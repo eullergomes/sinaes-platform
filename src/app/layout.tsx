@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
+import Sidebar from '@/components/Sidebar';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -10,8 +11,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Plataforma SINAES',
-  description: 'Plataforma SINAES - IFMA Campus Caxias'
+  title: "SINAES IFMA Plataforma",
+  description: "Sistema de monitoramento dos indicadores SINAES",
 };
 
 export default function RootLayout({
@@ -21,7 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={poppins.className}>{children}</body>
+      <body className={`${poppins.className} flex min-h-screen bg-gray-50 text-gray-800`}>
+        <Sidebar />
+
+        <main className="flex-1 p-6 overflow-y-auto">
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
