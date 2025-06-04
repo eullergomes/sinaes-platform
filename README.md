@@ -1,5 +1,15 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+# .prettierrc
+{
+  "trailingComma": "none", // Define que não deve haver vírgulas finais em listas, objetos ou parâmetros de funções.
+  "semi": true, // Indica que o código deve incluir ponto e vírgula (;) ao final das linhas.
+  "singleQuote": true, // Prefere aspas simples (') ao invés de aspas duplas (").
+  "endOfLine": "auto", // Ajusta automaticamente o tipo de quebra de linha com base no sistema operacional.
+  "plugins": ["prettier-plugin-tailwindcss"] // maneira ideal de organizar automaticamente as classes do Tailwind CSS!
+}
+
+
 ## Getting Started
 
 First, run the development server:

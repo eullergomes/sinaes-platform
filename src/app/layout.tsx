@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Poppins } from 'next/font/google';
+import './globals.css';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -10,22 +10,18 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Plataforma SINAES",
-  description: "Plataforma SINAES - IFMA Campus Caxias",
+  title: 'Plataforma SINAES',
+  description: 'Plataforma SINAES - IFMA Campus Caxias'
 };
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html lang="pt-BR">
-      <body
-        className={poppins.className}
-      >
-        {children}
-      </body>
+      <body className={poppins.className}>{children}</body>
     </html>
   );
 }
