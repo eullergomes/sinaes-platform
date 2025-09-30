@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import DownloadIcon from '@/icons/DownloadIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/StatusBadge';
 
@@ -122,6 +124,23 @@ const indicators = [
 
 const Dimension2Page = () => {
   const router = useRouter();
+  const [nsaChecked, setNsaChecked] = useState<Record<string, boolean>>(() => {
+    const allowed = new Set([
+      '2.2',
+      '2.7',
+      '2.8',
+      '2.10',
+      '2.11',
+      '2.13',
+      '2.14',
+      '2.15'
+    ]);
+    const init: Record<string, boolean> = {};
+    indicators.forEach((i) => {
+      if (allowed.has(i.code)) init[i.code] = false;
+    });
+    return init;
+  });
 
   const handleEdit = (code: string) => {
     router.push(`/dimension-2/indicator/${code}`);
@@ -134,8 +153,19 @@ const Dimension2Page = () => {
       </h1>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex items-center justify-between">
           <CardTitle>Indicadores da Dimensão 2</CardTitle>
+          <Button asChild variant="outline" className="cursor-pointer">
+            <a
+              href="/assets/pdf/pdf-2.pdf"
+              download
+              aria-label="Baixar Manual de Instruções da Dimensão 2"
+              className="inline-flex items-center gap-2"
+            >
+              <DownloadIcon width={16} height={16} />
+              Manual de Instruções
+            </a>
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -150,6 +180,7 @@ const Dimension2Page = () => {
                     Última Atualização
                   </th>
                   <th className="border px-4 py-2 text-center">Ações</th>
+                  <th className="border px-4 py-2 text-center">NSA</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,9 +202,55 @@ const Dimension2Page = () => {
                         variant="outline"
                         className="cursor-pointer"
                         onClick={() => handleEdit(indicador.code)}
+                        disabled={(() => {
+                          const allowed = new Set([
+                            '2.2',
+                            '2.7',
+                            '2.8',
+                            '2.10',
+                            '2.11',
+                            '2.13',
+                            '2.14',
+                            '2.15'
+                          ]);
+                          return allowed.has(indicador.code)
+                            ? !nsaChecked[indicador.code]
+                            : false;
+                        })()}
                       >
                         Editar
                       </Button>
+                    </td>
+                    <td className="border px-4 py-2 text-center">
+                      {(() => {
+                        const allowed = new Set([
+                          '2.2',
+                          '2.7',
+                          '2.8',
+                          '2.10',
+                          '2.11',
+                          '2.13',
+                          '2.14',
+                          '2.15'
+                        ]);
+                        const isAllowed = allowed.has(indicador.code);
+                        const checked = !!nsaChecked[indicador.code];
+                        return isAllowed ? (
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              setNsaChecked((prev) => ({
+                                ...prev,
+                                [indicador.code]: !prev[indicador.code]
+                              }))
+                            }
+                            aria-label={`Marcar NSA ${indicador.code}`}
+                          />
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

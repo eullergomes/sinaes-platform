@@ -1,9 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/StatusBadge';
+import DownloadIcon from '@/icons/DownloadIcon';
 
 const indicators = [
   {
@@ -178,6 +180,28 @@ const indicators = [
 
 const Dimension1Page = () => {
   const router = useRouter();
+  const [nsaChecked, setNsaChecked] = useState<Record<string, boolean>>(() => {
+    const allowed = new Set([
+      '1.7',
+      '1.8',
+      '1.9',
+      '1.10',
+      '1.11',
+      '1.14',
+      '1.15',
+      '1.17',
+      '1.18',
+      '1.21',
+      '1.22',
+      '1.23',
+      '1.24'
+    ]);
+    const init: Record<string, boolean> = {};
+    indicators.forEach((i) => {
+      if (allowed.has(i.code)) init[i.code] = false;
+    });
+    return init;
+  });
 
   const handleEdit = (code: string) => {
     router.push(`/dimension-1/indicator/${code}`);
@@ -188,10 +212,20 @@ const Dimension1Page = () => {
       <h1 className="text-3xl font-bold">
         Dimensão 1 - Organização Didático-Pedagógica
       </h1>
-
       <Card>
-        <CardHeader>
+        <CardHeader className="flex items-center justify-between">
           <CardTitle>Indicadores da Dimensão 1</CardTitle>
+          <Button asChild variant="outline" className="cursor-pointer">
+            <a
+              href="/assets/pdf/pdf-1.pdf"
+              download
+              aria-label="Baixar Manual de Instruções da Dimensão 1"
+              className="inline-flex items-center gap-2"
+            >
+              <DownloadIcon width={16} height={16} />
+              Manual de Instruções
+            </a>
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -206,6 +240,7 @@ const Dimension1Page = () => {
                     Última Atualização
                   </th>
                   <th className="border px-4 py-2 text-center">Ações</th>
+                  <th className="border px-4 py-2 text-center">NSA</th>
                 </tr>
               </thead>
               <tbody>
@@ -227,9 +262,66 @@ const Dimension1Page = () => {
                         className="cursor-pointer"
                         variant="outline"
                         onClick={() => handleEdit(indicator.code)}
+                        disabled={(() => {
+                          const allowed = new Set([
+                            '1.7',
+                            '1.8',
+                            '1.9',
+                            '1.10',
+                            '1.11',
+                            '1.14',
+                            '1.15',
+                            '1.17',
+                            '1.18',
+                            '1.21',
+                            '1.22',
+                            '1.23',
+                            '1.24'
+                          ]);
+                          return allowed.has(indicator.code)
+                            ? !nsaChecked[indicator.code]
+                            : false;
+                        })()}
                       >
                         Editar
                       </Button>
+                    </td>
+                    <td className="border px-4 py-2 text-center">
+                      {/* NSA checkbox only for allowed indicators */}
+                      {(() => {
+                        const allowed = new Set([
+                          '1.7',
+                          '1.8',
+                          '1.9',
+                          '1.10',
+                          '1.11',
+                          '1.14',
+                          '1.15',
+                          '1.17',
+                          '1.18',
+                          '1.21',
+                          '1.22',
+                          '1.23',
+                          '1.24'
+                        ]);
+                        const isAllowed = allowed.has(indicator.code);
+                        const checked = !!nsaChecked[indicator.code];
+                        return isAllowed ? (
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              setNsaChecked((prev) => ({
+                                ...prev,
+                                [indicator.code]: !prev[indicator.code]
+                              }))
+                            }
+                            aria-label={`Marcar NSA ${indicator.code}`}
+                          />
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -240,6 +332,6 @@ const Dimension1Page = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default Dimension1Page;
