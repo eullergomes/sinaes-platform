@@ -101,9 +101,8 @@ const IndicatorPage = () => {
           <CardTitle>Atribuição de Nota e Upload de Evidência</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Campo: Score */}
           <div className="space-y-2">
-            <Label>Score atribuído</Label>
+            <Label>Nota</Label>
             <Select>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Selecione" />
