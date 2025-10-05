@@ -13,50 +13,13 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-
-const criteriaByIndicator: Record<
-  string,
-  { concept: string; criterion: string }[]
-> = {
-  '3.1': [
-    {
-      concept: '1',
-      criterion: 'Não há espaço de trabalho para docentes em tempo integral.'
-    },
-    {
-      concept: '2',
-      criterion: 'Há espaço de trabalho, porém inadequado ou insuficiente.'
-    },
-    {
-      concept: '3',
-      criterion:
-        'Há espaço de trabalho adequado para docentes em tempo integral.'
-    },
-    {
-      concept: '4',
-      criterion:
-        'Há espaço de trabalho adequado, equipado e em quantidade compatível com a demanda.'
-    },
-    {
-      concept: '5',
-      criterion:
-        'O espaço de trabalho é exemplar, com recursos adicionais que favorecem a qualidade das atividades docentes.'
-    }
-  ],
-  '3.2': [
-    { concept: '1', criterion: 'Exemplo de critério para 3.2 - conceito 1' },
-    { concept: '2', criterion: '...' },
-    { concept: '3', criterion: '...' },
-    { concept: '4', criterion: '...' },
-    { concept: '5', criterion: '...' }
-  ]
-};
+import { criteriaByIndicator3 } from '@/app/constants/criteriaByIndicator3';
 
 const IndicatorPage = () => {
   const params = useParams();
   const code = params.code as string;
 
-  const criterions = criteriaByIndicator[code] || [];
+  const criterions = criteriaByIndicator3[code] || [];
 
   return (
     <div className="space-y-6 p-8">

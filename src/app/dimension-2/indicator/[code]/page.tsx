@@ -7,29 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-
-const criteriaByIndicator: Record<string, { concept: string; criterion: string }[]> = {
-  "2.1": [
-    { concept: "1", criterion: "O NDE não está constituído ou não atua no âmbito do curso." },
-    { concept: "2", criterion: "O NDE está parcialmente constituído e com atuação limitada." },
-    { concept: "3", criterion: "O NDE está constituído e atua regularmente no âmbito do curso." },
-    { concept: "4", criterion: "O NDE atua de maneira efetiva e participativa no âmbito do curso." },
-    { concept: "5", criterion: "O NDE atua de forma exemplar, promovendo inovação e melhoria contínua no âmbito do curso." },
-  ],
-  "2.2": [
-    { concept: "1", criterion: "Exemplo de critério para 2.2 - conceito 1" },
-    { concept: "2", criterion: "..." },
-    { concept: "3", criterion: "..." },
-    { concept: "4", criterion: "..." },
-    { concept: "5", criterion: "..." },
-  ],
-};
+import { criteriaByIndicator2 } from '@/app/constants/criteriaByIndicator2';
 
 const IndicatorPage = () => {
   const params = useParams();
   const code = params.code as string;
 
-  const criterions = criteriaByIndicator[code] || [];
+  const criterions = criteriaByIndicator2[code] || [];
 
   return (
     <div className="p-8 space-y-6">

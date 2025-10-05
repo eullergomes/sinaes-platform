@@ -13,52 +13,13 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-
-const criteriaByIndicator: Record<
-  string,
-  { concept: string; criterion: string }[]
-> = {
-  '1.1': [
-    {
-      concept: '1',
-      criterion:
-        'As políticas institucionais de ensino, extensão e pesquisa (quando for o caso), constantes no PDI, não estão implantadas no âmbito do curso.'
-    },
-    {
-      concept: '2',
-      criterion:
-        'As políticas institucionais de ensino, extensão e pesquisa (quando for o caso), constantes no PDI, estão implantadas no âmbito do curso de maneira limitada.'
-    },
-    {
-      concept: '3',
-      criterion:
-        'As políticas institucionais de ensino, extensão e pesquisa (quando for o caso), constantes no PDI, estão implantadas no âmbito do curso.'
-    },
-    {
-      concept: '4',
-      criterion:
-        'As políticas institucionais de ensino, extensão e pesquisa (quando for o caso), constantes no PDI, estão implantadas no âmbito do curso e claramente voltadas para a promoção de oportunidades de aprendizagem alinhadas ao perfil do egresso.'
-    },
-    {
-      concept: '5',
-      criterion:
-        'As políticas institucionais de ensino, extensão e pesquisa (quando for o caso), constantes no PDI, estão implantadas no âmbito do curso e claramente voltadas para a promoção de oportunidades de aprendizagem alinhadas ao perfil do egresso, adotando-se práticas comprovadamente exitosas ou inovadoras para a sua revisão.'
-    }
-  ],
-  '1.2': [
-    { concept: '1', criterion: 'Exemplo de critério do indicador 1.2' },
-    { concept: '2', criterion: '...' },
-    { concept: '3', criterion: '...' },
-    { concept: '4', criterion: '...' },
-    { concept: '5', criterion: '...' }
-  ]
-};
+import { criteriaByIndicator1 } from '@/app/constants/criteriaByIndicator1';
 
 const IndicadorPage = () => {
   const params = useParams();
   const code = (params?.code ?? '') as string;
 
-  const criterions = criteriaByIndicator[code] || [];
+  const criterions = criteriaByIndicator1[code] || [];
 
   return (
     <div className="space-y-6 p-8">
