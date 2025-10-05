@@ -1,6 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import {
   Sidebar,
@@ -12,9 +15,16 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail
+  SidebarMenuItem
 } from '@/components/ui/sidebar';
+
+import { Button } from '@/components/ui/button';
+import { useSidebar } from '@/components/ui/sidebar';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent
+} from '@/components/ui/tooltip';
 
 import {
   LayoutDashboard,
@@ -22,70 +32,64 @@ import {
   Users,
   LogOut,
   PanelLeftIcon,
-  MenuIcon,
   X,
-  LayoutDashboardIcon,
   ChartNoAxesCombinedIcon
 } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Button } from './ui/button';
-import { useSidebar } from '@/components/ui/sidebar';
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent
-} from '@/components/ui/tooltip';
-import { useState } from 'react';
 
-const data = {
-  navMain: [
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  /** vindo do Shell */
+  currentCourseId?: string | null;
+  currentCourseName?: string;
+};
+
+function buildNav(currentCourseId?: string | null) {
+  const prefix = currentCourseId ? `/courses/${currentCourseId}` : '';
+  console.log('AppSidebar.buildNav: prefix=', prefix);
+  
+  return [
     {
       title: 'Dashboard',
-      url: '#',
       items: [
         {
           title: 'Dashboard',
-          url: '/dashboard',
-          isActive: false,
+          url: `${prefix}/dashboard`,
           icon: ChartNoAxesCombinedIcon
-        },
+        }
       ]
     },
     {
       title: 'Dimensões',
-      url: '#',
       items: [
         {
           title: 'Dimensão 1',
-          url: '/dimension-1',
-          isActive: true,
+          url: `${prefix}/dimensions/1`,
           icon: LayoutDashboard
         },
         {
           title: 'Dimensão 2',
-          url: '/dimension-2',
-          isActive: false,
+          url: `${prefix}/dimensions/2`,
           icon: BookOpen
         },
-        {
-          title: 'Dimensão 3',
-          url: '/dimension-3',
-          isActive: false,
-          icon: Users
-        }
+        { title: 'Dimensão 3', url: `${prefix}/dimensions/3`, icon: Users }
       ]
     }
-  ]
-};
+  ] as const;
+}
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  currentCourseId,
+  currentCourseName,
+  ...props
+}: AppSidebarProps) {
   const { open, toggleSidebar, isMobile } = useSidebar();
   const [hovered, setHovered] = useState(false);
   const pathname = usePathname();
 
+  const nav = buildNav(currentCourseId);
+
   return (
     <Sidebar {...props}>
+      {/* HEADER */}
       <SidebarHeader>
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-2">
@@ -141,13 +145,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               }
               className="ml-2"
             >
-              <X
-                className={!open ? 'rotate-180' : ''}
-                color="white"
-              />
+              <X className={!open ? 'rotate-180' : ''} color="white" />
             </Button>
-          ) :
-          open ? (
+          ) : open ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -171,32 +171,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </Tooltip>
           ) : null}
         </div>
+
+        <div className="mt-1 transition-all duration-200 ease-linear group-data-[collapsible=icon]:hidden">
+          <div className="inline-flex max-w-full w-full items-center gap-2 truncate rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white">
+            <span className="opacity-80">Curso:</span>
+            <span className="font-medium">
+              {currentCourseName ?? currentCourseId ?? '—'}
+            </span>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
-        {data.navMain.map((item) => (
-          <SidebarGroup key={item.title}>
+        {nav.map((section) => (
+          <SidebarGroup key={section.title}>
             <SidebarGroupLabel className="text-white">
-              {item.title}
+              {section.title}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="gap-2">
-                {item.items.map((navItem) => {
-                  const isActive = !!(
-                    pathname && pathname.startsWith(navItem.url)
-                  );
+                {section.items.map((item) => {
+                  const isActive =
+                    pathname === item.url ||
+                    pathname.startsWith(item.url.split('?')[0]);
+                  const Icon = item.icon;
                   return (
-                    <SidebarMenuItem key={navItem.title}>
+                    <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={isActive}>
-                        <a
-                          href={navItem.url}
+                        <Link
+                          href={item.url}
                           className="flex items-center gap-2"
                         >
-                          <navItem.icon size={20} color="white" />
+                          <Icon size={20} color="white" />
                           <span className="text-[18px] font-medium text-white">
-                            {navItem.title}
+                            {item.title}
                           </span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -227,8 +237,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
-      {/* <SidebarRail /> */}
     </Sidebar>
   );
 }
