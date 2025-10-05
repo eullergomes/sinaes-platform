@@ -6,6 +6,11 @@ import { Button } from '@/components/ui/button';
 import DownloadIcon from '@/icons/DownloadIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/StatusBadge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 
 const indicators = [
   {
@@ -201,86 +206,112 @@ const Dimension3Page = () => {
                 </tr>
               </thead>
               <tbody>
-                {indicators.map((indicador) => (
-                  <tr key={indicador.code} className="hover:bg-gray-50">
-                    <td className="border px-4 py-2">{indicador.code}</td>
-                    <td className="border px-4 py-2">{indicador.name}</td>
-                    <td className="border px-4 py-2 text-center">
-                      {indicador.grade}
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      <StatusBadge status={indicador.status} />
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      {indicador.lastUpdate}
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      <Button
-                        variant="outline"
-                        className="cursor-pointer"
-                        onClick={() => handleEdit(indicador.code)}
-                        disabled={(() => {
-                          const allowed = new Set([
-                            '3.3',
-                            '3.4',
-                            '3.8',
-                            '3.9',
-                            '3.10',
-                            '3.11',
-                            '3.12',
-                            '3.13',
-                            '3.14',
-                            '3.15',
-                            '3.16',
-                            '3.17',
-                            '3.18'
-                          ]);
-                          return allowed.has(indicador.code)
-                            ? !nsaChecked[indicador.code]
-                            : false;
-                        })()}
-                      >
-                        Editar
-                      </Button>
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      {(() => {
-                        const allowed = new Set([
-                          '3.3',
-                          '3.4',
-                          '3.8',
-                          '3.9',
-                          '3.10',
-                          '3.11',
-                          '3.12',
-                          '3.13',
-                          '3.14',
-                          '3.15',
-                          '3.16',
-                          '3.17',
-                          '3.18'
-                        ]);
-                        const isAllowed = allowed.has(indicador.code);
-                        const checked = !!nsaChecked[indicador.code];
-                        return isAllowed ? (
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setNsaChecked((prev) => ({
-                                ...prev,
-                                [indicador.code]: !prev[indicador.code]
-                              }))
-                            }
-                            aria-label={`Marcar NSA ${indicador.code}`}
-                          />
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        );
-                      })()}
-                    </td>
-                  </tr>
-                ))}
+                {indicators.map((indicator) => {
+                  const allowed = new Set([
+                    '3.3',
+                    '3.4',
+                    '3.8',
+                    '3.9',
+                    '3.10',
+                    '3.11',
+                    '3.12',
+                    '3.13',
+                    '3.14',
+                    '3.15',
+                    '3.16',
+                    '3.17',
+                    '3.18'
+                  ]);
+                  const isAllowed = allowed.has(indicator.code);
+                  const checked = !!nsaChecked[indicator.code];
+                  // Now: when checked === false, show '-' (disabled). When checked === true, show info.
+                  const isDisabled = isAllowed && !checked;
+
+                  return (
+                    <tr key={indicator.code} className="hover:bg-gray-50">
+                      <td className="border px-4 py-2">
+                        <div className="flex h-8 items-center justify-start">
+                          {indicator.code}
+                        </div>
+                      </td>
+
+                      <td className="border px-4 py-2">
+                        <div className="flex h-8 items-center justify-start">
+                          {indicator.name}
+                        </div>
+                      </td>
+
+                      <td className="border px-4 py-2 text-center">
+                        <div className="flex h-8 items-center justify-center">
+                          {isDisabled ? '—' : indicator.grade}
+                        </div>
+                      </td>
+
+                      <td className="border px-4 py-2 text-center">
+                        <div className="flex h-8 items-center justify-center">
+                          {isDisabled ? (
+                            <span className="text-gray-400">—</span>
+                          ) : (
+                            <StatusBadge status={indicator.status} />
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="border px-4 py-2 text-center">
+                        <div className="flex h-8 items-center justify-center">
+                          {isDisabled ? '—' : indicator.lastUpdate}
+                        </div>
+                      </td>
+
+                      <td className="border px-4 py-2 text-center">
+                        <div className="flex h-8 items-center justify-center">
+                          {isDisabled ? (
+                            <span className="text-gray-400">—</span>
+                          ) : (
+                            <Button
+                              className="cursor-pointer"
+                              variant="outline"
+                              onClick={() => handleEdit(indicator.code)}
+                              disabled={(() => {
+                                return isAllowed ? !checked : false;
+                              })()}
+                            >
+                              Editar
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="border px-4 py-2 text-center">
+                        <div className="flex h-8 items-center justify-center">
+                          {/* NSA checkbox only for allowed indicators */}
+                          {isAllowed ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() =>
+                                    setNsaChecked((prev) => ({
+                                      ...prev,
+                                      [indicator.code]: !prev[indicator.code]
+                                    }))
+                                  }
+                                  aria-label={`Marcar NSA ${indicator.code}`}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {checked ? 'Desativar' : 'Ativar'}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

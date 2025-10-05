@@ -34,37 +34,6 @@ const DashboardPage = () => {
     <div className="space-y-6 p-8">
       <h1 className="text-3xl font-bold">Dashboard - Monitoramento SINAES</h1>
 
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Alert />
-              Pendências e Alertas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="w-2xl space-y-2 pl-5">
-              <CollapsibleSection title="Dimensão 1">
-                <p className="text-muted-foreground text-sm">
-                  Preencher indicador 1.6 - Metodologia
-                </p>
-              </CollapsibleSection>
-              <CollapsibleSection title="Dimensão 2">
-                <p className="text-muted-foreground text-sm">
-                  Atualizar evidências do indicador 2.3 - Atuação do coordenador
-                </p>
-              </CollapsibleSection>
-              <CollapsibleSection title="Dimensão 3">
-                <p className="text-muted-foreground text-sm">
-                  Falta documento comprobatório do indicador 3.18
-                </p>
-              </CollapsibleSection>
-            </div>
-            <Button className="mt-4 cursor-pointer">Ver todos</Button>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card
           className="transition-shadow duration-200 hover:cursor-pointer hover:shadow-lg"
