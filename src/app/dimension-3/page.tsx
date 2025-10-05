@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import DownloadIcon from '@/icons/DownloadIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,18 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Filter } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const indicators = [
   {
@@ -141,27 +153,29 @@ const indicators = [
   }
 ];
 
+const ALLOWED_NSA = new Set([
+  '3.3',
+  '3.4',
+  '3.8',
+  '3.9',
+  '3.10',
+  '3.11',
+  '3.12',
+  '3.13',
+  '3.14',
+  '3.15',
+  '3.16',
+  '3.17',
+  '3.18'
+]);
+
 const Dimension3Page = () => {
   const router = useRouter();
+
   const [nsaChecked, setNsaChecked] = useState<Record<string, boolean>>(() => {
-    const allowed = new Set([
-      '3.3',
-      '3.4',
-      '3.8',
-      '3.9',
-      '3.10',
-      '3.11',
-      '3.12',
-      '3.13',
-      '3.14',
-      '3.15',
-      '3.16',
-      '3.17',
-      '3.18'
-    ]);
     const init: Record<string, boolean> = {};
     indicators.forEach((i) => {
-      if (allowed.has(i.code)) init[i.code] = false;
+      if (ALLOWED_NSA.has(i.code)) init[i.code] = false;
     });
     return init;
   });
@@ -170,6 +184,47 @@ const Dimension3Page = () => {
     router.push(`/dimension-3/indicator/${code}`);
   };
 
+  const [gradeFilters, setGradeFilters] = useState<Set<string>>(new Set());
+  const [statusFilters, setStatusFilters] = useState<Set<string>>(new Set());
+
+  const gradeOptions = useMemo(() => {
+    const set = new Set<string>();
+    indicators.forEach((i) => set.add(i.grade));
+    const nums = Array.from(set)
+      .filter((g) => g !== 'NSA')
+      .sort((a, b) => Number(a) - Number(b));
+    return set.has('NSA') ? ['NSA', ...nums] : nums;
+  }, []);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set<string>();
+    indicators.forEach((i) => set.add(i.status));
+    return Array.from(set);
+  }, []);
+
+  const toggleInSet = (value: string, setter: (s: Set<string>) => void) =>
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+
+  // const clearFilters = () => {
+  //   setGradeFilters(new Set());
+  //   setStatusFilters(new Set());
+  // };
+
+  // const hasActiveFilters = gradeFilters.size > 0 || statusFilters.size > 0;
+
+  const filteredIndicators = useMemo(() => {
+    return indicators.filter((i) => {
+      const gradeOk = gradeFilters.size ? gradeFilters.has(i.grade) : true;
+      const statusOk = statusFilters.size ? statusFilters.has(i.status) : true;
+      return gradeOk && statusOk;
+    });
+  }, [gradeFilters, statusFilters]);
+
   return (
     <div className="space-y-6 p-8">
       <h1 className="text-3xl font-bold">Dimensão 3 - Infraestrutura</h1>
@@ -177,17 +232,158 @@ const Dimension3Page = () => {
       <Card>
         <CardHeader className="flex items-center justify-between">
           <CardTitle>Indicadores da Dimensão 3</CardTitle>
-          <Button asChild variant="outline" className="cursor-pointer">
-            <a
-              href="/assets/pdf/pdf-3.pdf"
-              download
-              aria-label="Baixar Manual de Instruções da Dimensão 3"
-              className="inline-flex items-center gap-2"
-            >
-              <DownloadIcon width={16} height={16} />
-              Manual de Instruções
-            </a>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="inline-flex cursor-pointer items-center gap-2"
+                    >
+                      <Filter className="h-4 w-4" />
+                      Nota atual
+                      {gradeFilters.size > 0 && (
+                        <Badge variant="secondary" className="ml-1">
+                          {gradeFilters.size}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Filtrar por nota</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <DropdownMenuContent className="w-48" align="start">
+                <DropdownMenuLabel>Filtrar por nota</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {gradeOptions.map((g) => {
+                  const checked = gradeFilters.has(g);
+                  const id = `grade-${g}`;
+                  return (
+                    <DropdownMenuItem
+                      key={g}
+                      className="flex items-center gap-2 hover:bg-gray-100"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <Checkbox
+                        id={id}
+                        className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
+                        checked={checked}
+                        onCheckedChange={() => toggleInSet(g, setGradeFilters)}
+                      />
+
+                      <Label
+                        htmlFor={id}
+                        className="w-full cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleInSet(g, setGradeFilters);
+                        }}
+                      >
+                        {g}
+                      </Label>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="inline-flex cursor-pointer items-center gap-2"
+                    >
+                      <Filter className="h-4 w-4" />
+                      Status
+                      {statusFilters.size > 0 && (
+                        <Badge variant="secondary" className="ml-1">
+                          {statusFilters.size}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Filtrar por status</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <DropdownMenuContent className="w-48" align="start">
+                <DropdownMenuLabel>Filtrar por status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {statusOptions.map((s) => {
+                  const checked = statusFilters.has(s);
+                  const id = `status-${s}`;
+                  return (
+                    <DropdownMenuItem
+                      key={s}
+                      className="flex items-center gap-2 hover:bg-gray-100"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <Checkbox
+                        id={id}
+                        className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
+                        checked={checked}
+                        onCheckedChange={() => toggleInSet(s, setStatusFilters)}
+                      />
+
+                      <Label
+                        htmlFor={id}
+                        className="w-full cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleInSet(s, setStatusFilters);
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <StatusBadge status={s} />
+                        </div>
+                      </Label>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* {hasActiveFilters && (
+              <Button
+                variant="destructive"
+                className="inline-flex cursor-pointer items-center gap-1"
+                onClick={clearFilters}
+              >
+                <Trash2 />
+              </Button>
+            )} */}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="ml-auto cursor-pointer"
+                >
+                  <a
+                    href="/assets/pdf/pdf-1.pdf"
+                    download
+                    aria-label="Baixar Manual de Instruções da Dimensão 1"
+                    className="inline-flex items-center gap-2"
+                  >
+                    <DownloadIcon width={16} height={16} />
+                    Manual de Instruções
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Baixar manual de instruções</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -206,25 +402,9 @@ const Dimension3Page = () => {
                 </tr>
               </thead>
               <tbody>
-                {indicators.map((indicator) => {
-                  const allowed = new Set([
-                    '3.3',
-                    '3.4',
-                    '3.8',
-                    '3.9',
-                    '3.10',
-                    '3.11',
-                    '3.12',
-                    '3.13',
-                    '3.14',
-                    '3.15',
-                    '3.16',
-                    '3.17',
-                    '3.18'
-                  ]);
-                  const isAllowed = allowed.has(indicator.code);
+                {filteredIndicators.map((indicator) => {
+                  const isAllowed = ALLOWED_NSA.has(indicator.code);
                   const checked = !!nsaChecked[indicator.code];
-                  // Now: when checked === false, show '-' (disabled). When checked === true, show info.
                   const isDisabled = isAllowed && !checked;
 
                   return (
@@ -272,9 +452,7 @@ const Dimension3Page = () => {
                               className="cursor-pointer"
                               variant="outline"
                               onClick={() => handleEdit(indicator.code)}
-                              disabled={(() => {
-                                return isAllowed ? !checked : false;
-                              })()}
+                              disabled={isAllowed ? !checked : false}
                             >
                               Editar
                             </Button>
@@ -284,14 +462,12 @@ const Dimension3Page = () => {
 
                       <td className="border px-4 py-2 text-center">
                         <div className="flex h-8 items-center justify-center">
-                          {/* NSA checkbox only for allowed indicators */}
                           {isAllowed ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <input
-                                  type="checkbox"
+                                <Checkbox
                                   checked={checked}
-                                  onChange={() =>
+                                  onCheckedChange={() =>
                                     setNsaChecked((prev) => ({
                                       ...prev,
                                       [indicator.code]: !prev[indicator.code]
@@ -312,6 +488,17 @@ const Dimension3Page = () => {
                     </tr>
                   );
                 })}
+
+                {filteredIndicators.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="border px-4 py-8 text-center text-gray-500"
+                    >
+                      Nenhum indicador encontrado com os filtros atuais.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
