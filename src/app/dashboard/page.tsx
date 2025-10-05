@@ -1,7 +1,6 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   Radar,
   RadarChart,
@@ -11,8 +10,6 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import Alert from '@/icons/Alert';
-import CollapsibleSection from '@/components/Collapsible';
 
 const data = [
   {
