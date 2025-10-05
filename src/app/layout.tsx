@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
+import PendingAlerts from '@/components/PendingAlerts';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -11,8 +13,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "SINAES IFMA Plataforma",
-  description: "Sistema de monitoramento dos indicadores SINAES",
+  title: 'SINAES IFMA Plataforma',
+  description: 'Sistema de monitoramento dos indicadores SINAES'
 };
 
 export default function RootLayout({
@@ -22,12 +24,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${poppins.className} flex min-h-screen bg-gray-50 text-gray-800`}>
-        <Sidebar />
+      <body
+        className={`${poppins.className} flex min-h-screen bg-gray-50 text-gray-800`}
+      >
+        <SidebarProvider>
+          <AppSidebar collapsible="icon" />
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center justify-end gap-2 border-b px-4">
+              <PendingAlerts />
 
-        <main className="flex-1 p-6 overflow-y-auto">
-          {children}
-        </main>
+              {/* <SidebarTrigger className="-ml-1" /> */}
+            </header>
+            <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+          </SidebarInset>
+        </SidebarProvider>
       </body>
     </html>
   );
