@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:format": "prisma format",
+    "prisma:generate": "npm run prisma:format && prisma generate",
+    "prisma:push": "npm run prisma:format && prisma db push",
+    "prisma:migrate": "npm run prisma:format && prisma migrate dev",
+    "prisma:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.3",
@@ -35,7 +43,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.19",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.28.0",
@@ -50,6 +58,7 @@
     "prettier-plugin-tailwindcss": "^0.6.12",
     "prisma": "^6.16.3",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5"
   }

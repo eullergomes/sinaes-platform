@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -8,14 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =====================
-// Enums
-// =====================
+enum UserRole {
+  ADMIN
+  DIRETOR_GERAL
+  DDE
+  DEPARTAMENTO_ENSINO
+  COORDENADOR_CURSO
+  AVALIADOR_MEC
+}
 
 enum IndicatorStatus {
-  CONCLUIDO // "Concluído"
-  EM_REVISAO // "Em revisão"
-  PENDENTE // "Pendente"
+  CONCLUIDO
+  EM_REVISAO
+  PENDENTE
 }
 
 enum IndicatorGrade {
@@ -28,181 +32,149 @@ enum IndicatorGrade {
 }
 
 enum NsaPolicy {
-  FIXED_APPLICABLE // sempre aplicável (NSA não pode ser marcado)
-  FIXED_NSA // nunca aplicável (sempre NSA, ex.: alguns 3.x)  :contentReference[oaicite:2]{index=2}
-  COURSE_DEPENDENT // depende do curso (NSA pode ser configurado por curso)
+  FIXED_APPLICABLE
+  FIXED_NSA
+  COURSE_DEPENDENT
 }
 
 enum StorageKind {
-  INTERNAL // arquivo enviado e armazenado no nosso storage
-  EXTERNAL // apenas link (Drive, OneDrive etc.)
+  INTERNAL
+  EXTERNAL
 }
 
-// =====================
-// Catálogos (globais)
-// =====================
-
-// Catálogo de dimensões (1,2,3)
-model DimensionDefinition {
+model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  number    Int      @unique // 1 | 2 | 3
-  title     String
+  email     String   @unique
+  name      String
+  password  String
+  role      UserRole @default(COORDENADOR_CURSO)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  managedCourses Course[] @relation("CourseCoordinator")
+
+  evidenceSubmissions EvidenceSubmission[]
+  evidenceFiles       EvidenceFile[]
+}
+
+model DimensionDefinition {
+  id         String                @id @default(auto()) @map("_id") @db.ObjectId
+  number     Int                   @unique
+  title      String
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
   indicators IndicatorDefinition[]
 }
 
-// Catálogo de indicadores (globais)
-// Ex.: code "1.1", nome, dimensão, critérios Conceito/Critério etc.
 model IndicatorDefinition {
-  id          String              @id @default(auto()) @map("_id") @db.ObjectId
-  code        String              @unique // "1.1", "2.3", ...
-  name        String
-  dimensionId String
-  dimension   DimensionDefinition @relation(fields: [dimensionId], references: [id])
-
-  // Política NSA no catálogo (o curso concretiza em CourseIndicator.nsaApplicable)
-  nsaPolicy NsaPolicy
-
-  // Tabela Conceito/Critério (poderia ser outra model; aqui JSON por simplicidade):
-  // [{ concept: 1|2|3|4|5, criterion: string }, ...]
+  id            String                 @id @default(auto()) @map("_id") @db.ObjectId
+  code          String                 @unique
+  name          String
+  dimensionId   String                 @db.ObjectId
+  dimension     DimensionDefinition    @relation(fields: [dimensionId], references: [id])
+  nsaPolicy     NsaPolicy
   criteriaTable Json?
-
-  // Ligação N:N com itens de evidência exigidos por este indicador
-  requirements IndicatorRequirement[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  requirements  IndicatorRequirement[]
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 
   CourseIndicator    CourseIndicator[]
   EvidenceSubmission EvidenceSubmission[]
 }
 
-// Catálogo de "itens de documentação comprobatória" reutilizáveis
-// Ex.: PPC, PDI, DCN, Perfil do Egresso, LIBRAS, AVA, etc.  :contentReference[oaicite:3]{index=3}
 model EvidenceRequirement {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  // slug curto único (ex.: "ppc", "pdi", "perfil-egresso")
-  slug        String   @unique
-  title       String // Nome exibido (ex.: "Projeto Pedagógico do Curso (PPC)")
-  description String? // opcional (regras, observações, exemplos)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  id          String                 @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String                 @unique
+  title       String
+  description String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
   indicators  IndicatorRequirement[]
-  // envios por curso (reutilizados em todos os indicadores que exigem este item)
   submissions EvidenceSubmission[]
 }
 
-// Tabela de junção (N:N) entre Indicador e Item de Evidência
-// Guarda também a ordem de exibição e observações específicas
 model IndicatorRequirement {
   id            String              @id @default(auto()) @map("_id") @db.ObjectId
   indicatorId   String              @db.ObjectId
   requirementId String              @db.ObjectId
   indicator     IndicatorDefinition @relation(fields: [indicatorId], references: [id])
   requirement   EvidenceRequirement @relation(fields: [requirementId], references: [id])
-  order         Int? // ordenar itens na UI
+  order         Int?
   notes         String?
 
   @@unique([indicatorId, requirementId])
 }
 
-// =====================
-// Entidades por Curso
-// =====================
-
 model Course {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  code      String   @unique // ex.: "ads", "eng-civil" (slug para URL)
+  code      String   @unique
   name      String
-  level     String? // Tecnólogo, Licenciatura, etc.
-  modality  String? // Presencial, EaD, Híbrido
+  level     String?
+  modality  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  coordinatorId String? @db.ObjectId
+  coordinator   User?   @relation("CourseCoordinator", fields: [coordinatorId], references: [id])
 
   indicators CourseIndicator[]
   evidences  EvidenceSubmission[]
 }
 
-// Instância de um indicador para um curso
-// Guarda NSA resolvido por curso, nota, status, data e observações
 model CourseIndicator {
   id             String              @id @default(auto()) @map("_id") @db.ObjectId
   courseId       String              @db.ObjectId
   indicatorDefId String              @db.ObjectId
   course         Course              @relation(fields: [courseId], references: [id])
   indicatorDef   IndicatorDefinition @relation(fields: [indicatorDefId], references: [id])
+  nsaApplicable  Boolean             @default(true)
+  nsaLocked      Boolean             @default(false)
+  grade          IndicatorGrade      @default(NSA)
+  status         IndicatorStatus     @default(PENDENTE)
+  lastUpdate     DateTime?
+  observations   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
-  // NSA (aplicável ao curso)
-  // - se nsaPolicy = FIXED_APPLICABLE => nsaApplicable = true e nsaLocked = true
-  // - se nsaPolicy = FIXED_NSA        => nsaApplicable = false e nsaLocked = true
-  // - se nsaPolicy = COURSE_DEPENDENT => nsaApplicable editável e nsaLocked = false
-  nsaApplicable Boolean @default(true)
-  nsaLocked     Boolean @default(false)
+  @@unique([courseId, indicatorDefId])
+  @@index([courseId])
+  @@index([indicatorDefId])
+}
 
-  // Avaliação
-  grade        IndicatorGrade  @default(NSA)
-  status       IndicatorStatus @default(PENDENTE)
-  lastUpdate   DateTime? // quando houve a última ação relevante
-  observations String?
+model EvidenceSubmission {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  courseId            String               @db.ObjectId
+  requirementId       String               @db.ObjectId
+  course              Course               @relation(fields: [courseId], references: [id])
+  requirement         EvidenceRequirement  @relation(fields: [requirementId], references: [id])
+  folderUrl           String?
+  firstIndicatorDefId String?              @db.ObjectId
+  firstIndicatorDef   IndicatorDefinition? @relation(fields: [firstIndicatorDefId], references: [id])
+  files               EvidenceFile[]
 
-  // cache/derivados opcionais (ex.: contagem de itens anexados)
-  evidenceItemsCount Int?
+  createdByUserId String? @db.ObjectId
+  createdByUser   User?   @relation(fields: [createdByUserId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([courseId, indicatorDefId])
-}
-
-// =====================
-// Evidências (envios reutilizáveis por curso+item)
-// =====================
-
-// Um "envio" por (curso + item de evidência)
-// Reutilizável automaticamente em todos os indicadores do curso que exijam o mesmo item.
-// Pode conter ZERO ou mais arquivos e/ou um link de pasta (Drive, OneDrive etc.).
-model EvidenceSubmission {
-  id            String              @id @default(auto()) @map("_id") @db.ObjectId
-  courseId      String              @db.ObjectId
-  requirementId String              @db.ObjectId
-  course        Course              @relation(fields: [courseId], references: [id])
-  requirement   EvidenceRequirement @relation(fields: [requirementId], references: [id])
-
-  // Link para pasta externa (opcional)
-  folderUrl String?
-
-  // Quem subiu primeiro e quando (opcional)
-  firstIndicatorDefId String?
-  firstIndicatorDef   IndicatorDefinition? @relation(fields: [firstIndicatorDefId], references: [id])
-
-  files EvidenceFile[]
-
-  createdByUserId String? // se houver usuário na app
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Garante unicidade: um "pacote" de evidência por curso+item
   @@unique([courseId, requirementId])
+  @@index([courseId])
+  @@index([requirementId])
 }
 
-// Arquivo individual anexado a uma EvidenceSubmission
 model EvidenceFile {
   id           String             @id @default(auto()) @map("_id") @db.ObjectId
   submissionId String             @db.ObjectId
   submission   EvidenceSubmission @relation(fields: [submissionId], references: [id])
+  kind         StorageKind        @default(INTERNAL)
+  storageKey   String?
+  externalUrl  String?
+  fileName     String
+  mimeType     String
+  sizeBytes    Int?
+  uploadedAt   DateTime           @default(now())
 
-  kind        StorageKind @default(INTERNAL)
-  // Se INTERNAL: chave no storage (S3/minio/etc.)
-  storageKey  String?
-  // Se EXTERNAL: URL direta do arquivo
-  externalUrl String?
-
-  fileName         String
-  mimeType         String
-  sizeBytes        Int?
-  uploadedAt       DateTime @default(now())
-  uploadedByUserId String?
+  uploadedByUserId String? @db.ObjectId
+  uploadedByUser   User?   @relation(fields: [uploadedByUserId], references: [id])
 }
