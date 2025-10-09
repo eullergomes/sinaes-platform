@@ -28,23 +28,37 @@ import { indicators } from '@/app/constants/indicators';
 import { DIMENSIONS } from '@/app/constants/dimensions';
 
 // ====== NSA por dimensão ======
-const ALLOWED_NSA_DIM1 = new Set(['1.7','1.8','1.9','1.10','1.11','1.14','1.15','1.17','1.18','1.21','1.22','1.23','1.24']);
-const ALLOWED_NSA_DIM2 = new Set(['2.10','2.11','2.14']);
-const ALLOWED_NSA_DIM3 = new Set(['3.15','3.18']);
+const ALLOWED_NSA_DIM1 = new Set([
+  '1.7',
+  '1.8',
+  '1.9',
+  '1.10',
+  '1.11',
+  '1.14',
+  '1.15',
+  '1.17',
+  '1.18',
+  '1.21',
+  '1.22',
+  '1.23',
+  '1.24'
+]);
+const ALLOWED_NSA_DIM2 = new Set(['2.10', '2.11', '2.14']);
+const ALLOWED_NSA_DIM3 = new Set(['3.15', '3.18']);
 
-const NSA_MAP: Record<'1'|'2'|'3', Set<string>> = {
+const NSA_MAP: Record<'1' | '2' | '3', Set<string>> = {
   '1': ALLOWED_NSA_DIM1,
   '2': ALLOWED_NSA_DIM2,
   '3': ALLOWED_NSA_DIM3
 };
 
-const MANUAL_BY_DIM: Record<'1'|'2'|'3', string> = {
+const MANUAL_BY_DIM: Record<'1' | '2' | '3', string> = {
   '1': '/assets/pdf/pdf-1.pdf',
   '2': '/assets/pdf/pdf-2.pdf',
   '3': '/assets/pdf/pdf-3.pdf'
 };
 
-function isAllowedNSA(dimId: '1'|'2'|'3', code: string) {
+function isAllowedNSA(dimId: '1' | '2' | '3', code: string) {
   return NSA_MAP[dimId].has(code);
 }
 
@@ -60,7 +74,9 @@ const DimensionPage = () => {
     [dimId]
   );
 
-  const [nsaChecked, setNsaChecked] = React.useState<Record<string, boolean>>({});
+  const [nsaChecked, setNsaChecked] = React.useState<Record<string, boolean>>(
+    {}
+  );
   React.useEffect(() => {
     const init: Record<string, boolean> = {};
     data.forEach((i) => {
@@ -69,13 +85,19 @@ const DimensionPage = () => {
     setNsaChecked(init);
   }, [dimId, data]);
 
-  const [gradeFilters, setGradeFilters] = React.useState<Set<string>>(new Set());
-  const [statusFilters, setStatusFilters] = React.useState<Set<string>>(new Set());
+  const [gradeFilters, setGradeFilters] = React.useState<Set<string>>(
+    new Set()
+  );
+  const [statusFilters, setStatusFilters] = React.useState<Set<string>>(
+    new Set()
+  );
 
   const gradeOptions = React.useMemo(() => {
     const set = new Set<string>();
     data.forEach((i) => set.add(i.grade));
-    const nums = Array.from(set).filter((g) => g !== 'NSA').sort((a, b) => Number(a) - Number(b));
+    const nums = Array.from(set)
+      .filter((g) => g !== 'NSA')
+      .sort((a, b) => Number(a) - Number(b));
     return set.has('NSA') ? ['NSA', ...nums] : nums;
   }, [data]);
 
@@ -85,10 +107,14 @@ const DimensionPage = () => {
     return Array.from(set);
   }, [data]);
 
-  const toggleInSet = (value: string, setter: (s: Set<string>) => void) =>
+  const toggleInSet = (
+    value: string,
+    setter: React.Dispatch<React.SetStateAction<Set<string>>>
+  ) =>
     setter((prev) => {
-      const next = new Set(prev);
-      next.has(value) ? next.delete(value) : next.add(value);
+      const next = new Set(prev ?? []);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
       return next;
     });
 
@@ -107,9 +133,9 @@ const DimensionPage = () => {
   };
 
   return (
-    <div className="space-y-6 p-8">
-      <h1 className="text-3xl font-bold">{dimTitle}</h1>
-      <Card>
+    <div className="space-y-6">
+      <h1 className="m-4 text-3xl font-bold md:m-8">{dimTitle}</h1>
+      <Card className="m-0 md:m-8">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Indicadores da Dimensão {dimId}</CardTitle>
 
@@ -118,7 +144,10 @@ const DimensionPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="inline-flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="inline-flex items-center gap-2"
+                    >
                       <Filter className="h-4 w-4" />
                       Nota atual
                       {gradeFilters.size > 0 && (
@@ -171,7 +200,10 @@ const DimensionPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="inline-flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="inline-flex items-center gap-2"
+                    >
                       <Filter className="h-4 w-4" />
                       Status
                       {statusFilters.size > 0 && (
@@ -252,7 +284,9 @@ const DimensionPage = () => {
                   <th className="border px-4 py-2 text-left">Indicador</th>
                   <th className="border px-4 py-2 text-center">Nota atual</th>
                   <th className="border px-4 py-2 text-center">Status</th>
-                  <th className="border px-4 py-2 text-center">Última Atualização</th>
+                  <th className="border px-4 py-2 text-center">
+                    Última Atualização
+                  </th>
                   <th className="border px-4 py-2 text-center">Ações</th>
                   <th className="border px-4 py-2 text-center">NSA</th>
                 </tr>
@@ -267,10 +301,17 @@ const DimensionPage = () => {
                   return (
                     <tr key={indicator.code} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">
-                        <div className="flex h-8 items-center">{indicator.code}</div>
+                        <div className="flex h-8 items-center">
+                          {indicator.code}
+                        </div>
                       </td>
-                      <td className="border px-4 py-2">
-                        <div className="flex h-8 items-center">{indicator.name}</div>
+                      <td className="max-w-xs border px-4 py-2">
+                        <span
+                          className="break-words whitespace-normal"
+                          title={indicator.name}
+                        >
+                          {indicator.name}
+                        </span>
                       </td>
                       <td className="border px-4 py-2 text-center">
                         <div className="flex h-8 items-center justify-center">
@@ -279,7 +320,11 @@ const DimensionPage = () => {
                       </td>
                       <td className="border px-4 py-2 text-center">
                         <div className="flex h-8 items-center justify-center">
-                          {disabledRow ? <span className="text-gray-400">—</span> : <StatusBadge status={indicator.status as any} />}
+                          {disabledRow ? (
+                            <span className="text-gray-400">—</span>
+                          ) : (
+                            <StatusBadge status={indicator.status} />
+                          )}
                         </div>
                       </td>
                       <td className="border px-4 py-2 text-center">
@@ -334,7 +379,10 @@ const DimensionPage = () => {
 
                 {filteredIndicators.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="border px-4 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={7}
+                      className="border px-4 py-8 text-center text-gray-500"
+                    >
                       Nenhum indicador encontrado com os filtros atuais.
                     </td>
                   </tr>

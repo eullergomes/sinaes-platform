@@ -12,14 +12,20 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { criteriaByIndicator1 } from '@/app/constants/criteriaByIndicator1';
+import { criteriaByIndicator } from '@/app/constants/criteriaByIndicator';
 import { FileUpload } from '@/components/file-upload';
 
 const IndicadorPage = () => {
-  const params = useParams();
-  const code = (params?.code ?? '') as string;
+  const params = useParams() as {
+    courseId?: string;
+    dimensonId?: string;
+    indicatorId?: string;
+  };
+  const code = (params?.indicatorId ?? '') as string;
 
-  const criterions = criteriaByIndicator1[code] || [];
+  const criterions = criteriaByIndicator[code] || [];
+
+  console.log('IndicadorPage: params=', params, 'criterions=', criterions);
 
   return (
     <div className="space-y-6 p-8">
@@ -83,7 +89,10 @@ const IndicadorPage = () => {
 
           <div className="space-y-2">
             <Label>Upload de documento comprobatório</Label>
-            <FileUpload onFileChange={(file) => console.log(file)} onLinkChange={(link) => console.log(link)} />
+            <FileUpload
+              onFilesChange={(files) => console.log(files)}
+              onLinkChange={(link) => console.log(link)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -96,6 +105,6 @@ const IndicadorPage = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default IndicadorPage;
