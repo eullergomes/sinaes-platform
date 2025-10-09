@@ -33,7 +33,8 @@ import {
   LogOut,
   PanelLeftIcon,
   X,
-  ChartNoAxesCombinedIcon
+  ChartNoAxesCombinedIcon,
+  ArrowLeftCircle
 } from 'lucide-react';
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
@@ -45,7 +46,7 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 function buildNav(currentCourseId?: string | null) {
   const prefix = currentCourseId ? `/courses/${currentCourseId}` : '';
   console.log('AppSidebar.buildNav: prefix=', prefix);
-  
+
   return [
     {
       title: 'Dashboard',
@@ -173,7 +174,7 @@ export function AppSidebar({
         </div>
 
         <div className="mt-1 transition-all duration-200 ease-linear group-data-[collapsible=icon]:hidden">
-          <div className="inline-flex max-w-full w-full items-center gap-2 truncate rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white">
+          <div className="inline-flex w-full max-w-full items-center gap-2 truncate rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white">
             <span className="opacity-80">Curso:</span>
             <span className="font-medium">
               {currentCourseName ?? currentCourseId ?? '—'}
@@ -221,16 +222,28 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem className="space-y-2">
             <SidebarMenuButton
-              className="flex w-full items-center gap-4 bg-gray-600"
+              className="flex w-full items-center gap-4 border border-white/20 bg-white/10"
               asChild
             >
-              <Link href="#" className="flex items-center gap-4">
+              <Link href="/courses" className="flex items-center gap-4">
+                <ArrowLeftCircle color="white" />
+                <span className="font-semibold text-white">
+                  Voltar aos cursos
+                </span>
+              </Link>
+            </SidebarMenuButton>
+
+            <SidebarMenuButton
+              className="flex w-full items-center gap-4"
+              asChild
+            >
+              <Link href="#" className="flex items-center gap-4 border border-white/20 bg-white/10">
                 <Users color="white" />
                 <span className="font-semibold text-white">Perfil</span>
               </Link>
             </SidebarMenuButton>
 
-            <SidebarMenuButton className="flex w-full items-center gap-4 bg-gray-600">
+            <SidebarMenuButton className="flex w-full items-center gap-4 border border-white/20 bg-white/10">
               <LogOut color="white" />
               <span className="font-semibold text-white">Sair</span>
             </SidebarMenuButton>

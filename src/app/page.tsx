@@ -1,7 +1,6 @@
-const Home = () => {
-  return ( 
-    <h1>Home</h1>
-   );
+import { redirect } from 'next/navigation';
+
+export default function Home() {
+  // Redirect root path to the courses selection page
+  redirect('/courses');
 }
- 
-export default Home;

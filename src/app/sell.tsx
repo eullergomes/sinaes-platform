@@ -2,7 +2,11 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger
+} from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import PendingAlerts from '@/components/PendingAlerts';
 
@@ -28,15 +32,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <SidebarInset>
         {!hideSidebar && (
-          <header className="flex h-16 shrink-0 items-center justify-end gap-2 border-b px-8">
-          {currentCourseId && (
-            <div className="mr-auto text-sm text-muted-foreground">
-              Curso ativo: <span className="font-medium text-foreground">{currentCourseId}</span>
+          <header className="flex h-16 shrink-0 items-center justify-end gap-2 border-b px-4 md:px-8 bg-gray-200">
+            {/* Mobile trigger to open the sidebar */}
+            <div className="sm:hidden">
+              <SidebarTrigger
+                className="-ml-1"
+                aria-label="Abrir barra lateral"
+              />
             </div>
-          )}
-          <PendingAlerts />
-          {/* <SidebarTrigger className="-ml-1" /> */}
-        </header>
+            {currentCourseId && (
+              <div className="text-muted-foreground mr-auto text-sm">
+                Curso ativo:{' '}
+                <span className="text-foreground font-medium">
+                  {currentCourseId}
+                </span>
+              </div>
+            )}
+            <PendingAlerts />
+          </header>
         )}
 
         <div className="flex flex-1 flex-col gap-4">{children}</div>
