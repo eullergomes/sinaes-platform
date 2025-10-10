@@ -1,5 +1,5 @@
 interface StatusBadgeProps {
-  status: 'Concluído' | 'Em revisão' | 'Pendente' | string;
+  status: 'Concluído' | 'Em edição' | 'Não preenchido' | string;
 }
 
 const StatusBadge = ({ status }: StatusBadgeProps) => {
@@ -9,10 +9,10 @@ const StatusBadge = ({ status }: StatusBadgeProps) => {
     case 'Concluído':
       colorClasses = 'bg-green-100 text-green-700';
       break;
-    case 'Em revisão':
+    case 'Em edição':
       colorClasses = 'bg-yellow-100 text-yellow-700';
       break;
-    case 'Pendente':
+    case 'Não preenchido':
       colorClasses = 'bg-red-100 text-red-700';
       break;
     default:

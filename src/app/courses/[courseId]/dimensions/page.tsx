@@ -65,7 +65,7 @@ export default function DimensionsPage() {
                 </p>
 
                 <div className="pt-2">
-                  <Button asChild>
+                  <Button asChild className="bg-green-700 hover:bg-green-800">
                     <Link href={`/courses/${courseId}/dimensions/${dimId}`}>
                       Ver indicadores
                     </Link>

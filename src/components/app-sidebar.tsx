@@ -36,6 +36,7 @@ import {
   ChartNoAxesCombinedIcon,
   ArrowLeftCircle
 } from 'lucide-react';
+import Image from 'next/image';
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   /** vindo do Shell */
@@ -126,13 +127,19 @@ export function AppSidebar({
                     </TooltipContent>
                   </Tooltip>
                 ) : (
-                  <LayoutDashboard size={20} color="white" />
+                  <Image
+                    src="/assets/ifma-avalia-logo.png"
+                    alt="IFMA Avalia Logo"
+                    width={20}
+                    height={20}
+                    className="brightness-0 invert"
+                  />
                 )}
               </button>
             )}
 
             <span className="text-2xl font-bold text-white transition-all duration-200 ease-linear group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:opacity-0">
-              SINAES
+              IFMA Avalia
             </span>
           </div>
 
@@ -237,7 +244,10 @@ export function AppSidebar({
               className="flex w-full items-center gap-4"
               asChild
             >
-              <Link href="#" className="flex items-center gap-4 border border-white/20 bg-white/10">
+              <Link
+                href="#"
+                className="flex items-center gap-4 border border-white/20 bg-white/10"
+              >
                 <Users color="white" />
                 <span className="font-semibold text-white">Perfil</span>
               </Link>
