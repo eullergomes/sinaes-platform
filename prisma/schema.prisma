@@ -8,18 +8,28 @@ datasource db {
 }
 
 enum UserRole {
-  ADMIN
-  DIRETOR_GERAL
-  DDE
-  DEPARTAMENTO_ENSINO
-  COORDENADOR_CURSO
-  AVALIADOR_MEC
+  DIRECAO
+  COORDENADOR
+}
+
+enum CourseLevel {
+  LICENCIATURA
+  BACHARELADO
+  ESPECIALIZACAO
+  MESTRADO
+  DOUTORADO
+}
+
+enum CourseModality {
+  PRESENCIAL
+  EAD
+  HIBRIDO
 }
 
 enum IndicatorStatus {
   CONCLUIDO
-  EM_REVISAO
-  PENDENTE
+  NAO_PREENCHIDO
+  EM_EDICAO
 }
 
 enum IndicatorGrade {
@@ -47,7 +57,7 @@ model User {
   email     String   @unique
   name      String
   password  String
-  role      UserRole @default(COORDENADOR_CURSO)
+  role      UserRole @default(COORDENADOR)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -106,13 +116,14 @@ model IndicatorRequirement {
 }
 
 model Course {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  code      String   @unique
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String          @unique
+  emecCode  Int?            @unique
   name      String
-  level     String?
-  modality  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  level     CourseLevel?
+  modality  CourseModality?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   coordinatorId String? @db.ObjectId
   coordinator   User?   @relation("CourseCoordinator", fields: [coordinatorId], references: [id])
@@ -122,23 +133,28 @@ model Course {
 }
 
 model CourseIndicator {
-  id             String              @id @default(auto()) @map("_id") @db.ObjectId
-  courseId       String              @db.ObjectId
-  indicatorDefId String              @db.ObjectId
-  course         Course              @relation(fields: [courseId], references: [id])
-  indicatorDef   IndicatorDefinition @relation(fields: [indicatorDefId], references: [id])
-  nsaApplicable  Boolean             @default(true)
-  nsaLocked      Boolean             @default(false)
-  grade          IndicatorGrade      @default(NSA)
-  status         IndicatorStatus     @default(PENDENTE)
-  lastUpdate     DateTime?
-  observations   String?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
+  courseId         String              @db.ObjectId
+  indicatorDefId   String              @db.ObjectId
+  evaluationYear   Int
+  course           Course              @relation(fields: [courseId], references: [id])
+  indicatorDef     IndicatorDefinition @relation(fields: [indicatorDefId], references: [id])
+  nsaApplicable    Boolean             @default(true)
+  nsaLocked        Boolean             @default(false)
+  grade            IndicatorGrade      @default(NSA)
+  status           IndicatorStatus     @default(EM_EDICAO)
+  lastUpdate       DateTime?
+  justification    String?
+  correctiveAction String?
+  responsible      String?
 
-  @@unique([courseId, indicatorDefId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, indicatorDefId, evaluationYear])
   @@index([courseId])
   @@index([indicatorDefId])
+  @@index([evaluationYear])
 }
 
 model EvidenceSubmission {
