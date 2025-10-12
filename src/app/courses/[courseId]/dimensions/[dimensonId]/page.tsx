@@ -26,6 +26,23 @@ import StatusBadge from '@/components/StatusBadge';
 
 import { indicators } from '@/app/constants/indicators';
 import { DIMENSIONS } from '@/app/constants/dimensions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 // ====== NSA por dimensão ======
 const ALLOWED_NSA_DIM1 = new Set([
@@ -69,10 +86,18 @@ const DimensionPage = () => {
   const dimId = (params.dimensonId as '1' | '2' | '3') ?? '1';
   const courseId = params.courseId;
 
-  const data = React.useMemo(
+  const initialYears = React.useMemo(() => [2021, 2024, 2025], []);
+  const [years, setYears] = React.useState<number[]>(initialYears);
+  const [year, setYear] = React.useState<number>(
+    initialYears[initialYears.length - 1] ?? new Date().getFullYear()
+  );
+
+  const baseData = React.useMemo(
     () => indicators.filter((i) => i.dimension === dimId),
     [dimId]
   );
+  const data = React.useMemo(() => baseData, [baseData]);
+  type IndicatorItem = (typeof indicators)[number];
 
   const [nsaChecked, setNsaChecked] = React.useState<Record<string, boolean>>(
     {}
@@ -83,7 +108,7 @@ const DimensionPage = () => {
       if (isAllowedNSA(dimId, i.code)) init[i.code] = false;
     });
     setNsaChecked(init);
-  }, [dimId, data]);
+  }, [dimId, data, year]);
 
   const [gradeFilters, setGradeFilters] = React.useState<Set<string>>(
     new Set()
@@ -101,8 +126,8 @@ const DimensionPage = () => {
     return set.has('NSA') ? ['NSA', ...nums] : nums;
   }, [data]);
 
-  const statusOptions = React.useMemo(() => {
-    const set = new Set<string>();
+  const statusOptions = React.useMemo<IndicatorItem['status'][]>(() => {
+    const set = new Set<IndicatorItem['status']>();
     data.forEach((i) => set.add(i.status));
     return Array.from(set);
   }, [data]);
@@ -128,6 +153,28 @@ const DimensionPage = () => {
 
   const dimTitle = `Dimensão ${dimId} — ${DIMENSIONS[dimId].title}`;
 
+  const [newYear, setNewYear] = React.useState<string>('');
+  const currentYear = new Date().getFullYear();
+  const canCreate = React.useMemo(() => {
+    const y = Number(newYear);
+    return (
+      Number.isInteger(y) &&
+      y >= 2000 &&
+      y <= currentYear + 10 &&
+      !years.includes(y)
+    );
+  }, [newYear, years, currentYear]);
+
+  const handleCreateCycle = () => {
+    const y = Number(newYear);
+    if (!Number.isInteger(y)) return;
+    if (years.includes(y)) return;
+    const next = [...years, y].sort((a, b) => a - b);
+    setYears(next);
+    setYear(y);
+    setNewYear('');
+  };
+
   const handleEdit = (code: string) => {
     router.push(`/courses/${courseId}/dimensions/${dimId}/indicators/${code}`);
   };
@@ -137,9 +184,77 @@ const DimensionPage = () => {
       <h1 className="m-4 text-3xl font-bold md:m-8">{dimTitle}</h1>
       <Card className="m-0 md:m-8">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Indicadores da Dimensão {dimId}</CardTitle>
+          <CardTitle>
+            Indicadores da Dimensão {dimId} — Ciclo {year}
+          </CardTitle>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={String(year)}
+              onValueChange={(v) => setYear(Number(v))}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {years
+                  .sort((a, b) => b - a)
+                  .map((y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-transparent bg-green-600 text-white hover:bg-green-700"
+                >
+                  Criar Novo Ciclo
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar novo ciclo</DialogTitle>
+                  <DialogDescription>
+                    Informe o ano para o novo ciclo de avaliação desta dimensão.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 py-2">
+                  <Label htmlFor="cycle-year">Ano</Label>
+                  <Input
+                    id="cycle-year"
+                    inputMode="numeric"
+                    pattern="\\d{4}"
+                    placeholder="Ex.: 2027"
+                    value={newYear}
+                    onChange={(e) =>
+                      setNewYear(
+                        e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
+                      )
+                    }
+                  />
+                </div>
+                <DialogFooter>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DialogTrigger>
+                  {/* Fechar ao criar */}
+                  <DialogTrigger asChild>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={!canCreate}
+                      onClick={handleCreateCycle}
+                    >
+                      Criar ciclo
+                    </Button>
+                  </DialogTrigger>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -245,7 +360,7 @@ const DimensionPage = () => {
                         }}
                       >
                         <div className="flex items-center">
-                          <StatusBadge status={s as any} />
+                          <StatusBadge status={s} />
                         </div>
                       </Label>
                     </DropdownMenuItem>
@@ -264,7 +379,7 @@ const DimensionPage = () => {
                     className="inline-flex items-center gap-2"
                   >
                     <DownloadIcon width={16} height={16} />
-                    Manual de Instruções
+                    Relatório
                   </a>
                 </Button>
               </TooltipTrigger>

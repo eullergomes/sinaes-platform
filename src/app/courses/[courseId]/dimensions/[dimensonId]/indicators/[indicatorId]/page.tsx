@@ -121,7 +121,7 @@ const IndicadorPage = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Label className="text-base font-semibold">
-                  Ações corretivas:
+                  Plano de ação:
                 </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
