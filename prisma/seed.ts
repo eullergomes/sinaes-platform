@@ -2,9 +2,11 @@ import {
   PrismaClient,
   NsaPolicy,
   IndicatorStatus,
-  IndicatorGrade
+  IndicatorGrade,
+  UserRole,
+  CourseLevel,
+  CourseModality
 } from '@prisma/client';
-
 const prisma = new PrismaClient();
 
 const allEvidenceRequirements = [
@@ -1824,7 +1826,7 @@ export const indicatorsData = [
     code: '2.14',
     name: 'Experiência do corpo de tutores em educação a distância',
     dimensionNumber: 2,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 39]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -1852,13 +1854,13 @@ export const indicatorsData = [
           'O corpo de tutores possui experiência em educação a distância que permite identificar as dificuldades dos discentes, expor o conteúdo em linguagem aderente às características da turma, apresentar exemplos contextualizados com os conteúdos dos componentes curriculares e elaborar atividades específicas, em colaboração com os docentes, para a promoção da aprendizagem de alunos com dificuldades, e adota práticas comprovadamente exitosas ou inovadoras no contexto da modalidade a distância.'
       }
     ],
-    evidenceSlugs: [] // [cite: 73]
+    evidenceSlugs: []
   },
   {
     code: '2.15',
     name: 'Interação entre tutores (presenciais quando for o caso - e a distância), docentes e coordenadores de curso a distância',
     dimensionNumber: 2,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 40]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -1886,13 +1888,13 @@ export const indicatorsData = [
           'Há interação, explicitada no PPC, que garante a mediação e a articulação entre tutores, docentes e coordenador do curso (e, quando for o caso, coordenador do polo), há planejamento devidamente documentado de interação para encaminhamento de questões do curso, e são realizadas avaliações periódicas para a identificação de problemas ou incremento na interação entre os interlocutores.'
       }
     ],
-    evidenceSlugs: [] // [cite: 73]
+    evidenceSlugs: []
   },
   {
     code: '2.16',
     name: 'Produção científica, cultural, artística ou tecnológica',
     dimensionNumber: 2,
-    nsaPolicy: NsaPolicy.FIXED_APPLICABLE, // [cite: 41]
+    nsaPolicy: NsaPolicy.FIXED_APPLICABLE,
     criteria: [
       {
         concept: '1',
@@ -1920,7 +1922,7 @@ export const indicatorsData = [
           'Pelo menos 50% dos docentes possuem, no mínimo, 9 produções nos últimos 3 anos.'
       }
     ],
-    evidenceSlugs: ['relacao-producoes-3-anos', 'curriculos'] // [cite: 73]
+    evidenceSlugs: ['relacao-producoes-3-anos', 'curriculos']
   },
 
   // ----- DIMENSÃO 3 -----
@@ -1928,7 +1930,7 @@ export const indicatorsData = [
     code: '3.1',
     name: 'Espaço de trabalho para docentes em tempo integral',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.FIXED_APPLICABLE, // [cite: 43]
+    nsaPolicy: NsaPolicy.FIXED_APPLICABLE,
     criteria: [
       {
         concept: '1',
@@ -1956,13 +1958,13 @@ export const indicatorsData = [
           'Os espaços de trabalho para docentes em Tempo Integral viabilizam ações acadêmicas, como planejamento didático-pedagógico, atendem às necessidades institucionais, possuem recursos de tecnologias da informação e comunicação apropriados, garantem privacidade para uso dos recursos, para o atendimento a discentes e orientandos, e para a guarda de material e equipamentos pessoais, com segurança.'
       }
     ],
-    evidenceSlugs: ['espacos-trabalho-docentes-ti'] // [cite: 73]
+    evidenceSlugs: ['espacos-trabalho-docentes-ti']
   },
   {
     code: '3.2',
     name: 'Espaço de trabalho para o coordenador',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.FIXED_APPLICABLE, // [cite: 44]
+    nsaPolicy: NsaPolicy.FIXED_APPLICABLE,
     criteria: [
       {
         concept: '1',
@@ -1990,13 +1992,13 @@ export const indicatorsData = [
           'O espaço de trabalho para o coordenador viabiliza as ações acadêmico-administrativas, possui equipamentos adequados, atende às necessidades institucionais, permite o atendimento de indivíduos ou grupos com privacidade e dispõe de infraestrutura tecnológica diferenciada, que possibilita formas distintas de trabalho.'
       }
     ],
-    evidenceSlugs: ['sala-coordenacao', 'registro-bens-sala-coordenacao'] // [cite: 73]
+    evidenceSlugs: ['sala-coordenacao', 'registro-bens-sala-coordenacao']
   },
   {
     code: '3.3',
     name: 'Sala coletiva de professores',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 45]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2024,13 +2026,13 @@ export const indicatorsData = [
           'A sala coletiva de professores viabiliza o trabalho docente, possui recursos de tecnologias da informação e comunicação apropriados para o quantitativo de docentes, permite o descanso e atividades de lazer e integração e dispõe de apoio técnico-administrativo próprio e espaço para a guarda de equipamentos e materiais.'
       }
     ],
-    evidenceSlugs: ['sala-coletiva-professores', 'registro-bens-sala-coletiva'] // [cite: 74]
+    evidenceSlugs: ['sala-coletiva-professores', 'registro-bens-sala-coletiva']
   },
   {
     code: '3.4',
     name: 'Salas de aula',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 46]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2058,13 +2060,13 @@ export const indicatorsData = [
           'As salas de aula atendem às necessidades institucionais e do curso, apresentando manutenção periódica, conforto, disponibilidade de recursos de tecnologias da informação e comunicação adequados às atividades a serem desenvolvidas, flexibilidade relacionada às configurações espaciais, oportunizando distintas situações de ensino-aprendizagem, e possuem outros recursos cuja utilização é comprovadamente exitosa.'
       }
     ],
-    evidenceSlugs: ['salas-aula', 'manutencao-periodica'] // [cite: 74]
+    evidenceSlugs: ['salas-aula', 'manutencao-periodica']
   },
   {
     code: '3.5',
     name: 'Acesso dos alunos a equipamentos de informática',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.FIXED_APPLICABLE, // [cite: 47]
+    nsaPolicy: NsaPolicy.FIXED_APPLICABLE,
     criteria: [
       {
         concept: '1',
@@ -2097,13 +2099,13 @@ export const indicatorsData = [
       'meios-acesso-equipamentos-informatica',
       'normas-uso-laboratorios-informatica',
       'contratacao-internet'
-    ] // [cite: 74]
+    ]
   },
   {
     code: '3.6',
     name: 'Bibliografia básica por Unidade Curricular (UC)',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.FIXED_APPLICABLE, // [cite: 48]
+    nsaPolicy: NsaPolicy.FIXED_APPLICABLE,
     criteria: [
       {
         concept: '1',
@@ -2144,13 +2146,13 @@ export const indicatorsData = [
       'memorial-descritivo-biblioteca',
       'portfolio-biblioteca',
       'planta-baixa-biblioteca'
-    ] // [cite: 74, 75]
+    ]
   },
   {
     code: '3.7',
     name: 'Bibliografia complementar por Unidade Curricular (UC)',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.FIXED_APPLICABLE, // [cite: 49]
+    nsaPolicy: NsaPolicy.FIXED_APPLICABLE,
     criteria: [
       {
         concept: '1',
@@ -2191,13 +2193,13 @@ export const indicatorsData = [
       'memorial-descritivo-biblioteca',
       'portfolio-biblioteca',
       'planta-baixa-biblioteca'
-    ] // [cite: 75]
+    ]
   },
   {
     code: '3.8',
     name: 'Laboratórios didáticos de formação básica',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 50]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2232,13 +2234,13 @@ export const indicatorsData = [
       'laboratorio-educacao',
       'manutencao-periodica',
       'resultados'
-    ] // [cite: 75]
+    ]
   },
   {
     code: '3.9',
     name: 'Laboratórios didáticos de formação específica',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 51]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2272,13 +2274,13 @@ export const indicatorsData = [
       'laboratorios-especificos',
       'manutencao-periodica',
       'resultados'
-    ] // [cite: 76]
+    ]
   },
   {
     code: '3.10',
     name: 'Laboratórios de ensino para a área de saúde',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 52]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2306,13 +2308,13 @@ export const indicatorsData = [
           'Há laboratórios específicos e multidisciplinares, em conformidade com as DCN, que permitem a abordagem dos diferentes aspectos celulares e moleculares das ciências da vida, atendem ao PPC, possuem recursos e insumos necessários para atender à demanda discente e apresentam recursos tecnológicos comprovadamente inovadores.'
       }
     ],
-    evidenceSlugs: [] // [cite: 76]
+    evidenceSlugs: []
   },
   {
     code: '3.11',
     name: 'Laboratórios de habilidades',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 53]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2340,13 +2342,13 @@ export const indicatorsData = [
           'Há laboratórios de habilidades da atividade médica ou de saúde, em conformidade com o PPC, que permitem a capacitação dos discentes nas diversas competências desenvolvidas nas diferentes fases do curso, com recursos tecnológicos comprovadamente inovadores.'
       }
     ],
-    evidenceSlugs: [] // [cite: 76]
+    evidenceSlugs: []
   },
   {
     code: '3.12',
     name: 'Unidades hospitalares e complexo assistencial conveniados',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 54]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2374,13 +2376,13 @@ export const indicatorsData = [
           'A IES conta com unidade(s) hospitalar(es), própria(s) ou conveniada(s), garantida(s) legalmente por período determinado, que apresenta(m) condições para a formação do estudante da área de saúde, estabelece(m) sistema de referência e contrarreferência e favorece(m) práticas interdisciplinares e interprofissionais na atenção à saúde.'
       }
     ],
-    evidenceSlugs: [] // [cite: 76]
+    evidenceSlugs: []
   },
   {
     code: '3.13',
     name: 'Biotérios',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 55]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2407,13 +2409,13 @@ export const indicatorsData = [
           'O biotério atende às necessidades práticas do ensino, possuindo insumos necessários à demanda docente e discente e apresentando protocolos de experimentos de acordo com as normas internacionais vigentes e suporte técnico, experimental e pedagógico.'
       }
     ],
-    evidenceSlugs: [] // [cite: 76]
+    evidenceSlugs: []
   },
   {
     code: '3.14',
     name: 'Processo de controle de produção ou distribuição de material didático (logística)',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 56]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2441,13 +2443,13 @@ export const indicatorsData = [
           'O processo de controle de produção ou distribuição de material didático está formalizado, atende à demanda e possui plano de contingência para a garantia de continuidade de funcionamento e dispõe de um sistema informatizado de acompanhamento para gerenciamento dos processos, com uso de indicadores bem definidos.'
       }
     ],
-    evidenceSlugs: [] // [cite: 76]
+    evidenceSlugs: []
   },
   {
     code: '3.15',
     name: 'Núcleo de práticas jurídicas: atividades básicas e arbitragem, negociação, conciliação, mediação e atividades jurídicas reais',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 57]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2475,13 +2477,13 @@ export const indicatorsData = [
           'O Núcleo de Práticas Jurídicas possui regulamento específico destinado à realização de práticas jurídicas simuladas e de arbitragem, negociação, conciliação, mediação e atividades jurídicas reais e oferta visitas orientadas, atendendo às demandas do curso e buscando a interdisciplinaridade das matérias legais, havendo avaliação periódica quanto ao atendimento da demanda do curso pelo Núcleo de Práticas Jurídicas em suas atividades básicas, também utilizada em processos de planejamento para o adequado atendimento da demanda existente.'
       }
     ],
-    evidenceSlugs: [] // [cite: 76]
+    evidenceSlugs: []
   },
   {
     code: '3.16',
     name: 'Comitê de Ética em Pesquisa (CEP)',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 58]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       { concept: '1', criterion: 'Não há Comitê de Ética em Pesquisa (CEP).' },
       {
@@ -2509,13 +2511,13 @@ export const indicatorsData = [
       'regimento-interno-cep',
       'membros-cep',
       'pagina-institucional-cep'
-    ] // [cite: 76]
+    ]
   },
   {
     code: '3.17',
     name: 'Comitê de Ética na Utilização de Animais (CEUA)',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 59]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2542,13 +2544,13 @@ export const indicatorsData = [
           'O Comitê de Ética na Utilização de Animais (CEUA) está homologado pela CONEP, pertence à própria instituição e presta atendimento a instituições parceiras.'
       }
     ],
-    evidenceSlugs: [] // [cite: 77]
+    evidenceSlugs: []
   },
   {
     code: '3.18',
     name: 'Ambientes profissionais vinculados ao curso',
     dimensionNumber: 3,
-    nsaPolicy: NsaPolicy.COURSE_DEPENDENT, // [cite: 60]
+    nsaPolicy: NsaPolicy.COURSE_DEPENDENT,
     criteria: [
       {
         concept: '1',
@@ -2576,309 +2578,303 @@ export const indicatorsData = [
           'Os ambientes profissionais estão articulados com a sede ou com os polos onde há oferta do curso e atendem aos objetivos constantes no PPC, considerando a função de espaços complementares para práticas laboratoriais e/ou profissionais que possibilitam experiências diferenciadas de aprendizagem, as quais passam por avaliações periódicas devidamente documentadas, que resultam em ações de melhoria contínua.'
       }
     ],
-    evidenceSlugs: [] // [cite: 77]
+    evidenceSlugs: []
   }
 ];
 
-const instanceDataByCode: Record<
+// Dados de instância para o ciclo de 2024 do curso de ADS
+const instanceDataFor2024: Record<
   string,
-  { grade: IndicatorGrade; status: IndicatorStatus; lastUpdate: string | null }
+  {
+    grade: IndicatorGrade;
+    status: IndicatorStatus;
+    justification?: string;
+    correctiveAction?: string;
+    responsible?: string;
+  }
 > = {
-  // ----- Dimensão 1 -----
+  // --- Dimensão 1 ---
   '1.1': {
     grade: IndicatorGrade.G3,
     status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-01'
+    justification:
+      'A implantação das políticas no PPC está adequada, mas a divulgação para os discentes pode ser melhorada.',
+    correctiveAction:
+      'Criar campanha de divulgação semestral sobre as políticas institucionais nos canais de comunicação do curso.',
+    responsible: 'Coordenação de Curso e NDE'
   },
-  '1.2': {
-    grade: IndicatorGrade.G4,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-28'
-  },
+  '1.2': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '1.3': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: '2025-05-20'
+    grade: IndicatorGrade.G4,
+    status: IndicatorStatus.EM_EDICAO,
+    justification:
+      'O perfil do egresso está alinhado com as DCNs, mas não articula claramente as necessidades locais.',
+    correctiveAction:
+      'Realizar reunião com o NDE para incluir as necessidades do mercado de trabalho local no perfil do egresso.',
+    responsible: 'NDE'
   },
-  '1.4': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
+  '1.4': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '1.5': {
-    grade: IndicatorGrade.G5,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-30'
-  },
-  '1.6': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.7': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.8': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.9': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.10': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.11': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.12': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.13': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.14': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.15': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.16': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.17': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.18': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.19': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.20': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.21': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.22': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.23': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-06-02'
-  },
-  '1.24': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-
-  // ----- Dimensão 2 -----
-  '2.1': {
     grade: IndicatorGrade.G4,
     status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-29'
+    justification:
+      'Os conteúdos estão atualizados, mas a bibliografia complementar precisa de mais títulos recentes.',
+    correctiveAction:
+      'Solicitar à biblioteca a aquisição de 5 novos títulos para a bibliografia complementar.',
+    responsible: 'Coordenação e Colegiado de Curso'
   },
-  '2.2': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-25'
+  '1.6': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '1.7': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.9': {
+    grade: IndicatorGrade.G4,
+    status: IndicatorStatus.NAO_PREENCHIDO,
+    justification: 'Pendente de revisão pelo NDE.'
   },
-  '2.3': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '2.4': {
-    grade: IndicatorGrade.G5,
+  '1.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.12': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '1.13': {
+    grade: IndicatorGrade.G4,
     status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-30'
+    justification:
+      'O apoio ao discente é bom, mas a divulgação dos programas de intercâmbio é baixa.'
   },
+  '1.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.16': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '1.17': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.18': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.19': {
+    grade: IndicatorGrade.G4,
+    status: IndicatorStatus.CONCLUIDO,
+    justification:
+      'Os procedimentos de avaliação são claros, mas precisam ser digitalizados.'
+  },
+  '1.20': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '1.21': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.22': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.23': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.24': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+
+  // --- Dimensão 2 ---
+  '2.1': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '2.2': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.3': {
+    grade: IndicatorGrade.G4,
+    status: IndicatorStatus.EM_EDICAO,
+    justification:
+      'A gestão do curso é eficiente, mas a comunicação com os discentes pode ser mais proativa.',
+    correctiveAction:
+      'Implementar um boletim informativo mensal para os alunos.',
+    responsible: 'Coordenação de Curso'
+  },
+  '2.4': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '2.5': {
     grade: IndicatorGrade.G4,
     status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-01'
+    justification:
+      'O corpo docente é qualificado, mas precisa de mais experiência em projetos de extensão.'
   },
-  '2.6': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-28'
-  },
-  '2.7': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '2.8': {
-    grade: IndicatorGrade.G5,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-02'
-  },
-  '2.9': {
-    grade: IndicatorGrade.G4,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-27'
-  },
-  '2.10': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '2.11': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
+  '2.6': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '2.7': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '2.9': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '2.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
   '2.12': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-26'
-  },
-  '2.13': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '2.14': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '2.15': {
     grade: IndicatorGrade.G4,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-03'
+    status: IndicatorStatus.EM_EDICAO,
+    justification:
+      'A atuação do colegiado é boa, mas as atas precisam ser publicadas com mais agilidade.'
   },
+  '2.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
   '2.16': {
-    grade: IndicatorGrade.G5,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-02'
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.NAO_PREENCHIDO,
+    justification:
+      'A produção científica do corpo docente está abaixo do esperado para a área.',
+    correctiveAction:
+      'Criar um programa de incentivo à publicação de artigos, com workshops e apoio na revisão.',
+    responsible: 'Direção de Pesquisa e Coordenação'
   },
 
-  // ----- Dimensão 3 -----
-  '3.1': {
-    grade: IndicatorGrade.G4,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-28'
-  },
+  // --- Dimensão 3 ---
+  '3.1': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.2': {
-    grade: IndicatorGrade.G5,
+    grade: IndicatorGrade.G4,
     status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-29'
+    justification:
+      'O espaço do coordenador é adequado, mas precisa de um computador mais moderno.',
+    correctiveAction:
+      'Solicitar ao departamento de TI a troca do equipamento de informática da coordenação.',
+    responsible: 'Coordenação de Curso'
   },
-  '3.3': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-30'
-  },
-  '3.4': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
+  '3.3': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.4': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.5': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '3.6': {
     grade: IndicatorGrade.G4,
     status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-27'
+    justification:
+      'O acesso à internet nos laboratórios é bom, mas a velocidade poderia ser maior.'
   },
+  '3.6': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.7': {
-    grade: IndicatorGrade.G5,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-01'
-  },
-  '3.8': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-25'
-  },
-  '3.9': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '3.10': {
     grade: IndicatorGrade.G4,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-02'
+    status: IndicatorStatus.EM_EDICAO,
+    justification:
+      'A bibliografia complementar é boa, mas alguns títulos estão desatualizados.'
   },
-  '3.11': {
-    grade: IndicatorGrade.G2,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '3.12': {
-    grade: IndicatorGrade.G5,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-03'
-  },
-  '3.13': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-26'
-  },
-  '3.14': {
-    grade: IndicatorGrade.G4,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-05-31'
-  },
-  '3.15': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
-  },
-  '3.16': {
-    grade: IndicatorGrade.G3,
-    status: IndicatorStatus.EM_REVISAO,
-    lastUpdate: '2025-05-29'
-  },
-  '3.17': {
-    grade: IndicatorGrade.G4,
-    status: IndicatorStatus.CONCLUIDO,
-    lastUpdate: '2025-06-01'
-  },
-  '3.18': {
-    grade: IndicatorGrade.NSA,
-    status: IndicatorStatus.PENDENTE,
-    lastUpdate: null
+  '3.8': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '3.9': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '3.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.12': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.16': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '3.17': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
+  '3.18': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO }
+};
+
+// Dados de instância para o ciclo de 2021 do curso de ADS
+const instanceDataFor2021: Record<
+  string,
+  {
+    grade: IndicatorGrade;
+    status: IndicatorStatus;
+    justification?: string;
+    correctiveAction?: string;
+    responsible?: string;
   }
+> = {
+  // --- Dimensão 1 ---
+  '1.1': {
+    grade: IndicatorGrade.G2,
+    status: IndicatorStatus.CONCLUIDO,
+    justification:
+      'As políticas institucionais não estavam bem implantadas no PPC.',
+    correctiveAction:
+      'Revisar o PPC para alinhar com as políticas institucionais do PDI.',
+    responsible: 'NDE'
+  },
+  '1.2': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '1.3': {
+    grade: IndicatorGrade.G4,
+    status: IndicatorStatus.CONCLUIDO,
+    justification:
+      'O perfil do egresso estava alinhado com as DCNs, mas não com as demandas locais.'
+  },
+  '1.4': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '1.5': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Conteúdos curriculares precisavam de atualização.',
+    correctiveAction: 'Revisão dos conteúdos e bibliografia pelo NDE.',
+    responsible: 'NDE e Corpo Docente'
+  },
+  '1.6': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '1.7': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.9': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Processos de estágio não estavam bem definidos.'
+  },
+  '1.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.12': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '1.13': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Apoio psicopedagógico inexistente.'
+  },
+  '1.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.16': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '1.17': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.18': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.19': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Procedimentos de avaliação confusos.'
+  },
+  '1.20': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '1.21': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.22': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.23': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '1.24': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+
+  // --- Dimensão 2 ---
+  '2.1': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '2.2': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.3': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification:
+      'Gestão do curso centralizada na coordenação, sem participação efetiva do colegiado.'
+  },
+  '2.4': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '2.5': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification:
+      'Corpo docente com baixa qualificação (poucos mestres e doutores).'
+  },
+  '2.6': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '2.7': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.9': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '2.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.12': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Colegiado de curso pouco atuante.'
+  },
+  '2.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '2.16': {
+    grade: IndicatorGrade.G2,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Produção científica quase inexistente.'
+  },
+
+  // --- Dimensão 3 ---
+  '3.1': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.2': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Coordenação não possuía espaço físico próprio.'
+  },
+  '3.3': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.4': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.5': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Poucos computadores disponíveis para os alunos.'
+  },
+  '3.6': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.7': {
+    grade: IndicatorGrade.G3,
+    status: IndicatorStatus.CONCLUIDO,
+    justification: 'Acervo bibliográfico desatualizado.'
+  },
+  '3.8': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.9': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.12': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
+  '3.16': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.17': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO },
+  '3.18': { grade: IndicatorGrade.G4, status: IndicatorStatus.CONCLUIDO }
 };
 
 async function main() {
@@ -2891,42 +2887,64 @@ async function main() {
   await prisma.courseIndicator.deleteMany();
   await prisma.indicatorRequirement.deleteMany();
   await prisma.course.deleteMany();
+  await prisma.user.deleteMany();
   await prisma.indicatorDefinition.deleteMany();
   await prisma.evidenceRequirement.deleteMany();
   await prisma.dimensionDefinition.deleteMany();
   console.log('✅ Dados limpos.');
 
-  // 2. CRIAÇÃO DAS DIMENSÕES
-  console.log('📚 Criando Dimensões...');
-  const dim1 = await prisma.dimensionDefinition.upsert({
-    where: { number: 1 },
-    update: {},
-    create: { number: 1, title: 'Dimensão 1 - Organização Didático-Pedagógica' }
+  // 2. CRIAÇÃO DE USUÁRIOS
+  console.log('👤 Criando usuários...');
+  const hashedPassword = '12345678'; // Em um app real, use bcrypt
+
+  await prisma.user.create({
+    data: {
+      email: 'direcao@instituicao.edu.br',
+      name: 'Ana Direção',
+      password: hashedPassword,
+      role: UserRole.DIRECAO
+    }
   });
-  const dim2 = await prisma.dimensionDefinition.upsert({
-    where: { number: 2 },
-    update: {},
-    create: { number: 2, title: 'Dimensão 2 - Corpo docente e tutorial' }
+
+  const coordAdsUser = await prisma.user.create({
+    data: {
+      email: 'coord.ads@instituicao.edu.br',
+      name: 'Carlos Coordenador ADS',
+      password: hashedPassword,
+      role: UserRole.COORDENADOR
+    }
   });
-  const dim3 = await prisma.dimensionDefinition.upsert({
-    where: { number: 3 },
-    update: {},
-    create: { number: 3, title: 'Dimensão 3 - Infraestrutura' }
+
+  const coordEngUser = await prisma.user.create({
+    data: {
+      email: 'coord.eng@instituicao.edu.br',
+      name: 'Beatriz Coordenadora ENG',
+      password: hashedPassword,
+      role: UserRole.COORDENADOR
+    }
+  });
+  console.log(`✅ ${await prisma.user.count()} usuários criados.`);
+
+  // 3. CRIAÇÃO DAS DIMENSÕES E EVIDÊNCIAS (Como antes)
+  console.log('📚 Criando Dimensões e Requisitos de Evidência...');
+  const dim1 = await prisma.dimensionDefinition.create({
+    data: { number: 1, title: 'Dimensão 1 - Organização Didático-Pedagógica' }
+  });
+  const dim2 = await prisma.dimensionDefinition.create({
+    data: { number: 2, title: 'Dimensão 2 - Corpo docente e tutorial' }
+  });
+  const dim3 = await prisma.dimensionDefinition.create({
+    data: { number: 3, title: 'Dimensão 3 - Infraestrutura' }
   });
   const dimensions = { 1: dim1, 2: dim2, 3: dim3 };
-  console.log('✅ Dimensões criadas.');
 
-  // 3. CRIAÇÃO DE TODOS OS REQUISITOS DE EVIDÊNCIA
-  console.log('📄 Criando catálogo de Requisitos de Evidência...');
   await prisma.evidenceRequirement.createMany({
     data: allEvidenceRequirements
   });
-  console.log(
-    `✅ ${await prisma.evidenceRequirement.count()} Requisitos de Evidência criados.`
-  );
+  console.log('✅ Dimensões e Evidências criadas.');
 
-  // 4. CRIAÇÃO DAS DEFINIÇÕES DE INDICADORES E SEUS VÍNCULOS COM AS EVIDÊNCIAS
-  console.log('📊 Criando Definições de Indicadores e seus vínculos...');
+  // 4. CRIAÇÃO DAS DEFINIÇÕES DE INDICADORES (Como antes)
+  console.log('📊 Criando Definições de Indicadores...');
   const allEvidenceReqs = await prisma.evidenceRequirement.findMany({
     select: { id: true, slug: true }
   });
@@ -2941,14 +2959,12 @@ async function main() {
           dimensions[indicatorData.dimensionNumber as keyof typeof dimensions]
             .id,
         nsaPolicy: indicatorData.nsaPolicy,
-        criteriaTable: indicatorData.criteria as any // Prisma aceita o formato JSON
+        criteriaTable: indicatorData.criteria as any
       }
     });
-
     const requirementIds = indicatorData.evidenceSlugs
       .map((slug) => evidenceMapBySlug.get(slug))
       .filter((id): id is string => !!id);
-
     if (requirementIds.length > 0) {
       await prisma.indicatorRequirement.createMany({
         data: requirementIds.map((reqId, index) => ({
@@ -2960,103 +2976,102 @@ async function main() {
     }
   }
   console.log(
-    `✅ ${await prisma.indicatorDefinition.count()} Definições de Indicadores criadas e vinculadas.`
+    `✅ ${await prisma.indicatorDefinition.count()} Definições de Indicadores criadas.`
   );
 
-  // 5. CRIAÇÃO DOS CURSOS
+  // 5. CRIAÇÃO DOS CURSOS COM OS NOVOS CAMPOS
   console.log('🏫 Criando cursos...');
   const courseAds = await prisma.course.create({
     data: {
       name: 'Análise e Desenvolvimento de Sistemas',
-      code: 'ads',
-      level: 'Tecnólogo',
-      modality: 'Presencial'
+      slug: 'ads',
+      emecCode: 12345,
+      level: CourseLevel.BACHARELADO,
+      modality: CourseModality.PRESENCIAL,
+      coordinatorId: coordAdsUser.id
     }
   });
 
   const courseEng = await prisma.course.create({
     data: {
       name: 'Engenharia Civil',
-      code: 'eng-civil',
-      level: 'Bacharelado',
-      modality: 'Presencial'
+      slug: 'eng-civil',
+      emecCode: 67890,
+      level: CourseLevel.BACHARELADO,
+      modality: CourseModality.PRESENCIAL,
+      coordinatorId: coordEngUser.id
     }
   });
   console.log(`✅ ${await prisma.course.count()} cursos criados.`);
 
-  // 6. INSTANCIAÇÃO DOS INDICADORES PARA CADA CURSO
-  console.log('🖇️  Vinculando indicadores aos cursos...');
+  // 6. INSTANCIAÇÃO DOS INDICADORES COM HISTÓRICO POR ANO
+  console.log('🖇️  Criando histórico de avaliações para os cursos...');
   const allIndicatorDefs = await prisma.indicatorDefinition.findMany();
+  const allCourses = [courseAds, courseEng];
+  const evaluationYears = [2024, 2021]; // Anos que queremos popular
 
-  // Para o curso de ADS, usas os dados de instância de indicators.ts
-  for (const indicatorDef of allIndicatorDefs) {
-    let nsaApplicable = true,
-      nsaLocked = false;
+  for (const course of allCourses) {
+    for (const year of evaluationYears) {
+      for (const indicatorDef of allIndicatorDefs) {
+        let nsaApplicable = true,
+          nsaLocked = false;
+        if (indicatorDef.nsaPolicy === NsaPolicy.FIXED_APPLICABLE) {
+          nsaLocked = true;
+        }
+        if (indicatorDef.nsaPolicy === NsaPolicy.FIXED_NSA) {
+          nsaApplicable = false;
+          nsaLocked = true;
+        }
 
-    // Lógica de NSA
-    if (indicatorDef.nsaPolicy === NsaPolicy.FIXED_APPLICABLE) {
-      nsaApplicable = true;
-      nsaLocked = true;
-    } else if (indicatorDef.nsaPolicy === NsaPolicy.FIXED_NSA) {
-      nsaApplicable = false;
-      nsaLocked = true;
-    } else {
-      // COURSE_DEPENDENT
-      nsaApplicable = true;
-      nsaLocked = false;
-    }
+        // Dados padrão
+        let data: {
+          grade: IndicatorGrade;
+          status: IndicatorStatus;
+          justification?: string;
+          correctiveAction?: string;
+          responsible?: string;
+        } = {
+          grade: IndicatorGrade.NSA,
+          status: IndicatorStatus.NAO_PREENCHIDO
+        };
 
-    const instance = instanceDataByCode[indicatorDef.code];
-    const grade = instance ? instance.grade : IndicatorGrade.NSA;
-    const status = instance ? instance.status : IndicatorStatus.PENDENTE;
-    const lastUpdate = instance?.lastUpdate
-      ? new Date(instance.lastUpdate)
-      : null;
+        // Aplica dados detalhados para o curso de ADS
+        if (course.slug === 'ads') {
+          let instanceData;
+          if (year === 2024) {
+            instanceData = instanceDataFor2024[indicatorDef.code];
+          } else if (year === 2021) {
+            instanceData = instanceDataFor2021[indicatorDef.code];
+          }
 
-    await prisma.courseIndicator.create({
-      data: {
-        courseId: courseAds.id,
-        indicatorDefId: indicatorDef.id,
-        nsaApplicable,
-        nsaLocked,
-        grade: nsaApplicable ? grade : IndicatorGrade.NSA, // Se não aplicável, força a nota NSA
-        status,
-        lastUpdate
+          if (instanceData) {
+            data = {
+              grade: instanceData.grade,
+              status: instanceData.status,
+              justification: instanceData.justification,
+              correctiveAction: instanceData.correctiveAction,
+              responsible: instanceData.responsible
+            };
+          }
+        }
+
+        // Cria o registro da avaliação para o ano específico
+        await prisma.courseIndicator.create({
+          data: {
+            courseId: course.id,
+            indicatorDefId: indicatorDef.id,
+            evaluationYear: year,
+            nsaApplicable,
+            nsaLocked,
+            ...data
+          }
+        });
       }
-    });
-  }
-
-  // Para o curso de Engenharia, criar todos como pendentes
-  for (const indicatorDef of allIndicatorDefs) {
-    let nsaApplicable = true,
-      nsaLocked = false;
-
-    if (indicatorDef.nsaPolicy === NsaPolicy.FIXED_APPLICABLE) {
-      nsaApplicable = true;
-      nsaLocked = true;
-    } else if (indicatorDef.nsaPolicy === NsaPolicy.FIXED_NSA) {
-      nsaApplicable = false;
-      nsaLocked = true;
-    } else {
-      nsaApplicable = true;
-      nsaLocked = false;
     }
-
-    await prisma.courseIndicator.create({
-      data: {
-        courseId: courseEng.id,
-        indicatorDefId: indicatorDef.id,
-        nsaApplicable,
-        nsaLocked,
-        grade: IndicatorGrade.NSA,
-        status: IndicatorStatus.PENDENTE
-      }
-    });
   }
   console.log(
-    `✅ ${await prisma.courseIndicator.count()} instâncias de indicadores de curso criadas.`
+    `✅ ${await prisma.courseIndicator.count()} registros de avaliações (histórico) criados.`
   );
-
   console.log('🎉 Seed concluído com sucesso!');
 }
 
@@ -3066,6 +3081,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    // Fecha a conexão com o banco de dados
     await prisma.$disconnect();
   });
