@@ -20,6 +20,12 @@ const alerts: AlertItem[] = [
     code: '1.6',
   },
   {
+    dimensionId: '1',
+    dimensionLabel: 'Dimensão 1',
+    text: 'Preencher indicador 1.6 - Metodologia',
+    code: '1.6',
+  },
+  {
     dimensionId: '2',
     dimensionLabel: 'Dimensão 2',
     text: 'Atualizar evidências do indicador 2.3 - Coordenador',

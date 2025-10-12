@@ -1,10 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   Radar,
   RadarChart,
@@ -15,6 +13,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { DIMENSIONS } from '@/app/constants/dimensions';
+import DimensionCard from '@/components/DimensionCard';
 
 // Tipagem simples para as notas globais por dimensão
 type DimensionGrade = {
@@ -41,7 +40,7 @@ export default function DimensionsPage() {
     <div className="space-y-6 p-8">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Dimensões — {courseId}</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Acompanhe o desempenho do curso nas 3 dimensões do SINAES.
         </p>
       </div>
@@ -53,26 +52,14 @@ export default function DimensionsPage() {
           const grade = gradeItem?.grade ?? 0;
 
           return (
-            <Card key={dimId} className="transition-shadow duration-200 hover:shadow-lg">
-              <CardHeader>
-                <CardTitle>Dimensão {dimId}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-xl font-semibold">{meta.title}</p>
-                <p className="text-muted-foreground text-sm">{meta.description}</p>
-                <p className="mt-2 text-lg">
-                  <span className="font-semibold">Nota atual:</span> {grade.toFixed(1)}
-                </p>
-
-                <div className="pt-2">
-                  <Button asChild className="bg-green-700 hover:bg-green-800">
-                    <Link href={`/courses/${courseId}/dimensions/${dimId}`}>
-                      Ver indicadores
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <DimensionCard
+              key={dimId}
+              dimId={dimId}
+              title={meta.title}
+              description={meta.description}
+              grade={grade}
+              href={`/courses/${courseId}/dimensions/${dimId}`}
+            />
           );
         })}
       </div>
@@ -85,7 +72,10 @@ export default function DimensionsPage() {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart
-                data={grades.map((g) => ({ dimension: g.name, grade: g.grade }))}
+                data={grades.map((g) => ({
+                  dimension: g.name,
+                  grade: g.grade
+                }))}
               >
                 <PolarGrid />
                 <PolarAngleAxis dataKey="dimension" />
