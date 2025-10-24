@@ -1,42 +1,44 @@
 'use client';
 
-import { useState, useCallback, ChangeEvent, DragEvent } from 'react';
+import { useId, useState, useCallback, ChangeEvent, DragEvent, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UploadCloud, FileText, X } from 'lucide-react';
+import { UploadCloud, FileText, X, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
+type ExistingFile = {
+  fileName: string;
+  sizeBytes?: number | null;
+  url?: string | null;
+};
 
 interface FileUploadProps {
   onFilesChange: (files: File[]) => void;
   onLinkChange: (link: string) => void;
+  initialLink?: string;
+  initialFiles?: ExistingFile[];
 }
 
-export const FileUpload = ({ onFilesChange, onLinkChange }: FileUploadProps) => {
-  const [link, setLink] = useState('');
+export const FileUpload = ({ onFilesChange, onLinkChange, initialLink = '', initialFiles = [] }: FileUploadProps) => {
+  const reactId = useId();
+  const idBase = `file-upload-${reactId}`;
+  const [link, setLink] = useState(initialLink);
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
 
-  // Regex para validar URLs de forma simples
   const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
 
-  /**
-   * Valida o link inserido pelo usuário.
-   */
   const validateLink = (url: string) => {
     if (url && !urlRegex.test(url)) {
       setError('Por favor, insira um link válido.');
       return false;
     }
-    // Limpa o erro de link se for válido, mas mantém erros de arquivo
     setError((prevError) => (prevError.includes('link válido') ? '' : prevError));
     return true;
   };
 
-  /**
-   * Lida com a mudança de valor no campo de link.
-   */
   const handleLinkChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLink = e.target.value;
     setLink(newLink);
@@ -44,10 +46,11 @@ export const FileUpload = ({ onFilesChange, onLinkChange }: FileUploadProps) => 
     validateLink(newLink);
   };
 
-  /**
-   * Processa e valida os arquivos selecionados.
-   */
-  const handleFilesSelect = (selectedFiles: FileList | null) => {
+  useEffect(() => {
+    setLink(initialLink ?? '');
+  }, [initialLink]);
+
+  const handleFilesSelect = useCallback((selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
     
     const newFiles = Array.from(selectedFiles);
@@ -73,9 +76,8 @@ export const FileUpload = ({ onFilesChange, onLinkChange }: FileUploadProps) => 
     const updatedFiles = [...files, ...newFiles];
     setFiles(updatedFiles);
     onFilesChange(updatedFiles);
-  };
+  }, [files, onFilesChange]);
 
-  // Funções para lidar com os eventos de arrastar e soltar (drag-and-drop)
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -98,17 +100,13 @@ export const FileUpload = ({ onFilesChange, onLinkChange }: FileUploadProps) => 
     e.stopPropagation();
     setIsDragging(false);
     handleFilesSelect(e.dataTransfer.files);
-  }, [files]); // Depende dos arquivos existentes para concatenar
+  }, [handleFilesSelect]);
 
   const handleFileChangeFromInput = (e: ChangeEvent<HTMLInputElement>) => {
     handleFilesSelect(e.target.files);
-     // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente
      e.target.value = '';
   };
 
-  /**
-   * Remove um arquivo da lista.
-   */
   const removeFile = (indexToRemove: number) => {
     const updatedFiles = files.filter((_, index) => index !== indexToRemove);
     setFiles(updatedFiles);
@@ -116,63 +114,125 @@ export const FileUpload = ({ onFilesChange, onLinkChange }: FileUploadProps) => 
     setError('');
   };
 
+  const clearAllSelected = () => {
+    setFiles([]);
+    onFilesChange([]);
+  };
+
   return (
     <div className="w-full space-y-4">
       {/* Campo para o Link */}
       <div className="space-y-2">
-        <Label htmlFor="drive-link">Link do Drive (Opcional)</Label>
-        <Input
-          id="drive-link"
-          placeholder="Cole o link do Google Drive, OneDrive, etc."
-          value={link}
-          onChange={handleLinkChange}
-        />
+        <Label htmlFor="drive-link" className='italic font-medium text-muted-foreground'>Links</Label>
+        <div className="relative">
+          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id={`${idBase}-drive-link`}
+            placeholder="Cole o link do Google Drive, OneDrive, etc."
+            value={link}
+            onChange={handleLinkChange}
+            className="pl-10 pr-10"
+          />
+          {link && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Limpar link"
+              title="Limpar link"
+              className="absolute right-1 top-1 h-7 w-7"
+              onClick={() => { setLink(''); onLinkChange(''); }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {initialLink && (
+          <a
+            href={initialLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-700 hover:underline"
+          >
+            Abrir link atual
+          </a>
+        )}
       </div>
 
-      {/* Campo para Upload de Arquivos */}
       <div className="space-y-2">
-        <Label htmlFor="file-upload">Arquivos PDF (Opcional)</Label>
-        
-        {/* Lista de arquivos enviados */}
-        <div className="space-y-2">
-            {files.map((file, index) => (
-                <div key={index} className="flex h-14 items-center justify-between rounded-lg border bg-muted/50 p-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <FileText className="h-8 w-8 flex-shrink-0 text-primary" />
-                        <div className="flex min-w-0 flex-col">
-                             <span className="truncate text-sm font-medium text-foreground" title={file.name}>{file.name}</span>
-                             <span className="text-xs text-muted-foreground">{ (file.size / 1024 / 1024).toFixed(2) } MB</span>
-                        </div>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeFile(index)}>
-                        <X className="h-5 w-5" />
-                    </Button>
-                </div>
-            ))}
+        <div className="flex items-center justify-between">
+          <Label htmlFor="file-upload" className='italic font-medium text-muted-foreground'>Arquivos PDF</Label>
+          {files.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearAllSelected}>
+              <Trash2 className="mr-2 h-4 w-4" /> Limpar seleção
+            </Button>
+          )}
         </div>
+        
+        {initialFiles.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Arquivos salvos:</p>
+            {initialFiles.map((f, index) => (
+              <div key={`existing-${index}`} className="flex h-12 items-center justify-between rounded-md border bg-muted/30 p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FileText className="h-6 w-6 flex-shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    {f.url ? (
+                      <a href={f.url} target="_blank" rel="noopener noreferrer" className="truncate text-sm font-medium text-blue-700 hover:underline" title={f.fileName}>
+                        {f.fileName}
+                      </a>
+                    ) : (
+                      <span className="truncate text-sm font-medium" title={f.fileName}>{f.fileName}</span>
+                    )}
+                    <div className="text-[10px] text-muted-foreground">{f.sizeBytes ? (f.sizeBytes / 1024 / 1024).toFixed(2) + ' MB' : ''}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Dropzone para novos arquivos */}
+        {files.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Arquivos a enviar:</p>
+            {files.map((file, index) => (
+              <div key={index} className="flex h-12 items-center justify-between rounded-md border bg-muted/50 p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FileText className="h-6 w-6 flex-shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <span className="truncate text-sm font-medium" title={file.name}>{file.name}</span>
+                    <div className="text-[10px] text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => removeFile(index)} aria-label="Remover arquivo">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           className={cn(
-            'relative flex h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-transparent text-center transition-colors hover:border-primary/80 hover:bg-muted/50',
+            'relative flex h-28 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-transparent text-center transition-colors',
             { 'border-primary bg-muted/50': isDragging }
           )}
         >
           <input
-            id="file-upload"
+            id={`${idBase}-file-upload`}
             type="file"
             className="hidden"
-            accept=".pdf"
+            accept="application/pdf,.pdf"
             onChange={handleFileChangeFromInput}
             multiple
           />
           <label
-            htmlFor="file-upload"
-            className='flex h-full w-full cursor-pointer flex-col items-center justify-center space-y-2'
+            htmlFor={`${idBase}-file-upload`}
+            className='flex h-full w-full cursor-pointer flex-col items-center justify-center space-y-2 hover:border-primary/80 hover:bg-muted/50'
           >
             <UploadCloud className="h-8 w-8 text-gray-400" />
             <p className="text-sm text-muted-foreground">
@@ -182,6 +242,9 @@ export const FileUpload = ({ onFilesChange, onLinkChange }: FileUploadProps) => 
           </label>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {files.length > 0 && (
+          <p className="text-xs text-muted-foreground">{files.length} arquivo(s) selecionado(s).</p>
+        )}
       </div>
     </div>
   );

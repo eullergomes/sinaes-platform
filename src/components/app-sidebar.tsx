@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -34,19 +33,18 @@ import {
   PanelLeftIcon,
   X,
   ChartNoAxesCombinedIcon,
-  ArrowLeftCircle
+  ArrowLeftCircle,
+  FileText
 } from 'lucide-react';
 import Image from 'next/image';
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  /** vindo do Shell */
   currentCourseId?: string | null;
-  currentCourseName?: string;
+  currentCourseName?: string | null;
 };
 
 function buildNav(currentCourseId?: string | null) {
   const prefix = currentCourseId ? `/courses/${currentCourseId}` : '';
-  console.log('AppSidebar.buildNav: prefix=', prefix);
 
   return [
     {
@@ -74,15 +72,25 @@ function buildNav(currentCourseId?: string | null) {
         },
         { title: 'Dimensão 3', url: `${prefix}/dimensions/3`, icon: Users }
       ]
+    },
+    {
+      title: 'Outros Documentos',
+      items: [
+        {
+          title: 'Outros Documentos',
+          url: `${prefix}/other-documents`,
+          icon: FileText
+        }
+      ]
     }
   ] as const;
 }
 
-export function AppSidebar({
+const AppSidebar = ({
   currentCourseId,
   currentCourseName,
   ...props
-}: AppSidebarProps) {
+}: AppSidebarProps) => {
   const { open, toggleSidebar, isMobile } = useSidebar();
   const [hovered, setHovered] = useState(false);
   const pathname = usePathname();
@@ -91,7 +99,6 @@ export function AppSidebar({
 
   return (
     <Sidebar {...props}>
-      {/* HEADER */}
       <SidebarHeader>
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-2">
@@ -128,7 +135,7 @@ export function AppSidebar({
                   </Tooltip>
                 ) : (
                   <Image
-                    src="/assets/ifma-avalia-logo.png"
+                    src="/assets/imgs/ifma-avalia-logo.png"
                     alt="IFMA Avalia Logo"
                     width={20}
                     height={20}
@@ -181,12 +188,15 @@ export function AppSidebar({
         </div>
 
         <div className="mt-1 transition-all duration-200 ease-linear group-data-[collapsible=icon]:hidden">
-          <div className="inline-flex w-full max-w-full items-center gap-2 truncate rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white">
+          <Link
+            href={`/courses/${currentCourseId}/dimensions`}
+            className="inline-flex w-full max-w-full items-center gap-2 truncate rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white"
+          >
             <span className="opacity-80">Curso:</span>
             <span className="font-medium">
               {currentCourseName ?? currentCourseId ?? '—'}
             </span>
-          </div>
+          </Link>
         </div>
       </SidebarHeader>
 
@@ -211,7 +221,7 @@ export function AppSidebar({
                           className="flex items-center gap-2"
                         >
                           <Icon size={20} color="white" />
-                          <span className="text-[18px] font-medium text-white">
+                          <span className="text-[18px] font-semibold text-white">
                             {item.title}
                           </span>
                         </Link>
@@ -262,4 +272,6 @@ export function AppSidebar({
       </SidebarFooter>
     </Sidebar>
   );
-}
+};
+
+export default AppSidebar;
