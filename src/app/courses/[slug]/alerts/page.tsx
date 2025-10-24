@@ -76,7 +76,6 @@ const AlertsPage = () => {
     return `/courses/${courseId}/dimensions/${a.dimensionId}/indicators/${a.code}`;
   };
 
-  // Agrupa alertas por dimensão
   const grouped = alerts.reduce(
     (acc, a) => {
       if (!acc[a.dimensionId])
