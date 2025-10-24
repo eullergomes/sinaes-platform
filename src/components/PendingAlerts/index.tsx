@@ -14,10 +14,9 @@ import {
 type AlertItem = {
   dimensionId: '1' | '2' | '3';
   text: string;
-  code: string; // "1.6", "2.3", "3.18" etc.
+  code: string;
 };
 
-// Descobre o courseId na URL: /courses/[courseId]/...
 function extractCourseId(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
   const i = parts.indexOf('courses');
@@ -50,13 +49,11 @@ const PendingAlerts = () => {
 
   const count = alerts.length;
 
-  // monta URL do indicador respeitando o courseId atual
-  const buildIndicatorUrl = (dimensionId: '1'|'2'|'3', code: string) => {
+  const buildIndicatorUrl = (dimensionId: '1' | '2' | '3', code: string) => {
     if (!courseId) return '/courses'; // fallback: seleção de curso
     return `/courses/${courseId}/dimensions/${dimensionId}/indicators/${code}`;
   };
 
-  // rota da página "ver todos" (conforme pedido)
   const ALL_ALERTS_URL = `/courses/${courseId}/alerts`;
 
   return (
@@ -67,7 +64,7 @@ const PendingAlerts = () => {
           className="relative rounded-md p-2 hover:cursor-pointer hover:bg-gray-100"
         >
           <Bell className="h-5 w-5" />
-          <span className="pointer-events-none absolute -right-0 -top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[11px] font-semibold text-white ring-2 ring-white">
+          <span className="pointer-events-none absolute -top-0 -right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[11px] font-semibold text-white">
             {count}
           </span>
         </button>
@@ -87,7 +84,7 @@ const PendingAlerts = () => {
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{`Dimensão ${a.dimensionId}`}</span>
-                <span className="text-xs text-muted-foreground">{a.text}</span>
+                <span className="text-muted-foreground text-xs">{a.text}</span>
               </div>
             </DropdownMenuItem>
           );
@@ -97,7 +94,7 @@ const PendingAlerts = () => {
 
         <DropdownMenuItem
           onSelect={() => router.push(ALL_ALERTS_URL)}
-          className="flex justify-center bg-gray-800 text-white hover:cursor-pointer"
+          className="flex justify-center bg-green-600 text-white hover:cursor-pointer hover:bg-green-700"
         >
           Ver todos
         </DropdownMenuItem>
