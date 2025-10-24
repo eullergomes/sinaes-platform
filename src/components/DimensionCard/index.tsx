@@ -11,14 +11,14 @@ export interface DimensionCardProps {
   className?: string;
 }
 
-export default function DimensionCard({
+const DimensionCard =  ({
   dimId,
   title,
   description,
   grade,
   href,
   className
-}: DimensionCardProps) {
+}: DimensionCardProps) => {
   return (
     <Card
       className={className ?? 'transition-shadow duration-200 hover:shadow-lg'}
@@ -32,7 +32,7 @@ export default function DimensionCard({
           <p className="text-muted-foreground text-sm">{description}</p>
         ) : null}
         <p className="mt-2 text-lg">
-          <span className="font-semibold">Nota atual:</span> {grade.toFixed(1)}
+          <span className="font-semibold">Nota:</span> {grade.toFixed(1)}
         </p>
 
         <div className="pt-2">
@@ -44,3 +44,5 @@ export default function DimensionCard({
     </Card>
   );
 }
+
+export default DimensionCard;
