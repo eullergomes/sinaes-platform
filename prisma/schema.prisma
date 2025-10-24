@@ -13,11 +13,9 @@ enum UserRole {
 }
 
 enum CourseLevel {
+  TECNOLOGO
   LICENCIATURA
   BACHARELADO
-  ESPECIALIZACAO
-  MESTRADO
-  DOUTORADO
 }
 
 enum CourseModality {
@@ -28,7 +26,7 @@ enum CourseModality {
 
 enum IndicatorStatus {
   CONCLUIDO
-  NAO_PREENCHIDO
+  NAO_ATINGIDO
   EM_EDICAO
 }
 
@@ -68,12 +66,13 @@ model User {
 }
 
 model DimensionDefinition {
-  id         String                @id @default(auto()) @map("_id") @db.ObjectId
-  number     Int                   @unique
-  title      String
-  createdAt  DateTime              @default(now())
-  updatedAt  DateTime              @updatedAt
-  indicators IndicatorDefinition[]
+  id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  number      Int                   @unique
+  title       String
+  description String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  indicators  IndicatorDefinition[]
 }
 
 model IndicatorDefinition {
@@ -116,14 +115,15 @@ model IndicatorRequirement {
 }
 
 model Course {
-  id        String          @id @default(auto()) @map("_id") @db.ObjectId
-  slug      String          @unique
-  emecCode  Int?            @unique
-  name      String
-  level     CourseLevel?
-  modality  CourseModality?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  slug              String          @unique
+  emecCode          Int?            @unique
+  name              String
+  level             CourseLevel?
+  modality          CourseModality?
+  otherDocumentsUrl String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   coordinatorId String? @db.ObjectId
   coordinator   User?   @relation("CourseCoordinator", fields: [coordinatorId], references: [id])

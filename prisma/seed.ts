@@ -1,5 +1,6 @@
 import {
   PrismaClient,
+  Prisma,
   NsaPolicy,
   IndicatorStatus,
   IndicatorGrade,
@@ -2628,10 +2629,10 @@ const instanceDataFor2024: Record<
   '1.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
   '1.9': {
     grade: IndicatorGrade.G4,
-    status: IndicatorStatus.NAO_PREENCHIDO,
+    status: IndicatorStatus.NAO_ATINGIDO,
     justification: 'Pendente de revisão pelo NDE.'
   },
-  '1.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '1.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
   '1.12': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '1.13': {
@@ -2643,8 +2644,8 @@ const instanceDataFor2024: Record<
   '1.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
   '1.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
   '1.16': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
-  '1.17': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '1.18': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.17': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '1.18': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '1.19': {
     grade: IndicatorGrade.G4,
     status: IndicatorStatus.CONCLUIDO,
@@ -2652,10 +2653,10 @@ const instanceDataFor2024: Record<
       'Os procedimentos de avaliação são claros, mas precisam ser digitalizados.'
   },
   '1.20': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
-  '1.21': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '1.22': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '1.23': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '1.24': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '1.21': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '1.22': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '1.23': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '1.24': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
 
   // --- Dimensão 2 ---
   '2.1': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
@@ -2678,10 +2679,10 @@ const instanceDataFor2024: Record<
   },
   '2.6': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '2.7': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
-  '2.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '2.8': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '2.9': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '2.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
-  '2.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '2.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '2.12': {
     grade: IndicatorGrade.G4,
     status: IndicatorStatus.EM_EDICAO,
@@ -2690,10 +2691,10 @@ const instanceDataFor2024: Record<
   },
   '2.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
   '2.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
-  '2.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '2.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '2.16': {
     grade: IndicatorGrade.G3,
-    status: IndicatorStatus.NAO_PREENCHIDO,
+    status: IndicatorStatus.NAO_ATINGIDO,
     justification:
       'A produção científica do corpo docente está abaixo do esperado para a área.',
     correctiveAction:
@@ -2712,7 +2713,7 @@ const instanceDataFor2024: Record<
       'Solicitar ao departamento de TI a troca do equipamento de informática da coordenação.',
     responsible: 'Coordenação de Curso'
   },
-  '3.3': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.3': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '3.4': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.5': {
     grade: IndicatorGrade.G4,
@@ -2731,10 +2732,10 @@ const instanceDataFor2024: Record<
   '3.9': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.10': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
   '3.11': { grade: IndicatorGrade.NSA, status: IndicatorStatus.CONCLUIDO },
-  '3.12': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '3.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '3.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
-  '3.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_PREENCHIDO },
+  '3.12': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '3.13': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '3.14': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
+  '3.15': { grade: IndicatorGrade.NSA, status: IndicatorStatus.NAO_ATINGIDO },
   '3.16': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.17': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO },
   '3.18': { grade: IndicatorGrade.G5, status: IndicatorStatus.CONCLUIDO }
@@ -2928,13 +2929,28 @@ async function main() {
   // 3. CRIAÇÃO DAS DIMENSÕES E EVIDÊNCIAS (Como antes)
   console.log('📚 Criando Dimensões e Requisitos de Evidência...');
   const dim1 = await prisma.dimensionDefinition.create({
-    data: { number: 1, title: 'Dimensão 1 - Organização Didático-Pedagógica' }
+    data: {
+      number: 1,
+      title: 'Organização Didático-Pedagógica',
+      description:
+        'Avalia o PPC, conteúdos, metodologias e práticas pedagógicas.'
+    }
   });
   const dim2 = await prisma.dimensionDefinition.create({
-    data: { number: 2, title: 'Dimensão 2 - Corpo docente e tutorial' }
+    data: {
+      number: 2,
+      title: 'Corpo docente e tutorial',
+      description:
+        'Analisa a qualificação, experiência e atuação do corpo docente e NDE.'
+    }
   });
   const dim3 = await prisma.dimensionDefinition.create({
-    data: { number: 3, title: 'Dimensão 3 - Infraestrutura' }
+    data: {
+      number: 3,
+      title: 'Infraestrutura',
+      description:
+        'Verifica a qualidade de laboratórios, biblioteca e espaços de trabalho.'
+    }
   });
   const dimensions = { 1: dim1, 2: dim2, 3: dim3 };
 
@@ -2959,7 +2975,7 @@ async function main() {
           dimensions[indicatorData.dimensionNumber as keyof typeof dimensions]
             .id,
         nsaPolicy: indicatorData.nsaPolicy,
-        criteriaTable: indicatorData.criteria as any
+        criteriaTable: indicatorData.criteria as Prisma.InputJsonValue
       }
     });
     const requirementIds = indicatorData.evidenceSlugs
@@ -3032,7 +3048,7 @@ async function main() {
           responsible?: string;
         } = {
           grade: IndicatorGrade.NSA,
-          status: IndicatorStatus.NAO_PREENCHIDO
+          status: IndicatorStatus.NAO_ATINGIDO
         };
 
         // Aplica dados detalhados para o curso de ADS
