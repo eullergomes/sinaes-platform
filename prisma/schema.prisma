@@ -8,8 +8,9 @@ datasource db {
 }
 
 enum UserRole {
-  DIRECAO
-  COORDENADOR
+  DIRECTOR
+  COORDINATOR
+  VISITOR
 }
 
 enum CourseLevel {
@@ -32,11 +33,11 @@ enum IndicatorStatus {
 
 enum IndicatorGrade {
   NSA
-  G1  @map("1")
-  G2  @map("2")
-  G3  @map("3")
-  G4  @map("4")
-  G5  @map("5")
+  G1 @map("1")
+  G2 @map("2")
+  G3 @map("3")
+  G4 @map("4")
+  G5 @map("5")
 }
 
 enum NsaPolicy {
@@ -51,18 +52,69 @@ enum StorageKind {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  name      String
-  password  String
-  role      UserRole @default(COORDENADOR)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  email         String   @unique
+  name          String
+  role          UserRole @default(VISITOR)
+  emailVerified Boolean  @default(false)
+  image         String?  @map("avatar")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   managedCourses Course[] @relation("CourseCoordinator")
 
   evidenceSubmissions EvidenceSubmission[]
   evidenceFiles       EvidenceFile[]
+  sessions            Session[]
+  accounts            Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String    @db.ObjectId
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+  @@map("verification")
 }
 
 model DimensionDefinition {
