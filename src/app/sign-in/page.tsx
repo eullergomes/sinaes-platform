@@ -137,9 +137,11 @@ const SignInPage = () => {
         <Image
           src="/assets/imgs/ifma-cx-logo.png"
           alt="Logo IFMA Caxias"
+          fill
+          sizes="100vw"
           className="absolute inset-0 h-full w-full object-contain"
-          layout="fill"
         />
+
       </div>
     </div>
   );

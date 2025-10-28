@@ -14,6 +14,10 @@ import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+import { useSession } from '@/lib/auth-client';
+
+import NavUser from '@/components/nav-user';
+
 function extractCourseId(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
   const i = parts.indexOf('courses');
@@ -24,7 +28,6 @@ function extractCourseId(pathname: string): string | null {
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [courseName, setCourseName] = useState<string | null>(null);
-  // Esconder sidebar em páginas sem curso selecionado: /courses, /courses/new e /courses/[slug]/edit
   const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up';
   const hideSidebar =
     pathname === '/courses' ||
@@ -32,6 +35,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     /\/courses\/.+\/edit$/.test(pathname) ||
     isAuthPage;
   const currentCourseId = extractCourseId(pathname);
+
+  const { data, isPending } = useSession();
+  const user = data?.user ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -56,10 +62,55 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     };
   }, [currentCourseId]);
 
+  // const UserBlock = (
+  //   <div className="flex items-center gap-3">
+  //     <div className="flex items-center gap-3 pt-1">
+  //       <Avatar>
+  //         <AvatarImage
+  //           src={avatarUrl(user?.image as string | undefined)}
+  //           alt={user?.name as string}
+  //         />
+  //         <AvatarFallback className='bg-gray-500'>
+  //           {user?.name
+  //             ?.split(' ')
+  //             .map((n) => n[0])
+  //             .slice(0, 2)
+  //             .join('')}
+  //         </AvatarFallback>
+  //       </Avatar>
+  //       <div className="flex flex-col items-start">
+  //         <h3 className="font-semibold">{user?.name}</h3>
+  //         <span className="text-xs text-muted-foreground">
+  //           {user?.email}
+  //         </span>
+  //       </div>
+  //     </div>
+  //     <Button
+  //       size="sm"
+  //       variant="secondary"
+  //       onClick={() => signOut()}
+  //     >
+  //       Sair
+  //     </Button>
+  //   </div>
+  // );
+
+  const UserSkeleton = (
+    <div className="flex items-center gap-3">
+      <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300" />
+      <div className="h-4 w-24 animate-pulse rounded bg-gray-300" />
+    </div>
+  );
+
   return (
     <SidebarProvider>
       {!hideSidebar && (
-        <AppSidebar collapsible="icon" currentCourseId={currentCourseId} currentCourseName={courseName} />
+        <AppSidebar
+          collapsible="icon"
+          currentCourseId={currentCourseId}
+          currentCourseName={courseName}
+          user={user}
+        />
       )}
 
       <SidebarInset>
@@ -83,11 +134,18 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   />
                   <span className="text-lg font-semibold">IFMA Avalia</span>
                 </Link>
-                <Button asChild variant="outline">
-                  <Link href="/sign-in" className="text-black">
-                    Login
-                  </Link>
-                </Button>
+
+                {isPending ? (
+                  UserSkeleton
+                ) : user ? (
+                  <NavUser user={user} />
+                ) : (
+                  <Button asChild variant="outline">
+                    <Link href="/sign-in" className="text-black">
+                      Login
+                    </Link>
+                  </Button>
+                )}
               </>
             ) : (
               <>
@@ -105,8 +163,17 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                     </span>
                   </div>
                 )}
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-4">
                   <PendingAlerts />
+                  {isPending ? (
+                    UserSkeleton
+                  ) : user ? (
+                    <NavUser user={user} />
+                  ) : (
+                    <Button asChild size="sm" variant="default">
+                      <Link href="/sign-in">Login</Link>
+                    </Button>
+                  )}
                 </div>
               </>
             )}

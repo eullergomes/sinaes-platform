@@ -29,7 +29,6 @@ import {
   LayoutDashboard,
   BookOpen,
   Users,
-  LogOut,
   PanelLeftIcon,
   X,
   ChartNoAxesCombinedIcon,
@@ -37,10 +36,13 @@ import {
   FileText
 } from 'lucide-react';
 import Image from 'next/image';
+import NavUser from './nav-user';
+import { User } from 'better-auth';
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   currentCourseId?: string | null;
   currentCourseName?: string | null;
+  user: User | null;
 };
 
 function buildNav(currentCourseId?: string | null) {
@@ -89,6 +91,7 @@ function buildNav(currentCourseId?: string | null) {
 const AppSidebar = ({
   currentCourseId,
   currentCourseName,
+  user,
   ...props
 }: AppSidebarProps) => {
   const { open, toggleSidebar, isMobile } = useSidebar();
@@ -236,7 +239,7 @@ const AppSidebar = ({
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
+        <SidebarMenu> 
           <SidebarMenuItem className="space-y-2">
             <SidebarMenuButton
               className="flex w-full items-center gap-4 border border-white/20 bg-white/10"
@@ -250,23 +253,7 @@ const AppSidebar = ({
               </Link>
             </SidebarMenuButton>
 
-            <SidebarMenuButton
-              className="flex w-full items-center gap-4"
-              asChild
-            >
-              <Link
-                href="#"
-                className="flex items-center gap-4 border border-white/20 bg-white/10"
-              >
-                <Users color="white" />
-                <span className="font-semibold text-white">Perfil</span>
-              </Link>
-            </SidebarMenuButton>
-
-            <SidebarMenuButton className="flex w-full items-center gap-4 border border-white/20 bg-white/10">
-              <LogOut color="white" />
-              <span className="font-semibold text-white">Sair</span>
-            </SidebarMenuButton>
+            {user && <NavUser user={user} />}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
