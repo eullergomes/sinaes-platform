@@ -17,11 +17,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '../../components/ui/password-input';
-import { UploadCloud } from 'lucide-react';
+import { Loader2, UploadCloud } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import uploadToCloudinary from '@/services/uploadToCloudinary';
 
 const SignUpForm = () => {
   const formSchema = z
@@ -46,6 +47,7 @@ const SignUpForm = () => {
 
   const router = useRouter();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,25 +66,47 @@ const SignUpForm = () => {
   }, [avatarPreview]);
 
   async function onSubmit(values: FormValues) {
-    await authClient.signUp.email({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-      fetchOptions: {
-        onSuccess: () => {
-          router.push('/');
-        },
-        onError: (error) => {
-          if (error.error.code === 'USER_ALREADY_EXISTS') {
-            toast.error('E-mail já cadastrado.');
-            return form.setError('email', {
-              message: 'E-mail já cadastrado.'
-            });
-          }
-          toast.error(error.error.message);
+    setIsSubmitting(true);
+    try {
+      let imageUrl: string | undefined;
+
+      const file = values.avatar instanceof File ? values.avatar : undefined;
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          throw new Error('Arquivo inválido');
         }
+        if (file.size > 2 * 1024 * 1024) {
+          throw new Error('Máx 2MB');
+        }
+        imageUrl = await uploadToCloudinary(file);
       }
-    });
+
+      await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        image: imageUrl,
+        fetchOptions: {
+          onSuccess: () => {
+            router.push('/');
+          },
+          onError: (error) => {
+            if (error.error.code === 'USER_ALREADY_EXISTS') {
+              toast.error('E-mail já cadastrado.');
+              return form.setError('email', {
+                message: 'E-mail já cadastrado.'
+              });
+            }
+            toast.error(error.error.message);
+          }
+        }
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao criar conta.';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -120,6 +144,8 @@ const SignUpForm = () => {
                                 src={avatarPreview}
                                 alt="Pré-visualização do avatar"
                                 className="h-full w-full object-cover"
+                                width={24}
+                                height={24}
                               />
                             ) : (
                               <div className="text-muted-foreground flex h-full w-full items-center justify-center">
@@ -230,9 +256,17 @@ const SignUpForm = () => {
 
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="w-full bg-green-600 hover:cursor-pointer hover:bg-green-700"
                   >
-                    Criar
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      'Criar'
+                    )}
                   </Button>
                 </div>
               </form>
@@ -250,8 +284,9 @@ const SignUpForm = () => {
         <Image
           src="/assets/imgs/ifma-cx-logo.png"
           alt="Logo IFMA Caxias"
+          fill
+          sizes="100vw"
           className="absolute inset-0 h-full w-full object-contain"
-          layout="fill"
         />
       </div>
     </div>
