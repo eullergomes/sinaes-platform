@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMemo } from 'react';
+import { Course } from '@prisma/client';
 
 type DimId = '1' | '2' | '3';
 type Status = 'Concluído' | 'Em edição' | 'Não atingido';
@@ -27,7 +28,7 @@ const STATUSES: Status[] = ['Concluído', 'Em edição', 'Não atingido'];
 type CriterionRow = { dimension: string; label: string; grade: number };
 
 type Props = {
-  courseId: string;
+  course: Course;
   indicators: Array<{
     id: string;
     dimension: DimId;
@@ -37,7 +38,7 @@ type Props = {
   }>;
 };
 
-const CourseDashboardClient = ({ courseId, indicators }: Props) => {
+const CourseDashboardClient = ({ indicators, course }: Props) => {
   const kpi = useMemo(() => {
     const withoutNSA = indicators
       .map((i) => i.grade)
@@ -102,10 +103,10 @@ const CourseDashboardClient = ({ courseId, indicators }: Props) => {
 
   return (
     <div className="space-y-6 p-8">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard do Curso — {courseId}</h1>
-        <p className="text-muted-foreground text-sm">
-          Visão geral dos indicadores do SINAES
+      <div className='flex flex-col gap-4'>
+        <h1 className="text-3xl font-bold">Dashboard do Curso <span className="text-foreground font-semibold">— {course.name}</span></h1>
+        <p className="text-muted-foreground text-lg">
+          Visão geral dos indicadores do SINAES.
         </p>
       </div>
 

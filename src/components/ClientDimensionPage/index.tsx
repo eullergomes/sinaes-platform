@@ -33,29 +33,7 @@ import { Toaster, toast } from 'sonner';
 import { IndicatorStatus } from '@prisma/client';
 import { DimensionApiResponse, IndicatorGrade } from '@/types/dimension-types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
-const StatusBadge = ({ status }: { status: IndicatorStatus }) => {
-  switch (status) {
-    case IndicatorStatus.CONCLUIDO:
-      return (
-        <Badge variant="outline" className="border-green-700 text-green-700">
-          Concluído
-        </Badge>
-      );
-    case IndicatorStatus.EM_EDICAO:
-      return (
-        <Badge variant="outline" className="border-yellow-600 text-yellow-600">
-          Em Edição
-        </Badge>
-      );
-    default:
-      return (
-        <Badge variant="outline" className="border-red-600 text-red-600">
-          Não atingido
-        </Badge>
-      );
-  }
-};
+import StatusBadge from '../status-badge';
 
 const ClientDimensionPage = ({
   slug,
@@ -86,6 +64,8 @@ const ClientDimensionPage = ({
         const response = await fetch(
           `/api/courses/${slug}/dimensions/${dimId}`
         );
+        console.log("Indicadores: ", response);
+        
         if (!response.ok)
           throw new Error(
             (await response.json()).error || 'Falha ao carregar os dados'
@@ -256,7 +236,6 @@ const ClientDimensionPage = ({
           </CardTitle>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Select de Ano */}
             <Select
               value={String(selectedYear)}
               onValueChange={(v) => setSelectedYear(Number(v))}
@@ -273,7 +252,6 @@ const ClientDimensionPage = ({
               </SelectContent>
             </Select>
 
-            {/* Filtros: Nota */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -314,7 +292,6 @@ const ClientDimensionPage = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Filtros: Status */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -354,7 +331,6 @@ const ClientDimensionPage = ({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* Modal Criar Ciclo - componente reutilizável */}
             <NewCicle
               open={dialogIsOpen}
               onOpenChange={setDialogIsOpen}
