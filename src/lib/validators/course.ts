@@ -27,6 +27,7 @@ export const courseSchema = z.object({
     .pipe(
       z.number().int().positive('O código e-MEC deve ser um inteiro positivo.')
     ),
+  ppcDocumentUrl: z.string().trim().url('A URL do PPC deve ser válida.').optional().or(z.literal('')),
   coordinatorId: z.string().trim().min(1, 'O coordenador é obrigatório.')
 });
 

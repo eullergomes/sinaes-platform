@@ -1,9 +1,10 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useFormStatus } from 'react-dom';
 import { XIcon } from 'lucide-react';
+import { validateLink } from '@/utils/validateLink';
 
 type Props = {
   initialUrl: string;
@@ -21,11 +22,24 @@ function SubmitButton({ disabledExtra }: { disabledExtra?: boolean }) {
 }
 
 export default function OtherDocumentsForm({ initialUrl, slug, onSave }: Props) {
+  const [linkErrors, setLinkErrors] = useState<string[]>([]);
   const [value, setValue] = useState(initialUrl);
   const unchanged = value.trim() === (initialUrl ?? '').trim();
+  const hasError = linkErrors.some((e) => !!e);
+
+  useEffect(() => {
+    validateLink(initialUrl || '', setLinkErrors);
+  }, [initialUrl]);
+
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+    const ok = validateLink(value, setLinkErrors);
+    if (!ok) {
+      e.preventDefault();
+    }
+  };
 
   return (
-    <form action={onSave} className="space-y-3">
+    <form action={onSave} onSubmit={handleSubmit} className="space-y-3">
       <input type="hidden" name="slug" value={slug} />
       <div className="space-y-1">
         <label htmlFor="otherDocumentsUrl" className="text-sm font-medium">Link da pasta do Google Drive</label>
@@ -36,7 +50,10 @@ export default function OtherDocumentsForm({ initialUrl, slug, onSave }: Props) 
             placeholder="https://drive.google.com/drive/folders/…"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="pr-10"
+            onBlur={() => validateLink(value, setLinkErrors)}
+            aria-invalid={hasError || undefined}
+            aria-describedby={hasError ? 'otherDocumentsUrl-error' : undefined}
+            className={`pr-10 ${hasError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
           />
           {value && (
             <Button
@@ -51,6 +68,11 @@ export default function OtherDocumentsForm({ initialUrl, slug, onSave }: Props) 
             </Button>
           )}
         </div>
+        {hasError && (
+          <p id="otherDocumentsUrl-error" className="text-sm text-red-600">
+            {linkErrors[0]}
+          </p>
+        )}
         {initialUrl && (
           <a
             href={initialUrl}
@@ -63,7 +85,7 @@ export default function OtherDocumentsForm({ initialUrl, slug, onSave }: Props) 
         )}
       </div>
       <div>
-        <SubmitButton disabledExtra={unchanged} />
+        <SubmitButton disabledExtra={unchanged || hasError} />
       </div>
     </form>
   );
