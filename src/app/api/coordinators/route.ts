@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
     const coordinators = await prisma.user.findMany({
       where: {
-        role: UserRole.COORDENADOR,
+        role: UserRole.COORDINATOR,
         ...(query && {
           OR: [
             { name: { contains: query, mode: 'insensitive' } },
