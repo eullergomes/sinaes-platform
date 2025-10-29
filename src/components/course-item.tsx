@@ -144,6 +144,19 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
               <span className="font-normal">{course.coordinator?.name}</span>
             </p>
           )}
+          {course.ppcDocumentUrl && (
+            <p className="font-semibold">
+              • {''}
+              <a
+                href={course.ppcDocumentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className='text-blue-500 underline'
+              >
+                PPC
+              </a>
+            </p>
+          )}
         </div>
 
         <div className="flex items-center justify-between">

@@ -193,11 +193,12 @@ const AppSidebar = ({
         <div className="mt-1 transition-all duration-200 ease-linear group-data-[collapsible=icon]:hidden">
           <Link
             href={`/courses/${currentCourseId}/dimensions`}
-            className="inline-flex w-full max-w-full items-center gap-2 truncate rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white"
+            className="inline-flex w-full max-w-full items-center gap-2 rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white"
+            title={currentCourseName ?? '—'}
           >
             <span className="opacity-80">Curso:</span>
-            <span className="font-medium">
-              {currentCourseName ?? currentCourseId ?? '—'}
+            <span className="font-medium flex-1 min-w-0 truncate">
+              {currentCourseName ?? '—'}
             </span>
           </Link>
         </div>
@@ -253,7 +254,7 @@ const AppSidebar = ({
               </Link>
             </SidebarMenuButton>
 
-            {user && <NavUser user={user} />}
+            {user && <NavUser user={user}/>}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

@@ -138,7 +138,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                 {isPending ? (
                   UserSkeleton
                 ) : user ? (
-                  <NavUser user={user} />
+                  <NavUser user={user} hideInfo={true} />
                 ) : (
                   <Button asChild variant="outline">
                     <Link href="/sign-in" className="text-black">
@@ -159,7 +159,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   <div className="text-muted-foreground mr-auto text-sm">
                     Curso ativo:{' '}
                     <span className="text-foreground font-medium">
-                      {courseName ?? currentCourseId}
+                      {courseName ?? '—'}
                     </span>
                   </div>
                 )}
@@ -168,10 +168,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   {isPending ? (
                     UserSkeleton
                   ) : user ? (
-                    <NavUser user={user} />
+                    <NavUser user={user} hideInfo={true} />
                   ) : (
-                    <Button asChild size="sm" variant="default">
-                      <Link href="/sign-in">Login</Link>
+                    <Button asChild variant="outline">
+                      <Link href="/sign-in" className="text-black">
+                        Login
+                      </Link>
                     </Button>
                   )}
                 </div>

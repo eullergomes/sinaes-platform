@@ -100,12 +100,11 @@ const DimensionList = ({
 
   return (
     <div className="space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dimensões — {courseName}</h1>
-          <p className="text-muted-foreground text-sm">
-            Acompanhe o desempenho do curso nas 3 dimensões do SINAES (ciclo
-            mais recente).
+      <div className="flex items-start justify-between md:flex-row flex-col md:items-center gap-4">
+        <div className='flex flex-col gap-4'>
+          <h1 className="text-3xl font-bold">Dimensões <span className="text-foreground font-semibold">— {courseName}</span></h1>
+          <p className="text-muted-foreground text-lg">
+            Acompanhe o desempenho do curso nas 3 dimensões do SINAES.
           </p>
         </div>
         <Button
@@ -113,7 +112,7 @@ const DimensionList = ({
           className="inline-flex items-center gap-2 hover:cursor-pointer"
         >
           <a
-            href="#"
+            href="/assets/pdf/pdf-1.pdf"
             download
             aria-label={`Baixar Manual de Instruções}`}
             className="inline-flex items-center gap-2"

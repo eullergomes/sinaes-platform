@@ -46,6 +46,6 @@ export default async function CourseDashboardPage({
   });
 
   return (
-    <CourseDashboardClient courseId={slug} indicators={clientIndicators} />
+    <CourseDashboardClient course={course} indicators={clientIndicators} />
   );
 }
