@@ -13,12 +13,14 @@ export default async function EditCoursePage({ params }: { params: Params }) {
 
   if (!course) return notFound();
 
+  // melhorar essa tipagem
   const initial: EditCourseInitial = {
     id: course.id,
     name: course.name,
     emecCode: course.emecCode ?? null,
     level: course.level ?? null,
     modality: course.modality ?? null,
+    ppcDocumentUrl: course.ppcDocumentUrl ?? null,
     coordinator: course.coordinator
       ? { id: course.coordinator.id, name: course.coordinator.name }
       : null

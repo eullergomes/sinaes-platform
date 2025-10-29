@@ -21,15 +21,18 @@ import { updateCourse } from '@/app/actions/course';
 import type { CreateCourseState } from '@/app/actions/course';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { validateLink } from '@/utils/validateLink';
 
 type Coordinator = { id: string; name: string };
 
+// Melhorar essa tipagem
 export type EditCourseInitial = {
   id: string;
   name: string;
   emecCode: number | null;
   level: CourseLevel | null;
   modality: CourseModality | null;
+  ppcDocumentUrl: string | null;
   coordinator: Coordinator | null;
 };
 
@@ -58,6 +61,13 @@ export default function EditCourseForm({
   );
   const [level, setLevel] = useState<string>(initial.level ?? '');
   const [modality, setModality] = useState<string>(initial.modality ?? '');
+  const [ppcDocumentUrl, setPpcDocumentUrl] = useState<string>(
+    initial.ppcDocumentUrl ?? ''
+  );
+  const [ppcLinkErrors, setPpcLinkErrors] = useState<string[]>([]);
+  const hasPpcError = ppcLinkErrors.some((e) => !!e);
+  const [nameError, setNameError] = useState<string | ''>('');
+  const [emecCodeError, setEmecCodeError] = useState<string | ''>('');
   const [coordinator, setCoordinator] = useState<Coordinator | null>(
     initial.coordinator
   );
@@ -85,7 +95,34 @@ export default function EditCourseForm({
     }
   }, [formState?.eventId, formState?.error]);
 
-  const disabled = !level || !modality || !coordinator?.id;
+  useEffect(() => {
+    validateLink(initial.ppcDocumentUrl || '', setPpcLinkErrors);
+  }, [initial.ppcDocumentUrl]);
+
+  const validateName = (value: string) => {
+    const trimmed = value.trim();
+    let error: string = '';
+    if (trimmed.length > 0 && trimmed.length < 3) {
+      error = 'Nome deve ter pelo menos 3 caracteres.';
+    } else if (trimmed.length > 150) {
+      error = 'Nome deve ter no máximo 150 caracteres.';
+    }
+    setNameError(error);
+    return !error;
+  };
+
+  const validateEmec = (value: string) => {
+    let error: string = '';
+    if (value && /\D/.test(value)) {
+      error = 'Apenas números são permitidos.';
+    } else if (value && value.length > 8) {
+      error = 'Código e-MEC deve ter no máximo 8 dígitos.';
+    }
+    setEmecCodeError(error);
+    return !error;
+  };
+
+  const disabled = !level || !modality || !coordinator?.id || hasPpcError || !!nameError || !!emecCodeError;
 
   return (
     <div className="space-y-6 p-8">
@@ -96,7 +133,16 @@ export default function EditCourseForm({
         </Button>
       </div>
 
-      <form action={formAction} noValidate>
+      <form
+        action={formAction}
+        noValidate
+        onSubmit={(e) => {
+          const okLink = validateLink(ppcDocumentUrl, setPpcLinkErrors);
+          const okName = validateName(name);
+          const okEmec = validateEmec(emecCode);
+          if (!okLink || !okName || !okEmec) e.preventDefault();
+        }}
+      >
         <input type="hidden" name="courseId" value={initial.id} />
         <Card>
           <CardHeader>
@@ -110,9 +156,20 @@ export default function EditCourseForm({
                   id="name"
                   name="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setName(v);
+                  }}
+                  onBlur={() => validateName(name)}
+                  maxLength={150}
+                  aria-invalid={!!nameError || undefined}
+                  aria-describedby={nameError ? 'name-error' : undefined}
+                  className={nameError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   required
                 />
+                {nameError && (
+                  <p id="name-error" className="text-sm text-red-600">{nameError}</p>
+                )}
                 {formState?.fieldErrors?.name && (
                   <p className="text-destructive text-sm">
                     {formState.fieldErrors.name}
@@ -128,9 +185,20 @@ export default function EditCourseForm({
                   inputMode="numeric"
                   pattern="\\d+"
                   value={emecCode}
-                  onChange={(e) => setEmecCode(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEmecCode(v);
+                  }}
+                  onBlur={() => validateEmec(emecCode)}
+                  maxLength={8}
+                  aria-invalid={!!emecCodeError || undefined}
+                  aria-describedby={emecCodeError ? 'emecCode-error' : undefined}
+                  className={emecCodeError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   required
                 />
+                {emecCodeError && (
+                  <p id="emecCode-error" className="text-sm text-red-600">{emecCodeError}</p>
+                )}
                 {formState?.fieldErrors?.emecCode && (
                   <p className="text-destructive text-sm">
                     {formState.fieldErrors.emecCode}
@@ -183,6 +251,35 @@ export default function EditCourseForm({
                 {formState?.fieldErrors?.modality && (
                   <p className="text-destructive text-sm">
                     {formState.fieldErrors.modality}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ppcDocumentUrl">URL do Documento PPC</Label>
+                <Input 
+                  id="ppcDocumentUrl"
+                  name="ppcDocumentUrl"
+                  placeholder="https://drive.google.com/drive/folders/…"
+                  value={ppcDocumentUrl}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setPpcDocumentUrl(v);
+                  }}
+                  onBlur={() => validateLink(ppcDocumentUrl, setPpcLinkErrors)}
+                  aria-invalid={hasPpcError || undefined}
+                  aria-describedby={hasPpcError ? 'ppcDocumentUrl-error' : undefined}
+                  className={hasPpcError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  required
+                />
+                {hasPpcError && (
+                  <p id="ppcDocumentUrl-error" className="text-sm text-red-600">
+                    {ppcLinkErrors[0]}
+                  </p>
+                )}
+                {formState?.fieldErrors?.ppcDocumentUrl && (
+                  <p className="text-destructive text-sm">
+                    {formState.fieldErrors.ppcDocumentUrl}
                   </p>
                 )}
               </div>

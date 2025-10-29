@@ -13,13 +13,14 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import CoordinatorAutocomplete from '@/components/coordinator-autocomplete';
 import { createCourse } from '@/app/actions/course';
 import type { CreateCourseState } from '@/app/actions/course';
 import { CourseLevel, CourseModality } from '@prisma/client';
+import { validateLink } from '@/utils/validateLink';
 
 function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
@@ -27,7 +28,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
     <Button
       type="submit"
       disabled={pending || disabled}
-      className="bg-green-600 hover:bg-green-700"
+      className="bg-green-600 hover:bg-green-700 hover:cursor-pointer"
     >
       {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {pending ? 'Salvando...' : 'Salvar'}
@@ -40,6 +41,11 @@ export default function NewCoursePage() {
   const [emecCode, setEmecCode] = useState('');
   const [level, setLevel] = useState<string>('');
   const [modality, setModality] = useState<string>('');
+  const [ppcDocumentUrl, setPpcDocumentUrl] = useState('');
+  const [ppcLinkErrors, setPpcLinkErrors] = useState<string[]>([]);
+  const hasPpcError = ppcLinkErrors.some((e) => !!e);
+  const [nameError, setNameError] = useState<string | ''>('');
+  const [emecCodeError, setEmecCodeError] = useState<string | ''>('');
   const [selectedCoordinator, setSelectedCoordinator] = useState<{
     id: string;
     name: string;
@@ -57,6 +63,38 @@ export default function NewCoursePage() {
     }
   }, [formState?.eventId, formState?.error]);
 
+  const validateName = (value: string) => {
+    const trimmed = value.trim();
+    let error: string = '';
+    if (trimmed.length > 0 && trimmed.length < 3) {
+      error = 'Nome do curso muito curto.';
+    } else if (trimmed.length > 150) {
+      error = 'Nome do curso muito longo.';
+    }
+    setNameError(error);
+    return !error;
+  };
+
+  const validateEmec = (value: string) => {
+    let error: string = '';
+    if (value && /\D/.test(value)) {
+      error = 'Apenas números são permitidos.';
+    } else if (value && value.length > 8) {
+      error = 'Código e-MEC deve ter no máximo 8 dígitos.';
+    }
+    setEmecCodeError(error);
+    return !error;
+  };
+
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+    const okLink = validateLink(ppcDocumentUrl, setPpcLinkErrors);
+    const okName = validateName(name);
+    const okEmec = validateEmec(emecCode);
+    if (!okLink || !okName || !okEmec) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="space-y-6 p-8">
       <div className="flex items-center justify-between">
@@ -66,7 +104,7 @@ export default function NewCoursePage() {
         </Button>
       </div>
 
-      <form action={formAction} noValidate>
+  <form action={formAction} onSubmit={handleSubmit} noValidate>
         <Card>
           <CardHeader>
             <CardTitle>Dados do curso</CardTitle>
@@ -79,10 +117,21 @@ export default function NewCoursePage() {
                   id="name"
                   name="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setName(v);
+                  }}
+                  onBlur={() => validateName(name)}
+                  maxLength={150}
+                  aria-invalid={!!nameError || undefined}
+                  aria-describedby={nameError ? 'name-error' : undefined}
+                  className={nameError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   placeholder="Ex.: Licenciatura em Matemática"
                   required
                 />
+                {nameError && (
+                  <p id="name-error" className="text-sm text-red-600">{nameError}</p>
+                )}
                 {formState?.fieldErrors?.name && (
                   <p className="text-destructive text-sm">
                     {formState.fieldErrors.name}
@@ -98,10 +147,21 @@ export default function NewCoursePage() {
                   inputMode="numeric"
                   pattern="\\d+"
                   value={emecCode}
-                  onChange={(e) => setEmecCode(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEmecCode(v);
+                  }}
+                  onBlur={() => validateEmec(emecCode)}
+                  maxLength={8}
+                  aria-invalid={!!emecCodeError || undefined}
+                  aria-describedby={emecCodeError ? 'emecCode-error' : undefined}
+                  className={emecCodeError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   placeholder="Apenas números"
                   required
                 />
+                {emecCodeError && (
+                  <p id="emecCode-error" className="text-sm text-red-600">{emecCodeError}</p>
+                )}
                 {formState?.fieldErrors?.emecCode && (
                   <p className="text-destructive text-sm">
                     {formState.fieldErrors.emecCode}
@@ -158,6 +218,48 @@ export default function NewCoursePage() {
                 )}
               </div>
 
+              <div className="space-y-1">
+                <Label htmlFor="ppcDocumentUrl" className="text-sm font-medium">PPC</Label>
+                <div className="relative">
+                  <Input
+                    id="ppcDocumentUrl"
+                    name="ppcDocumentUrl"
+                    placeholder="https://drive.google.com/drive/folders/…"
+                    value={ppcDocumentUrl}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPpcDocumentUrl(v);
+                    }}
+                    onBlur={() => validateLink(ppcDocumentUrl, setPpcLinkErrors)}
+                    aria-invalid={hasPpcError || undefined}
+                    aria-describedby={hasPpcError ? 'ppcDocumentUrl-error' : undefined}
+                    className={`pr-10 ${hasPpcError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  />
+                  {ppcDocumentUrl && (
+                    <Button
+                      type="button"
+                      variant='ghost'
+                      onClick={() => setPpcDocumentUrl('')}
+                      className="absolute right-1 top-1 h-7 w-7 p-0 text-lg hover:cursor-pointer"
+                      aria-label="Limpar link"
+                      title="Limpar link"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {hasPpcError && (
+                  <p id="ppcDocumentUrl-error" className="text-sm text-red-600">
+                    {ppcLinkErrors[0]}
+                  </p>
+                )}
+                {formState?.fieldErrors?.ppcDocumentUrl && (
+                  <p className="text-destructive text-sm">
+                    {formState.fieldErrors.ppcDocumentUrl}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2 md:col-span-2">
                 <Label>Coordenador</Label>
                 <CoordinatorAutocomplete
@@ -184,7 +286,7 @@ export default function NewCoursePage() {
                 <Link href="/courses">Cancelar</Link>
               </Button>
               <SubmitButton
-                disabled={!level || !modality || !selectedCoordinator?.id}
+                disabled={!level || !modality || !selectedCoordinator?.id || hasPpcError || !!nameError || !!emecCodeError}
               />
             </div>
           </CardContent>

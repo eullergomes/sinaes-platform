@@ -33,11 +33,11 @@ enum IndicatorStatus {
 
 enum IndicatorGrade {
   NSA
-  G1 @map("1")
-  G2 @map("2")
-  G3 @map("3")
-  G4 @map("4")
-  G5 @map("5")
+  G1  @map("1")
+  G2  @map("2")
+  G3  @map("3")
+  G4  @map("4")
+  G5  @map("5")
 }
 
 enum NsaPolicy {
@@ -173,6 +173,7 @@ model Course {
   name              String
   level             CourseLevel?
   modality          CourseModality?
+  ppcDocumentUrl    String?
   otherDocumentsUrl String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -215,7 +216,7 @@ model EvidenceSubmission {
   requirementId       String               @db.ObjectId
   course              Course               @relation(fields: [courseId], references: [id])
   requirement         EvidenceRequirement  @relation(fields: [requirementId], references: [id])
-  folderUrl           String?
+  folderUrls          String[]             @db.String
   firstIndicatorDefId String?              @db.ObjectId
   firstIndicatorDef   IndicatorDefinition? @relation(fields: [firstIndicatorDefId], references: [id])
   files               EvidenceFile[]

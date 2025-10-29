@@ -2896,14 +2896,11 @@ async function main() {
 
   // 2. CRIAÇÃO DE USUÁRIOS
   console.log('👤 Criando usuários...');
-  const hashedPassword = '12345678'; // Em um app real, use bcrypt
-
   await prisma.user.create({
     data: {
       email: 'direcao@instituicao.edu.br',
       name: 'Ana Direção',
-      password: hashedPassword,
-      role: UserRole.DIRECAO
+      role: UserRole.DIRECTOR
     }
   });
 
@@ -2911,8 +2908,7 @@ async function main() {
     data: {
       email: 'coord.ads@instituicao.edu.br',
       name: 'Carlos Coordenador ADS',
-      password: hashedPassword,
-      role: UserRole.COORDENADOR
+      role: UserRole.COORDINATOR
     }
   });
 
@@ -2920,8 +2916,7 @@ async function main() {
     data: {
       email: 'coord.eng@instituicao.edu.br',
       name: 'Beatriz Coordenadora ENG',
-      password: hashedPassword,
-      role: UserRole.COORDENADOR
+      role: UserRole.COORDINATOR
     }
   });
   console.log(`✅ ${await prisma.user.count()} usuários criados.`);

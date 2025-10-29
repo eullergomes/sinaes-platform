@@ -34,6 +34,7 @@ export async function createCourse(
     level: formData.get('level') as unknown as CourseLevel,
     modality: formData.get('modality') as unknown as CourseModality,
     emecCode: ((formData.get('emecCode') as string) ?? '').trim(),
+    ppcDocumentUrl: ((formData.get('ppcDocumentUrl') as string) ?? '').trim(),
     coordinatorId: ((formData.get('coordinatorId') as string) ?? '').trim()
   };
 
@@ -50,7 +51,7 @@ export async function createCourse(
     return { fieldErrors, eventId: newEvent() };
   }
 
-  const { name, level, modality, emecCode, coordinatorId } = parsed.data;
+  const { name, level, modality, emecCode, ppcDocumentUrl, coordinatorId } = parsed.data;
   const slug = createSlug(name);
 
   try {
@@ -83,6 +84,7 @@ export async function createCourse(
         level,
         modality,
         emecCode,
+        ppcDocumentUrl,
         coordinatorId: coordinatorId
       }
     });
@@ -155,6 +157,7 @@ export async function updateCourse(
     level: formData.get('level') as unknown as CourseLevel,
     modality: formData.get('modality') as unknown as CourseModality,
     emecCode: ((formData.get('emecCode') as string) ?? '').trim(),
+    ppcDocumentUrl: ((formData.get('ppcDocumentUrl') as string) ?? '').trim(),
     coordinatorId: ((formData.get('coordinatorId') as string) ?? '').trim()
   };
 
@@ -171,7 +174,7 @@ export async function updateCourse(
     return { fieldErrors, eventId: newEvent() };
   }
 
-  const { name, level, modality, emecCode, coordinatorId } = parsed.data;
+  const { name, level, modality, emecCode, ppcDocumentUrl, coordinatorId } = parsed.data;
   const slug = createSlug(name);
 
   try {
@@ -208,6 +211,7 @@ export async function updateCourse(
         level,
         modality,
         emecCode,
+        ppcDocumentUrl,
         coordinatorId
       }
     });
