@@ -76,10 +76,7 @@ export default function EditCourseForm({
     error: undefined,
     success: undefined
   };
-  const [formState, formAction] = useActionState(
-    updateCourse,
-    initialState
-  );
+  const [formState, formAction] = useActionState(updateCourse, initialState);
   const router = useRouter();
 
   useEffect(() => {
@@ -122,7 +119,13 @@ export default function EditCourseForm({
     return !error;
   };
 
-  const disabled = !level || !modality || !coordinator?.id || hasPpcError || !!nameError || !!emecCodeError;
+  const disabled =
+    !level ||
+    !modality ||
+    !coordinator?.id ||
+    hasPpcError ||
+    !!nameError ||
+    !!emecCodeError;
 
   return (
     <div className="space-y-6 p-8">
@@ -151,28 +154,42 @@ export default function EditCourseForm({
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome do Curso</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setName(v);
+                <Label>Grau</Label>
+                <Select
+                  value={level}
+                  onValueChange={(v) => {
+                    const prevLevel = level;
+                    setLevel(v);
+                    const trimmed = name.trim();
+                    let rest = trimmed;
+                    if (
+                      prevLevel &&
+                      trimmed
+                        .toLowerCase()
+                        .startsWith(prevLevel.toLowerCase() + ' ')
+                    ) {
+                      rest = trimmed.slice(prevLevel.length).trimStart();
+                    }
+                    const nextName = rest ? `${v} ${rest}` : v;
+                    setName(nextName);
+                    validateName(nextName);
                   }}
-                  onBlur={() => validateName(name)}
-                  maxLength={150}
-                  aria-invalid={!!nameError || undefined}
-                  aria-describedby={nameError ? 'name-error' : undefined}
-                  className={nameError ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                  required
-                />
-                {nameError && (
-                  <p id="name-error" className="text-sm text-red-600">{nameError}</p>
-                )}
-                {formState?.fieldErrors?.name && (
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o grau" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(CourseLevel).map((lv) => (
+                      <SelectItem key={lv} value={lv}>
+                        {lv}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="level" value={level} required />
+                {formState?.fieldErrors?.level && (
                   <p className="text-destructive text-sm">
-                    {formState.fieldErrors.name}
+                    {formState.fieldErrors.level}
                   </p>
                 )}
               </div>
@@ -192,12 +209,20 @@ export default function EditCourseForm({
                   onBlur={() => validateEmec(emecCode)}
                   maxLength={8}
                   aria-invalid={!!emecCodeError || undefined}
-                  aria-describedby={emecCodeError ? 'emecCode-error' : undefined}
-                  className={emecCodeError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  aria-describedby={
+                    emecCodeError ? 'emecCode-error' : undefined
+                  }
+                  className={
+                    emecCodeError
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   required
                 />
                 {emecCodeError && (
-                  <p id="emecCode-error" className="text-sm text-red-600">{emecCodeError}</p>
+                  <p id="emecCode-error" className="text-sm text-red-600">
+                    {emecCodeError}
+                  </p>
                 )}
                 {formState?.fieldErrors?.emecCode && (
                   <p className="text-destructive text-sm">
@@ -207,23 +232,32 @@ export default function EditCourseForm({
               </div>
 
               <div className="space-y-2">
-                <Label>Grau</Label>
-                <Select value={level} onValueChange={(v) => setLevel(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o grau" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(CourseLevel).map((lv) => (
-                      <SelectItem key={lv} value={lv}>
-                        {lv}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="level" value={level} required />
-                {formState?.fieldErrors?.level && (
+                <Label htmlFor="name">Nome do Curso</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setName(v);
+                  }}
+                  onBlur={() => validateName(name)}
+                  maxLength={150}
+                  aria-invalid={!!nameError || undefined}
+                  aria-describedby={nameError ? 'name-error' : undefined}
+                  className={
+                    nameError ? 'border-red-500 focus-visible:ring-red-500' : ''
+                  }
+                  required
+                />
+                {nameError && (
+                  <p id="name-error" className="text-sm text-red-600">
+                    {nameError}
+                  </p>
+                )}
+                {formState?.fieldErrors?.name && (
                   <p className="text-destructive text-sm">
-                    {formState.fieldErrors.level}
+                    {formState.fieldErrors.name}
                   </p>
                 )}
               </div>
@@ -257,7 +291,7 @@ export default function EditCourseForm({
 
               <div className="space-y-2">
                 <Label htmlFor="ppcDocumentUrl">URL do Documento PPC</Label>
-                <Input 
+                <Input
                   id="ppcDocumentUrl"
                   name="ppcDocumentUrl"
                   placeholder="https://drive.google.com/drive/folders/…"
@@ -268,8 +302,14 @@ export default function EditCourseForm({
                   }}
                   onBlur={() => validateLink(ppcDocumentUrl, setPpcLinkErrors)}
                   aria-invalid={hasPpcError || undefined}
-                  aria-describedby={hasPpcError ? 'ppcDocumentUrl-error' : undefined}
-                  className={hasPpcError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  aria-describedby={
+                    hasPpcError ? 'ppcDocumentUrl-error' : undefined
+                  }
+                  className={
+                    hasPpcError
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   required
                 />
                 {hasPpcError && (

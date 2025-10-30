@@ -28,7 +28,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
     <Button
       type="submit"
       disabled={pending || disabled}
-      className="bg-green-600 hover:bg-green-700 hover:cursor-pointer"
+      className="bg-green-600 hover:cursor-pointer hover:bg-green-700"
     >
       {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {pending ? 'Salvando...' : 'Salvar'}
@@ -104,7 +104,7 @@ export default function NewCoursePage() {
         </Button>
       </div>
 
-  <form action={formAction} onSubmit={handleSubmit} noValidate>
+      <form action={formAction} onSubmit={handleSubmit} noValidate>
         <Card>
           <CardHeader>
             <CardTitle>Dados do curso</CardTitle>
@@ -112,29 +112,42 @@ export default function NewCoursePage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome do Curso</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setName(v);
+                <Label>Grau</Label>
+                <Select
+                  value={level}
+                  onValueChange={(v) => {
+                    const prevLevel = level;
+                    setLevel(v);
+                    const trimmed = name.trim();
+                    let rest = trimmed;
+                    if (
+                      prevLevel &&
+                      trimmed
+                        .toLowerCase()
+                        .startsWith(prevLevel.toLowerCase() + ' ')
+                    ) {
+                      rest = trimmed.slice(prevLevel.length).trimStart();
+                    }
+                    const nextName = rest ? `${v} ${rest}` : v;
+                    setName(nextName);
+                    validateName(nextName);
                   }}
-                  onBlur={() => validateName(name)}
-                  maxLength={150}
-                  aria-invalid={!!nameError || undefined}
-                  aria-describedby={nameError ? 'name-error' : undefined}
-                  className={nameError ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                  placeholder="Ex.: Licenciatura em Matemática"
-                  required
-                />
-                {nameError && (
-                  <p id="name-error" className="text-sm text-red-600">{nameError}</p>
-                )}
-                {formState?.fieldErrors?.name && (
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o grau" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(CourseLevel).map((lv) => (
+                      <SelectItem key={lv} value={lv}>
+                        {lv}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="level" value={level} required />
+                {formState?.fieldErrors?.level && (
                   <p className="text-destructive text-sm">
-                    {formState.fieldErrors.name}
+                    {formState.fieldErrors.level}
                   </p>
                 )}
               </div>
@@ -154,13 +167,21 @@ export default function NewCoursePage() {
                   onBlur={() => validateEmec(emecCode)}
                   maxLength={8}
                   aria-invalid={!!emecCodeError || undefined}
-                  aria-describedby={emecCodeError ? 'emecCode-error' : undefined}
-                  className={emecCodeError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  aria-describedby={
+                    emecCodeError ? 'emecCode-error' : undefined
+                  }
+                  className={
+                    emecCodeError
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                   placeholder="Apenas números"
                   required
                 />
                 {emecCodeError && (
-                  <p id="emecCode-error" className="text-sm text-red-600">{emecCodeError}</p>
+                  <p id="emecCode-error" className="text-sm text-red-600">
+                    {emecCodeError}
+                  </p>
                 )}
                 {formState?.fieldErrors?.emecCode && (
                   <p className="text-destructive text-sm">
@@ -170,23 +191,33 @@ export default function NewCoursePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Grau</Label>
-                <Select value={level} onValueChange={(v) => setLevel(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o grau" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(CourseLevel).map((lv) => (
-                      <SelectItem key={lv} value={lv}>
-                        {lv}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="level" value={level} required />
-                {formState?.fieldErrors?.level && (
+                <Label htmlFor="name">Nome do Curso</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setName(v);
+                  }}
+                  onBlur={() => validateName(name)}
+                  maxLength={150}
+                  aria-invalid={!!nameError || undefined}
+                  aria-describedby={nameError ? 'name-error' : undefined}
+                  className={
+                    nameError ? 'border-red-500 focus-visible:ring-red-500' : ''
+                  }
+                  placeholder="Ex.: Licenciatura em Matemática"
+                  required
+                />
+                {nameError && (
+                  <p id="name-error" className="text-sm text-red-600">
+                    {nameError}
+                  </p>
+                )}
+                {formState?.fieldErrors?.name && (
                   <p className="text-destructive text-sm">
-                    {formState.fieldErrors.level}
+                    {formState.fieldErrors.name}
                   </p>
                 )}
               </div>
@@ -219,7 +250,9 @@ export default function NewCoursePage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="ppcDocumentUrl" className="text-sm font-medium">PPC</Label>
+                <Label htmlFor="ppcDocumentUrl" className="text-sm font-medium">
+                  PPC
+                </Label>
                 <div className="relative">
                   <Input
                     id="ppcDocumentUrl"
@@ -230,17 +263,21 @@ export default function NewCoursePage() {
                       const v = e.target.value;
                       setPpcDocumentUrl(v);
                     }}
-                    onBlur={() => validateLink(ppcDocumentUrl, setPpcLinkErrors)}
+                    onBlur={() =>
+                      validateLink(ppcDocumentUrl, setPpcLinkErrors)
+                    }
                     aria-invalid={hasPpcError || undefined}
-                    aria-describedby={hasPpcError ? 'ppcDocumentUrl-error' : undefined}
+                    aria-describedby={
+                      hasPpcError ? 'ppcDocumentUrl-error' : undefined
+                    }
                     className={`pr-10 ${hasPpcError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   />
                   {ppcDocumentUrl && (
                     <Button
                       type="button"
-                      variant='ghost'
+                      variant="ghost"
                       onClick={() => setPpcDocumentUrl('')}
-                      className="absolute right-1 top-1 h-7 w-7 p-0 text-lg hover:cursor-pointer"
+                      className="absolute top-1 right-1 h-7 w-7 p-0 text-lg hover:cursor-pointer"
                       aria-label="Limpar link"
                       title="Limpar link"
                     >
@@ -286,7 +323,14 @@ export default function NewCoursePage() {
                 <Link href="/courses">Cancelar</Link>
               </Button>
               <SubmitButton
-                disabled={!level || !modality || !selectedCoordinator?.id || hasPpcError || !!nameError || !!emecCodeError}
+                disabled={
+                  !level ||
+                  !modality ||
+                  !selectedCoordinator?.id ||
+                  hasPpcError ||
+                  !!nameError ||
+                  !!emecCodeError
+                }
               />
             </div>
           </CardContent>
