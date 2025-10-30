@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { DimensionDefinition } from '@prisma/client';
 import DimensionItem from './dimension-item';
-import NewCicle from '@/components/new-cicle';
+import NewCycle from '@/components/new-cycle-dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -100,27 +100,44 @@ const DimensionList = ({
 
   return (
     <div className="space-y-6 p-8">
-      <div className="flex items-start justify-between md:flex-row flex-col md:items-center gap-4">
-        <div className='flex flex-col gap-4'>
-          <h1 className="text-3xl font-bold">Dimensões <span className="text-foreground font-semibold">— {courseName}</span></h1>
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-3xl font-bold">
+            Dimensões{' '}
+            <span className="text-foreground font-semibold">
+              — {courseName}
+            </span>
+          </h1>
           <p className="text-muted-foreground text-lg">
             Acompanhe o desempenho do curso nas 3 dimensões do SINAES.
           </p>
         </div>
-        <Button
-          variant="outline"
-          className="inline-flex items-center gap-2 hover:cursor-pointer"
-        >
-          <a
-            href="/assets/pdf/pdf-1.pdf"
-            download
-            aria-label={`Baixar Manual de Instruções}`}
-            className="inline-flex items-center gap-2"
+        <div className='flex items-center gap-4'>
+          <Button
+            variant="outline"
+            className="inline-flex items-center gap-2 hover:cursor-pointer"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Manual de instruções
-          </a>
-        </Button>
+            <a
+              href="/assets/pdf/pdf-1.pdf"
+              download
+              aria-label={`Baixar Manual de Instruções}`}
+              className="inline-flex items-center gap-2"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Manual de instruções
+            </a>
+          </Button>
+          <NewCycle
+            open={dialogIsOpen}
+            onOpenChange={setDialogIsOpen}
+            onCreate={handleCreateCycle}
+            trigger={
+              <Button className="bg-green-600 hover:cursor-pointer hover:bg-green-700">
+                Criar ciclo
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       {!hasCycles ? (
@@ -129,7 +146,7 @@ const DimensionList = ({
             <p className="text-lg">
               Este curso ainda não possui ciclos de avaliação.
             </p>
-            <NewCicle
+            <NewCycle
               open={dialogIsOpen}
               onOpenChange={setDialogIsOpen}
               onCreate={handleCreateCycle}

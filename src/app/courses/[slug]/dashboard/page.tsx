@@ -15,9 +15,9 @@ function mapGrade(grade: string | null) {
 export default async function CourseDashboardPage({
   params
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) return notFound();

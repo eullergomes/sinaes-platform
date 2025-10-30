@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-react';
+import { Bell, ChevronsUpDown, LogOut, UserCircle } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -16,6 +16,7 @@ import { SidebarMenuButton } from '@/components/ui/sidebar';
 import type { User } from 'better-auth';
 import { Button } from './ui/button';
 import { signOut } from '@/lib/auth-client';
+import Link from 'next/link';
 
 type NavUserProps = { user: User; hideInfo?: boolean };
 
@@ -82,13 +83,17 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <BadgeCheck />
-            Conta
+          <DropdownMenuItem asChild className='hover:cursor-pointer'>
+            <Link href="/profile" className='flex gap-4'>
+              <UserCircle />
+              Perfil
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell />
-            Notificações
+          <DropdownMenuItem asChild className='hover:cursor-pointer'>
+            <Link href="/notifications" className='flex gap-4'>
+              <Bell />
+              Notificações
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

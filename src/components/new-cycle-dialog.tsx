@@ -13,7 +13,7 @@ import {
 import { Input } from './ui/input';
 import { MAX_YEAR, MIN_YEAR } from '@/constants/year';
 
-type NewCicleProps = {
+type NewCycleProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate: (year: number, copyFromPrevious: boolean) => Promise<void>;
@@ -24,7 +24,7 @@ type NewCicleProps = {
   description?: string;
 };
 
-const NewCicle: React.FC<NewCicleProps> = ({
+const NewCycle: React.FC<NewCycleProps> = ({
   open,
   onOpenChange,
   onCreate,
@@ -127,4 +127,4 @@ const NewCicle: React.FC<NewCicleProps> = ({
   );
 };
 
-export default NewCicle;
+export default NewCycle;
