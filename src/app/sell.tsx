@@ -10,13 +10,13 @@ import {
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/app-sidebar';
 import PendingAlerts from '@/components/PendingAlerts';
-import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 import { useSession } from '@/lib/auth-client';
 
 import NavUser from '@/components/nav-user';
+import Footer from '@/components/footer';
 
 function extractCourseId(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
@@ -62,43 +62,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     };
   }, [currentCourseId]);
 
-  // const UserBlock = (
-  //   <div className="flex items-center gap-3">
-  //     <div className="flex items-center gap-3 pt-1">
-  //       <Avatar>
-  //         <AvatarImage
-  //           src={avatarUrl(user?.image as string | undefined)}
-  //           alt={user?.name as string}
-  //         />
-  //         <AvatarFallback className='bg-gray-500'>
-  //           {user?.name
-  //             ?.split(' ')
-  //             .map((n) => n[0])
-  //             .slice(0, 2)
-  //             .join('')}
-  //         </AvatarFallback>
-  //       </Avatar>
-  //       <div className="flex flex-col items-start">
-  //         <h3 className="font-semibold">{user?.name}</h3>
-  //         <span className="text-xs text-muted-foreground">
-  //           {user?.email}
-  //         </span>
-  //       </div>
-  //     </div>
-  //     <Button
-  //       size="sm"
-  //       variant="secondary"
-  //       onClick={() => signOut()}
-  //     >
-  //       Sair
-  //     </Button>
-  //   </div>
-  // );
-
   const UserSkeleton = (
     <div className="flex items-center gap-3">
       <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300" />
-      <div className="h-4 w-24 animate-pulse rounded bg-gray-300" />
     </div>
   );
 
@@ -183,7 +149,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
         )}
 
         <div className="flex flex-1 flex-col gap-4">{children}</div>
-        <Toaster />
+        <Footer />
       </SidebarInset>
     </SidebarProvider>
   );

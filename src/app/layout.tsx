@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
 import AppShell from './sell';
+import { Toaster } from '@/components/ui/sonner';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -20,8 +21,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${poppins.className} flex min-h-screen bg-gray-50 text-gray-800`}>
+      <body
+        suppressHydrationWarning
+        className={`${poppins.className} flex min-h-screen flex-col bg-gray-50 text-gray-800`}
+      >
         <AppShell>{children}</AppShell>
+        <Toaster />
       </body>
     </html>
   );
