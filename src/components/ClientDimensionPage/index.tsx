@@ -27,9 +27,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import NewCicle from '@/components/new-cicle';
 import { Filter, Loader2 } from 'lucide-react';
-import { Toaster, toast } from 'sonner';
 import { IndicatorStatus } from '@prisma/client';
 import { DimensionApiResponse, IndicatorGrade } from '@/types/dimension-types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -46,7 +44,6 @@ const ClientDimensionPage = ({
 }) => {
   const router = useRouter();
 
-  const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [apiData, setApiData] = useState<DimensionApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +147,6 @@ const ClientDimensionPage = ({
     });
   }, [apiData, selectedYear, gradeFilters, statusFilters]);
 
-  // --- HANDLERS ---
   const toggleInSet = (
     value: string,
     setter: React.Dispatch<React.SetStateAction<Set<string>>>
@@ -161,20 +157,6 @@ const ClientDimensionPage = ({
       else next.add(value);
       return next;
     });
-
-  async function handleCreateCycle(y: number, copyFromPrevious: boolean) {
-    const res = await fetch(`/api/courses/${encodeURIComponent(slug)}/cycles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ year: y, copyFromPrevious })
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data?.error || 'Falha ao criar ciclo');
-    }
-    toast.success('Ciclo criado com sucesso.');
-    await fetchData(y);
-  }
 
   const handleEdit = (code: string) => {
     router.push(
@@ -226,7 +208,6 @@ const ClientDimensionPage = ({
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-      <Toaster richColors position="top-right" />
       <h1 className="text-3xl font-bold">{apiData?.dimension.title}</h1>
 
       <Card>
@@ -331,16 +312,6 @@ const ClientDimensionPage = ({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <NewCicle
-              open={dialogIsOpen}
-              onOpenChange={setDialogIsOpen}
-              onCreate={handleCreateCycle}
-              trigger={
-                <Button className="bg-green-600 hover:cursor-pointer hover:bg-green-700">
-                  Criar ciclo
-                </Button>
-              }
-            />
           </div>
         </CardHeader>
 

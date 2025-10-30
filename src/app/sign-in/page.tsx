@@ -64,6 +64,13 @@ const SignInPage = () => {
                 className="space-y-8"
               >
                 <div className="grid gap-4">
+                  <Image 
+                    src="/assets/imgs/ifma-avalia-logo.png"
+                    alt="Logo IFMA"
+                    width={100}
+                    height={100}
+                    className="mx-auto"
+                  />
                   <div className="flex flex-col items-center gap-1 text-center">
                     <h1 className="text-2xl font-bold">Entrar</h1>
                     <p className="text-muted-foreground text-sm text-balance">

@@ -78,7 +78,8 @@ const SignUpForm = () => {
         if (file.size > 2 * 1024 * 1024) {
           throw new Error('Máx 2MB');
         }
-        imageUrl = await uploadToCloudinary(file);
+        const uploadResponse = await uploadToCloudinary(file, 'ifma-avatars');
+        imageUrl = uploadResponse.secure_url;
       }
 
       await authClient.signUp.email({
@@ -102,7 +103,8 @@ const SignUpForm = () => {
         }
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao criar conta.';
+      const message =
+        error instanceof Error ? error.message : 'Erro ao criar conta.';
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -120,6 +122,13 @@ const SignUpForm = () => {
                 className="space-y-8"
               >
                 <div className="grid gap-4">
+                  <Image
+                    src="/assets/imgs/ifma-avalia-logo.png"
+                    alt="Logo IFMA"
+                    width={100}
+                    height={100}
+                    className="mx-auto"
+                  />
                   <div className="flex flex-col items-center gap-1 text-center">
                     <h1 className="text-2xl font-bold">Cadastre-se</h1>
                     <p className="text-muted-foreground text-sm text-balance">
