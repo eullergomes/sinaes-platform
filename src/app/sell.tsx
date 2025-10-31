@@ -28,7 +28,7 @@ function extractCourseId(pathname: string): string | null {
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [courseName, setCourseName] = useState<string | null>(null);
-  const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up';
+  const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up' || pathname === '/profile';
   const hideSidebar =
     pathname === '/courses' ||
     pathname === '/courses/new' ||
@@ -148,7 +148,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           </header>
         )}
 
-        <div className="flex flex-1 flex-col gap-4">{children}</div>
+        <div className="flex flex-1 flex-col gap-4 min-h-[calc(100svh-4rem)]">{children}</div>
         <Footer />
       </SidebarInset>
     </SidebarProvider>

@@ -221,7 +221,7 @@ const ClientDimensionPage = ({
               value={String(selectedYear)}
               onValueChange={(v) => setSelectedYear(Number(v))}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-28 md:w-32">
                 <SelectValue placeholder="Ano" />
               </SelectTrigger>
               <SelectContent>
@@ -247,7 +247,7 @@ const ClientDimensionPage = ({
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40" align="start">
+              <DropdownMenuContent className="w-36" align="start">
                 <DropdownMenuLabel>Filtrar por nota</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {Object.values(IndicatorGrade).map((g) => (

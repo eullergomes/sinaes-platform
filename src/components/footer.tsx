@@ -9,7 +9,7 @@ const Footer = () => {
 
   return (
     <footer className="border-t bg-green-600 text-sm text-muted-foreground">
-      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="px-8 py-4">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row">
           <div className="flex-1 space-y-2">
             <a 
@@ -44,7 +44,7 @@ const Footer = () => {
                     href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/avaliacao-in-loco"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 hover:text-primary hover:underline text-white"
+                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
                   >
                     <BookMarked className="h-4 w-4" />
                     Sobre o SINAES (INEP)
@@ -55,7 +55,7 @@ const Footer = () => {
                     href="https://caxias.ifma.edu.br"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 hover:text-primary hover:underline text-white"
+                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
                   >
                     <Building className="h-4 w-4" />
                     Site do IFMA - Campus Caxias
