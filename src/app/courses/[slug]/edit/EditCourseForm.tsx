@@ -325,11 +325,11 @@ export default function EditCourseForm({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label>Coordenador</Label>
+                <Label>Coordenador(a)</Label>
                 <CoordinatorAutocomplete
                   value={coordinator}
                   onChange={setCoordinator}
-                  placeholder="Buscar e selecionar coordenador"
+                  placeholder="Buscar e selecionar coordenador(a)"
                 />
                 <input
                   type="hidden"

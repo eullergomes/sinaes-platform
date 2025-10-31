@@ -298,11 +298,11 @@ export default function NewCoursePage() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label>Coordenador</Label>
+                <Label>Coordenador(a)</Label>
                 <CoordinatorAutocomplete
                   value={selectedCoordinator}
                   onChange={setSelectedCoordinator}
-                  placeholder="Buscar e selecionar coordenador"
+                  placeholder="Buscar e selecionar coordenador(a)"
                 />
                 <input
                   type="hidden"

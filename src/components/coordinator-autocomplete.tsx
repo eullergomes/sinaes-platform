@@ -30,7 +30,7 @@ function useDebounced<T>(value: T, delay = 300) {
 const CoordinatorAutocomplete = ({
   value,
   onChange,
-  placeholder = 'Selecione o coordenador',
+  placeholder = 'Selecionar coordenador(a)',
   disabled,
   className
 }: CoordinatorAutocompleteProps) => {
@@ -69,7 +69,7 @@ const CoordinatorAutocomplete = ({
     const run = async () => {
       try {
         const url =
-          '/api/coordinators' +
+          '/api/visitors' +
           (debouncedQuery
             ? `?query=${encodeURIComponent(debouncedQuery)}`
             : '');
@@ -80,7 +80,7 @@ const CoordinatorAutocomplete = ({
       } catch (e: unknown) {
         const err = e as { name?: string } | undefined;
         if (err?.name === 'AbortError') return;
-        setError('Não foi possível carregar os coordenadores.');
+        setError('Não foi possível carregar os usuários.');
         setItems([]);
       } finally {
         setLoading(false);
@@ -144,7 +144,7 @@ const CoordinatorAutocomplete = ({
               </div>
             ) : items.length === 0 ? (
               <div className="text-muted-foreground px-2 py-1.5 text-sm">
-                Nenhum coordenador encontrado
+                Nenhum usuário encontrado
               </div>
             ) : (
               <ul className="max-h-64 overflow-y-auto py-1">
