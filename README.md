@@ -91,22 +91,22 @@ A plataforma está sendo desenvolvida com múltiplos níveis de acesso, garantin
 <div align="center">
 
 ### Página dos Cursos  
-<img src="./public/assets/screenshots/course-page.png" alt="Página dos Cursos" width="600" style="margin:10px;"/>
+<img src="./public/assets/screenshots/course-page.png" alt="Página dos Cursos" width="800" style="margin:10px;"/>
 
 ### Página de Edição do Curso  
-<img src="./public/assets/screenshots/edit-couse-page.png" alt="Página de Edição do Curso" width="600" style="margin:10px;"/>
+<img src="./public/assets/screenshots/edit-couse-page.png" alt="Página de Edição do Curso" width="800" style="margin:10px;"/>
 
 ### Página das Dimensões  
-<img src="./public/assets/screenshots/dimentions-page.png" alt="Página das Dimensões" width="600" style="margin:10px;"/>
+<img src="./public/assets/screenshots/dimentions-page.png" alt="Página das Dimensões" width="800" style="margin:10px;"/>
 
 ### Página da Dimensão  
-<img src="./public/assets/screenshots/dimention-page.png" alt="Página da Dimensão" width="600" style="margin:10px;"/>
+<img src="./public/assets/screenshots/dimention-page.png" alt="Página da Dimensão" width="800" style="margin:10px;"/>
 
 ### Página do Indicador  
-<img src="./public/assets/screenshots/indicator-page.png" alt="Página do Indicador" width="600" style="margin:10px;"/>
+<img src="./public/assets/screenshots/indicator-page.png" alt="Página do Indicador" width="800" style="margin:10px;"/>
 
 ### Página de Login  
-<img src="./public/assets/screenshots/sign-in-page.png" alt="Página de Login" width="600" style="margin:10px;"/>
+<img src="./public/assets/screenshots/sign-in-page.png" alt="Página de Login" width="800" style="margin:10px;"/>
 
 </div>
 
