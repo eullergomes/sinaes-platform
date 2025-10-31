@@ -21,6 +21,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import Image from 'next/image';
+import { mapAuthError } from '@/lib/errors/auth';
 
 const formSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -44,7 +45,9 @@ const SignInPage = () => {
         fetchOptions: {
           onSuccess: () => router.push('/'),
           onError: (error) => {
-            toast.error(error.error?.message ?? 'Falha no login');
+            console.log(error);
+
+            toast.error(mapAuthError(error));
           }
         }
       });
@@ -64,7 +67,7 @@ const SignInPage = () => {
                 className="space-y-8"
               >
                 <div className="grid gap-4">
-                  <Image 
+                  <Image
                     src="/assets/imgs/ifma-avalia-logo.png"
                     alt="Logo IFMA"
                     width={100}
@@ -140,15 +143,14 @@ const SignInPage = () => {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
+      <div className="bg-muted hidden items-center justify-center md:flex">
         <Image
           src="/assets/imgs/ifma-cx-logo.png"
           alt="Logo IFMA Caxias"
-          fill
-          sizes="100vw"
-          className="absolute inset-0 h-full w-full object-contain"
+          width={500}
+          height={500}
+          className="object-contain"
         />
-
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import { PasswordInput } from '../../components/ui/password-input';
 import { Loader2, UploadCloud } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
+import { mapAuthErrorCode } from '@/lib/errors/auth';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import uploadToCloudinary from '@/services/uploadToCloudinary';
@@ -92,13 +93,13 @@ const SignUpForm = () => {
             router.push('/');
           },
           onError: (error) => {
-            if (error.error.code === 'USER_ALREADY_EXISTS') {
-              toast.error('E-mail já cadastrado.');
-              return form.setError('email', {
-                message: 'E-mail já cadastrado.'
-              });
+            console.log(error);
+            const code = (error as { error?: { code?: string } })?.error?.code;
+            const message = mapAuthErrorCode(code, 'Erro ao criar conta.');
+            if (code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL') {
+              form.setError('email', { message });
             }
-            toast.error(error.error.message);
+            toast.error(message);
           }
         }
       });
@@ -289,13 +290,13 @@ const SignUpForm = () => {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
+      <div className="bg-muted hidden items-center justify-center md:flex">
         <Image
           src="/assets/imgs/ifma-cx-logo.png"
           alt="Logo IFMA Caxias"
-          fill
-          sizes="100vw"
-          className="absolute inset-0 h-full w-full object-contain"
+          width={500}
+          height={500}
+          className="object-contain"
         />
       </div>
     </div>
