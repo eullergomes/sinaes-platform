@@ -1,16 +1,6 @@
-<!--
-NOTA PARA VOCÊ, EULLER:
-Este é um README profissional. Antes de colar, lembre-se de:
-
-✅ Adicionar screenshots reais na seção "Screenshots" (MUITO IMPORTANTE!)
-✅ Verificar o caminho para o logo do IFMA (ou remover a linha)
-✅ Inserir seu LinkedIn e link do TCC (quando disponível)
--->
-
 <div align="center">
 
-<!-- Substitua o link do logo se tiver o arquivo local no repositório -->
-<img src="https://caxias.ifma.edu.br/wp-content/uploads/sites/27/2024/11/Logo-IFMA-Vertical-2.png" alt="Logo IFMA Campus Caxias" width="300"/>
+<img src="./public/assets/imgs/logo-ifma-vertical.png" alt="Logo IFMA Campus Caxias" width="300"/>
 
 <h1>Plataforma de Monitoramento SINAES</h1>
 
