@@ -154,13 +154,13 @@ Crie um arquivo `.env` na raiz do projeto, baseado no `.env.example`:
 DATABASE_URL="mongodb://localhost:27017/sinaes_db_local?replicaSet=rs0"
 
 # Secret de autenticação
-AUTH_SECRET="SEU_AUTH_SECRET_FORTE"
+BETTER_AUTH_SECRET="YOUR_AUTH_SECRET"
 
 # Credenciais Cloudinary
 CLOUDINARY_URL="cloudinary://<API_KEY>:<API_SECRET>@<CLOUD_NAME>"
-CLOUDINARY_CLOUD_NAME="SEU_CLOUD_NAME"
-CLOUDINARY_API_KEY="SUA_API_KEY"
-CLOUDINARY_API_SECRET="SUA_API_SECRET"
+CLOUDINARY_CLOUD_NAME="YOUR_CLOUD_NAME"
+CLOUDINARY_API_KEY="YOUR_API_KEY"
+CLOUDINARY_API_SECRET="YOUR_API_SECRET"
 ```
 ### 🐳 4. Iniciar o Banco de Dados com Docker
 ```bash
@@ -213,6 +213,3 @@ Este software é de uso interno do Instituto Federal do Maranhão (IFMA) – Cam
 Sua reprodução, modificação ou redistribuição fora do âmbito institucional requer autorização expressa do autor e da instituição.
 
 © 2025 Euller Gomes Teixeira. Todos os direitos reservados.
-
-
-<div align="center"> Feito com 💚 por <strong>Euller Gomes Teixeira</strong> </div>
