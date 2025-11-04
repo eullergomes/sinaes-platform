@@ -11,132 +11,217 @@ import {
 const prisma = new PrismaClient();
 
 const allEvidenceRequirements = [
-  // Dimensão 1
-  { slug: 'politica-ensino', title: 'Política institucional de Ensino' },
-  { slug: 'politica-extensao', title: 'Política institucional de Extensão' },
-  { slug: 'politica-pesquisa', title: 'Política Institucional de Pesquisa' },
-  { slug: 'pdi', title: 'Plano de Desenvolvimento Institucional (PDI)' },
-  { slug: 'ppc', title: 'Projeto Político de Curso (PPC)' },
-  { slug: 'implantacao-ensino', title: 'Implantação no âmbito do Ensino' },
-  { slug: 'implantacao-extensao', title: 'Implantação no âmbito da Extensão' },
-  { slug: 'implantacao-pesquisa', title: 'Implantação no âmbito da Pesquisa' },
+  // Dimensão 1 — Organização Didático-Pedagógica (Indicador 1.1)
   {
-    slug: 'perfil-egresso-recorte',
-    title: 'Perfil do Egresso - recorte do PPC'
+    slug: 'politica-institucional-ensino',
+    title: 'Política institucional de ensino'
   },
   {
-    slug: 'praticas-exitosas-inovadoras',
-    title: 'Práticas Exitosas e Inovadoras'
-  },
-  { slug: 'objetivos-recorte', title: 'Objetivos - recorte do PPC' },
-  {
-    slug: 'perfil-profissional-egresso-recorte',
-    title: 'Perfil profissional do egresso - recorte do PPC'
+    slug: 'politica-institucional-extensao',
+    title: 'Política institucional de extensão'
   },
   {
-    slug: 'estrutura-curricular-recorte',
-    title: 'Estrutura curricular - recorte do PPC'
+    slug: 'politica-institucional-pesquisa',
+    title: 'Política institucional de pesquisa'
   },
-  { slug: 'dcn', title: 'Diretrizes Curriculares Nacionais (DCN)' },
+  { slug: 'pdi', title: 'PDI' },
+  {
+    slug: 'implantacao-no-ambito-do-curso',
+    title: 'Implantação no âmbito do curso'
+  },
+  {
+    slug: 'politicas-promocao-aprendizagem-perfil-egresso',
+    title:
+      'Políticas institucionais voltadas para a promoção de oportunidades de aprendizagem alinhadas ao perfil do egresso'
+  },
+  {
+    slug: 'praticas-exitosas-ou-inovadoras',
+    title: 'Práticas exitosas ou inovadoras'
+  },
+
+  // Indicador 1.2 — Objetivos do curso
+  { slug: 'objetivos-do-curso', title: 'Objetivos do curso' },
+  {
+    slug: 'perfil-profissional-do-egresso',
+    title: 'Perfil profissional do egresso'
+  },
+  { slug: 'estrutura-curricular', title: 'Estrutura curricular' },
+  { slug: 'contexto-educacional', title: 'Contexto educacional' },
+  {
+    slug: 'caracteristicas-locais-regionais',
+    title: 'Características locais e regionais'
+  },
+  { slug: 'novas-praticas-emergentes', title: 'Novas práticas emergentes' },
+
+  // Indicador 1.3 — Perfil profissional do egresso
+  { slug: 'dcn', title: 'DCN' },
+  {
+    slug: 'competencias-a-desenvolver',
+    title: 'Competências a serem desenvolvidas pelo discente'
+  },
+  {
+    slug: 'necessidades-locais-regionais',
+    title: 'Necessidades locais e regionais'
+  },
+  {
+    slug: 'ampliacao-por-demandas-do-trabalho',
+    title: 'Ampliação em função de novas demandas pelo mundo do trabalho'
+  },
+
+  // Indicador 1.4 — Estrutura curricular
+  { slug: 'flexibilidade', title: 'Flexibilidade' },
+  { slug: 'interdisciplinaridade', title: 'Interdisciplinaridade' },
   { slug: 'acessibilidade-metodologica', title: 'Acessibilidade metodológica' },
+  {
+    slug: 'compatibilidade-carga-horaria-total',
+    title: 'Compatibilidade da carga horária total (em horas-relógio)'
+  },
+  {
+    slug: 'articulacao-teoria-pratica',
+    title: 'Evidência da articulação da teoria com a prática'
+  },
   { slug: 'disciplina-libras', title: 'Disciplina de LIBRAS' },
   {
-    slug: 'articulacao-componentes-curriculares-recorte',
-    title:
-      'Articulação entre os componentes curriculares no percurso de formação - recorte do PPC'
+    slug: 'articulacao-componentes-curriculares',
+    title: 'Articulação entre os componentes curriculares'
+  },
+  { slug: 'elementos-inovadores', title: 'Elementos inovadores' },
+
+  // Indicador 1.5 — Conteúdos curriculares
+  { slug: 'conteudos-curriculares', title: 'Conteúdos curriculares' },
+  { slug: 'atualizacao-da-area', title: 'Atualização da área' },
+  {
+    slug: 'adequacao-cargas-horarias',
+    title: 'Adequação das cargas horárias (em horas-relógio)'
+  },
+  { slug: 'adequacao-bibliografia', title: 'Adequação da bibliografia' },
+  { slug: 'educacao-ambiental', title: 'Educação ambiental' },
+  { slug: 'educacao-direitos-humanos', title: 'Educação em direitos humanos' },
+  {
+    slug: 'educacao-relacoes-etnico-raciais',
+    title: 'Educação das relações étnico-raciais'
   },
   {
-    slug: 'elementos-inovadores-recorte',
-    title: 'Elementos comprovadamente inovadores - recorte do PPC'
+    slug: 'historia-cultura-afro-africana-indigena',
+    title: 'Ensino de história e cultura afro-brasileira, africana e indígena'
   },
   {
-    slug: 'conteudos-curriculares-recorte',
-    title: 'Conteúdos curriculares - recorte do PPC'
-  },
-  {
-    slug: 'educacao-ambiental-recorte',
-    title: 'Educação ambiental - recorte do PPC'
-  },
-  {
-    slug: 'educacao-direitos-humanos-recorte',
-    title: 'Educação em Direitos humanos - recorte do PPC'
-  },
-  {
-    slug: 'educacao-relacoes-etnico-raciais-recorte',
-    title: 'Educação das relações étnico raciais - recorte do PPC'
-  },
-  {
-    slug: 'ensino-historia-cultura-afro-indigena-recorte',
-    title:
-      'Ensino de história e cultura afro-brasileira, africana e indígena - recorte do PPC'
+    slug: 'diferencial-do-curso',
+    title: 'Diferencial do curso dentro da área profissional'
   },
   {
     slug: 'conhecimento-recente-inovador',
     title: 'Conhecimento recente e inovador'
   },
-  { slug: 'metodologia-recorte', title: 'Metodologia - recorte do PPC' },
+
+  // Indicador 1.6 — Metodologia
+  { slug: 'metodologia', title: 'Metodologia' },
+  {
+    slug: 'atendimento-desenvolvimento-conteudos',
+    title: 'Atendimento ao desenvolvimento de conteúdos'
+  },
+  {
+    slug: 'atendimento-estrategias-aprendizagem',
+    title: 'Atendimento às estratégias de aprendizagem'
+  },
+  {
+    slug: 'atendimento-acompanhamento-atividades',
+    title: 'Atendimento ao contínuo acompanhamento das atividades'
+  },
+  {
+    slug: 'atendimento-acessibilidade-metodologica',
+    title: 'Atendimento à acessibilidade metodológica'
+  },
+  {
+    slug: 'atendimento-autonomia-discente',
+    title: 'Atendimento à autonomia do discente'
+  },
   {
     slug: 'praticas-pedagogicas-acao-discente',
-    title: 'Práticas pedagógicas que estimulam a ação discente'
+    title:
+      'Práticas pedagógicas que estimulam a ação discente em uma relação teoria-prática'
   },
-  { slug: 'relacao-teoria-pratica', title: 'Relação teoria-prática' },
-  { slug: 'aprendizagem-diferenciada', title: 'Aprendizagem diferenciada' },
-  { slug: 'resolucao-estagio', title: 'Resolução de estágio supervisionado' },
+  { slug: 'metodologias-inovadoras', title: 'Metodologias inovadoras' },
   {
-    slug: 'estagio-supervisionado-recorte',
-    title: 'Estágio supervisionado - recorte do PPC'
+    slug: 'recursos-aprendizagens-diferenciadas',
+    title:
+      'Recursos que proporcionam aprendizagens diferenciadas dentro da área'
   },
-  { slug: 'planos-estagios', title: 'Planos de estágios' },
+
+  // Indicador 1.7 — Estágio curricular supervisionado
+  {
+    slug: 'institucionalizacao-estagio',
+    title: 'Institucionalização do estágio curricular supervisionado'
+  },
+  { slug: 'carga-horaria-estagio', title: 'Carga horária' },
+  {
+    slug: 'orientacao-coordenacao-supervisao',
+    title: 'Orientação compatível com as atividades, coordenação e supervisão'
+  },
   { slug: 'convenios-estagios', title: 'Convênios de estágios' },
   {
     slug: 'integracao-ensino-mundo-trabalho',
-    title: 'Integração entre ensino e mundo do trabalho'
+    title:
+      'Estratégias para gestão da integração entre ensino e mundo do trabalho'
   },
+  { slug: 'perfil-do-egresso', title: 'Perfil do egresso' },
   {
     slug: 'interlocucao-institucionalizada',
-    title: 'Interlocução institucionalizada'
-  },
-  { slug: 'insumos', title: 'Insumos' },
-  {
-    slug: 'resolucao-160-2022-atividades-complementares',
     title:
-      'Resolução N. 160/2022 - Regulamentação das atividades complementares'
+      'Interlocução institucionalizada da IES com o(s) ambiente(s) de estágio'
   },
   {
-    slug: 'carga-horaria-diversidade-atividades-recorte',
+    slug: 'insumos',
+    title: 'Insumos para atualização das práticas do estágio'
+  },
+
+  // Indicadores 1.8 e 1.9 — Não se aplica (NSA)
+
+  // Indicador 1.10 — Atividades complementares
+  {
+    slug: 'institucionalizacao-atividades-complementares',
+    title: 'Institucionalização das atividades complementares'
+  },
+  {
+    slug: 'carga-horaria-atividades-complementares',
+    title: 'Carga horária das atividades complementares'
+  },
+  {
+    slug: 'diversidade-atividades-complementares',
+    title: 'Diversidade de atividades'
+  },
+  { slug: 'formas-aproveitamento', title: 'Formas de aproveitamento' },
+  {
+    slug: 'aderencia-formacao-geral-especifica',
+    title: 'Aderência à formação geral e específica do discente'
+  },
+  {
+    slug: 'mecanismos-exitosos-inovadores-gestao-aproveitamento',
     title:
-      'Carga horária e diversidade de atividades - recorte da Resolução N. 160/2022'
+      'Mecanismos exitosos ou inovadores na regulação, gestão e aproveitamento'
   },
+
+  // Indicador 1.11 — Trabalhos de Conclusão de Curso (TCC)
   {
-    slug: 'formas-aproveitamento-recorte',
-    title: 'Formas de aproveitamento - recorte da Resolução N. 160/2022'
+    slug: 'institucionalizacao-tcc',
+    title: 'Institucionalização do Trabalho de Conclusão de Curso'
   },
+  { slug: 'carga-horaria-tcc', title: 'Carga horária' },
   {
-    slug: 'objetivos-gerais-especificos-recorte',
-    title: 'Objetivos Gerais e Específicos - recorte do PPC'
+    slug: 'formas-apresentacao-orientacao-coordenacao',
+    title: 'Formas de apresentação, orientação e coordenação'
   },
-  {
-    slug: 'mecanismos-gestao-aproveitamento',
-    title: 'Mecanismos de gestão e aproveitamento'
-  },
-  {
-    slug: 'resolucao-088-2017-tcc',
-    title: 'Resolução N. 088/2017 - regulamentação do TCC'
-  },
-  { slug: 'tcc-recorte', title: 'TCC - recorte do PPC' },
   {
     slug: 'manuais-apoio-tcc',
-    title: 'Manuais de apoio à produção dos trabalhos'
+    title: 'Manuais atualizados de apoio à produção dos trabalhos'
   },
   {
-    slug: 'regras-apresentacao-artigo',
-    title: 'Regras para apresentação do artigo científico'
+    slug: 'repositorios-institucionais',
+    title: 'Repositórios institucionais próprios'
   },
-  { slug: 'repositorio', title: 'Repositório' },
-  {
-    slug: 'apoio-discente-recorte',
-    title: 'Apoio ao discente - recorte do PPC'
-  },
+
+  // Indicador 1.12 — Apoio ao discente
+  { slug: 'apoio-ao-discente', title: 'Apoio ao discente' },
   {
     slug: 'acoes-acolhimento-permanencia',
     title: 'Ações de acolhimento e permanência'
@@ -151,164 +236,296 @@ const allEvidenceRequirements = [
   { slug: 'apoio-psicopedagogico', title: 'Apoio Psicopedagógico' },
   { slug: 'centros-academicos', title: 'Centros acadêmicos' },
   { slug: 'intercambios', title: 'Intercâmbios' },
-  { slug: 'acoes-exitosas-inovadoras', title: 'Ações exitosas e inovadoras' },
-  { slug: 'cae', title: 'Coordenadoria de Assuntos Estudantis (CAE)' },
   {
-    slug: 'avaliacao-curso-recorte',
-    title: 'Avaliação do curso - recorte do PPC'
+    slug: 'acoes-exitosas-ou-inovadoras',
+    title: 'Ações exitosas ou inovadoras'
   },
+
+  // Indicador 1.13 — Gestão do curso e avaliações interna/externa
+  { slug: 'gestao-do-curso', title: 'Gestão do curso' },
   { slug: 'autoavaliacao-institucional', title: 'Autoavaliação institucional' },
   {
-    slug: 'gestao-avaliacoes-externas',
-    title: 'Gestão baseada em avaliações externas (Plano Trienal)'
+    slug: 'aprimoramento-planejamento-avaliacoes-externas',
+    title:
+      'Aprimoramento do planejamento do curso baseado em avaliações externas'
   },
   {
-    slug: 'apropriacao-resultados-avaliacoes',
+    slug: 'apropiacao-resultados-avaliacoes',
     title: 'Apropriação dos resultados das avaliações pela comunidade acadêmica'
   },
   {
     slug: 'autoavaliacao-periodica-curso',
     title: 'Autoavaliação periódica do curso'
   },
-  { slug: 'tics-recorte', title: 'TICs - recorte do PPC' },
+
+  // 1.16 — TIC no processo ensino-aprendizagem
+  { slug: 'tics', title: 'Tecnologias de informação e comunicação' },
   {
     slug: 'acessibilidade-digital-comunicacional',
     title: 'Acessibilidade digital e comunicacional'
   },
   {
     slug: 'interatividade-docentes-discentes',
+    title: 'Interatividade entre docentes e discentes'
+  },
+  {
+    slug: 'acesso-materiais-recursos-didaticos',
+    title: 'Acesso a materiais ou recursos didáticos'
+  },
+  {
+    slug: 'experiencias-diferenciadas-aprendizagem',
+    title: 'Experiências diferenciadas de aprendizagem'
+  },
+
+  // 1.17 e 1.18 — NSA
+
+  // 1.19 — Procedimentos de acompanhamento e avaliação
+  {
+    slug: 'procedimentos-acompanhamento-avaliacao',
     title:
-      'Interatividade entre docentes e discentes; acesso a materiais; experiências diferenciadas de aprendizagem'
-  },
-  { slug: 'pud', title: 'Planos de Unidade Didática - PUD' },
-  { slug: 'ppi', title: 'Projeto Político Institucional (PPI)' },
-  {
-    slug: 'avaliacao-aprendizagem-recorte-ppc',
-    title: 'Avaliação da aprendizagem - recorte do PPC'
+      'Procedimentos de acompanhamento e de avaliação nos processos de ensino-aprendizagem'
   },
   {
-    slug: 'avaliacao-aprendizagem-recorte-ppi',
-    title: 'Avaliação da aprendizagem - recorte do PPI'
+    slug: 'desenvolvimento-autonomia-discente',
+    title: 'Desenvolvimento e a autonomia do discente'
   },
   {
-    slug: 'acompanhamento-avaliacao-planos-ensino',
-    title: 'Procedimentos de acompanhamento e de avaliação nos Planos de Ensino'
+    slug: 'informacoes-sistematizadas-estudantes',
+    title: 'Informações sistematizadas e disponibilizadas aos estudantes'
+  },
+  {
+    slug: 'mecanismos-natureza-formativa',
+    title: 'Mecanismos que garantem a natureza formativa'
   },
   {
     slug: 'acoes-melhoria-aprendizagem',
-    title: 'Ações para a melhoria da aprendizagem'
+    title:
+      'Ações para a melhoria da aprendizagem em função das avaliações realizadas'
   },
-  { slug: 'estudo-numero-vagas', title: 'Estudo do número de vagas' },
-  { slug: 'resolucao-criacao-curso', title: 'Resolução de criação do curso' },
-  { slug: 'resolucao-numero-vagas', title: 'Resolução do número de vagas' },
-  // Dimensão 2
-  { slug: 'regulamento-nde', title: 'Regulamento do NDE' },
+
+  // 1.20 — Número de vagas
   {
-    slug: 'portaria-nde-composicao-atual',
-    title: 'Portaria NDE - composição atual'
+    slug: 'estudo-numero-vagas',
+    title: 'Estudo quantitativo e qualitativo do número de vagas'
   },
   {
-    slug: 'regime-trabalho-membros-nde',
-    title: 'Regime de trabalho dos membros do NDE'
+    slug: 'pesquisas-comunidade-academica',
+    title: 'Pesquisas com a comunidade acadêmica'
   },
+  {
+    slug: 'adequacao-corpo-docente',
+    title: 'Adequação à dimensão do corpo docente'
+  },
+  {
+    slug: 'condicoes-infraestrutura-ensino-pesquisa',
+    title:
+      'Condições de infraestrutura física e tecnológica para o ensino e a pesquisa'
+  },
+
+  // 1.21, 1.22, 1.23, 1.24 — Tópicos de integração/atividades práticas (sem detalhamento no quadro)
+
+  // Dimensão 2 — Corpo Docente e Tutorial
+  // 2.1 — NDE
+  {
+    slug: 'nde-minimo-cinco-docentes',
+    title: 'NDE possui, no mínimo, 5 docentes do curso'
+  },
+  { slug: 'regime-trabalho-membros-nde', title: 'Regime de trabalho' },
   { slug: 'titulacao-stricto-sensu', title: 'Titulação stricto sensu' },
   {
-    slug: 'portaria-nomeacao-coordenacao',
-    title: 'Portaria de nomeação da coordenação de curso'
-  },
-  { slug: 'nde-recorte-ppc', title: 'NDE - recorte do PPC' },
-  {
-    slug: 'docentes-curso-recorte-ppc',
-    title: 'Docentes do curso - recorte do PPC'
-  },
-  { slug: 'atas-reunioes', title: 'Atas de reuniões' },
-  { slug: 'atualizacao-ppc', title: 'Atualização do PPC' },
-  {
-    slug: 'portarias-nde-composicoes-anteriores',
-    title: 'Portarias NDE - composições anteriores'
+    slug: 'coordenador-integrante-nde',
+    title: 'Coordenador do curso como integrante'
   },
   {
-    slug: 'normas-coordenadorias',
-    title: 'Normas das Coordenadorias dos Cursos de Graduação'
+    slug: 'atuacao-nde-ppc',
+    title: 'Atuação no acompanhamento, na consolidação e na atualização do PPC'
   },
   {
-    slug: 'gestao-curso-recorte-ppc',
-    title: 'Gestão do curso - recorte do PPC'
-  },
-  { slug: 'portarias-colegiado', title: 'Portarias do Colegiado' },
-  { slug: 'planos-acao', title: 'Planos de ação' },
-  { slug: 'indicadores-desempenho', title: 'Indicadores de desempenho' },
-  {
-    slug: 'gestao-potencialidade-corpo-docente',
-    title: 'Gestão da potencialidade do corpo docente'
+    slug: 'estudos-atualizacao-periodica',
+    title: 'Realização de estudos e atualização periódica'
   },
   {
-    slug: 'regime-trabalho-coordenador',
-    title: 'Regime de trabalho do(a) coordenador(a) de curso'
+    slug: 'verificacao-impacto-avaliacao-aprendizagem',
+    title:
+      'Verificação do impacto do sistema de avaliação de aprendizagem na formação do estudante'
   },
   {
-    slug: 'horarios-atendimento-coordenacao',
-    title: 'Horários de atendimento da coordenação'
+    slug: 'analise-adequacao-perfil-egresso',
+    title: 'Análise da adequação do perfil do egresso'
+  },
+  { slug: 'consideracao-dcn', title: 'Consideração das DCN' },
+  {
+    slug: 'consideracao-demandas-trabalho',
+    title: 'Consideração das novas demandas do mundo do trabalho'
+  },
+  {
+    slug: 'manutencao-membros-ato-regulatorio',
+    title: 'Manutenção de parte dos membros desde o último ato regulatório'
+  },
+
+  // 2.2 — Equipe multidisciplinar (NSA)
+
+  // 2.3 — Atuação do coordenador
+  { slug: 'atuacao-do-coordenador', title: 'Atuação do coordenador' },
+  {
+    slug: 'atendimento-demanda-existente',
+    title: 'Atendimento à demanda existente'
+  },
+  {
+    slug: 'relacao-docentes-discentes',
+    title: 'Relação com os docentes e discentes'
   },
   {
     slug: 'representatividade-colegiados-superiores',
-    title: 'Representatividade nos colegiados superiores'
+    title: 'Representatividade em colegiados superiores'
   },
+  { slug: 'indicadores-de-desempenho', title: 'Indicadores de desempenho' },
   {
     slug: 'administracao-potencialidade-corpo-docente',
     title: 'Administração da potencialidade do corpo docente'
   },
-  { slug: 'ementas-recorte-ppc', title: 'Ementas - recorte do PPC' },
-  { slug: 'bases-dados-periodicos', title: 'Bases de dados de periódicos' },
+  {
+    slug: 'integracao-melhoria-continua',
+    title: 'Integração e melhoria contínua'
+  },
+
+  // 2.4 — Regime de trabalho do coordenador de curso
+  {
+    slug: 'regime-trabalho-coordenador',
+    title: 'Regime de trabalho do(a) coordenador(a)'
+  },
+  { slug: 'planos-de-acao', title: 'Planos de ação' },
+  { slug: 'indicadores', title: 'Indicadores' },
+
+  // 2.5 — Corpo docente: titulação
+  {
+    slug: 'analise-conteudos-componentes',
+    title: 'Análise dos conteúdos dos componentes curriculares'
+  },
+  {
+    slug: 'relevancia-atuacao-profissional-academica',
+    title:
+      'Abordagem da relevância para a atuação profissional e acadêmica do discente'
+  },
+  {
+    slug: 'fomento-raciocinio-critico',
+    title:
+      'Fomento ao raciocínio crítico com base em literatura atualizada, para além da bibliografia proposta'
+  },
   {
     slug: 'acesso-conteudos-pesquisa-ponta',
     title: 'Acesso a conteúdos de pesquisa de ponta'
   },
-  { slug: 'autoavaliacao-docente', title: 'Autoavaliação docente' },
-  { slug: 'grupos-pesquisa', title: 'Grupos de pesquisa' },
-  { slug: 'publicacoes', title: 'Publicações' },
   {
-    slug: 'pit-rit',
-    title: 'Plano e Relatório Individual de Trabalho (PIT e RIT)'
+    slug: 'relacao-pesquisa-objetivos-perfil',
+    title:
+      'Relação dos conteúdos de pesquisa de ponta aos objetivos das disciplinas e ao perfil do egresso'
   },
+  {
+    slug: 'incentivo-producao-conhecimento',
+    title:
+      'Incentivo à produção do conhecimento, por meio de grupos de estudo ou de pesquisa e da publicação.'
+  },
+
+  // 2.6 — Regime de trabalho do corpo docente
   {
     slug: 'regime-trabalho-corpo-docente',
     title: 'Regime de trabalho do corpo docente'
   },
   {
+    slug: 'atendimento-integral-demanda',
+    title: 'Atendimento integral da demanda existente'
+  },
+  {
+    slug: 'dedicacao-docencia-atendimento',
+    title: 'Dedicação à docência, atendimento aos discentes'
+  },
+  { slug: 'participacao-colegiado', title: 'Participação no colegiado' },
+  {
+    slug: 'planejamento-didatico-avaliacoes',
+    title:
+      'Planejamento didático e a preparação e correção das avaliações de aprendizagem'
+  },
+  {
+    slug: 'documentacao-atividade-docente',
+    title: 'Documentação sobre atividade docente'
+  },
+  {
     slug: 'planejamento-gestao-melhoria-continua',
     title: 'Planejamento e gestão para melhoria contínua'
   },
+
+  // 2.7 — Experiência profissional do docente
   {
     slug: 'experiencia-profissional-mundo-trabalho',
     title: 'Experiência profissional no mundo do trabalho'
   },
   {
-    slug: 'interdisciplinaridade-recorte-ppc',
-    title: 'Interdisciplinaridade - recorte do PPC'
-  },
-  { slug: 'curriculos', title: 'Currículos' },
-  {
-    slug: 'declaracao-docencia-superior',
-    title: 'Declaração de docência superior'
-  },
-  { slug: 'avaliacao-cpa', title: 'Avaliação CPA' },
-  {
-    slug: 'atividades-promocao-aprendizagem-dificuldades',
+    slug: 'contextualizacao-problemas-praticos',
     title:
-      'Atividades específicas para a promoção da aprendizagem de discentes com dificuldades'
+      'Contextualização com relação a problemas práticos de aplicação da teoria ministrada em diferentes unidades curriculares em relação ao fazer profissional'
   },
-  { slug: 'colegiado-recorte-ppc', title: 'Colegiado - recorte do PPC' },
+  {
+    slug: 'atualizacao-interacao-conteudo-pratica',
+    title: 'Atualização com relação à interação conteúdo e prática'
+  },
+  {
+    slug: 'compreensao-interdisciplinaridade-laboral',
+    title: 'Compreensão da Interdisciplinaridade no contexto laboral'
+  },
+  {
+    slug: 'analise-competencias-ppc-profissao',
+    title:
+      'Análise das competências previstas no PPC considerando o conteúdo abordado e a profissão'
+  },
+
+  // 2.8 — Experiência na educação básica (sem itens detalhados no quadro)
+
+  // 2.9 — Experiência na docência superior
+  {
+    slug: 'experiencia-docencia-superior',
+    title: 'Experiência na docência superior'
+  },
+  {
+    slug: 'acoes-identificacao-dificuldades',
+    title: 'Ações que permitem identificar dificuldades dos discentes'
+  },
+  {
+    slug: 'linguagem-aderente-turma',
+    title: 'Conteúdo em linguagem aderente às características da turma'
+  },
+  {
+    slug: 'exemplos-contextualizados',
+    title:
+      'Exemplos contextualizados com conteúdos dos componentes curriculares'
+  },
+  {
+    slug: 'atividades-especificas-dificuldades',
+    title: 'Atividades específicas para discentes com dificuldades'
+  },
+  {
+    slug: 'avaliacoes-diagnosticas-formativas-somativas',
+    title: 'Avaliações diagnósticas, formativas e somativas'
+  },
+  {
+    slug: 'redefinicao-pratica-docente',
+    title: 'Redefinição da prática docente'
+  },
+  { slug: 'lideranca-producao', title: 'Liderança e produção' },
+
+  // 2.10, 2.11, 2.13, 2.14, 2.15 — Tópicos EAD/tutoria (sem detalhamento no quadro)
+
+  // 2.12 — Atuação do colegiado
   { slug: 'atuacao-colegiado', title: 'Atuação do colegiado' },
   {
     slug: 'institucionalizacao-colegiado',
-    title: 'Institucionalização do Colegiado'
+    title: 'Institucionalização do colegiado'
   },
   {
-    slug: 'representatividade-segmentos-portaria-colegiado',
-    title: 'Representatividade dos segmentos - Portaria do Colegiado'
+    slug: 'representatividade-segmentos',
+    title: 'Representatividade dos segmentos'
   },
-  { slug: 'periodicidade-reunioes', title: 'Periodicidade de reuniões' },
+  { slug: 'periodicidade-reunioes', title: 'Periodicidade das reuniões' },
   {
     slug: 'registro-reunioes-decisoes',
     title: 'Registro das reuniões e decisões'
@@ -320,7 +537,7 @@ const allEvidenceRequirements = [
   {
     slug: 'sistema-suporte-registro-acompanhamento-execucao',
     title:
-      'Sistema de suporte ao registro, acompanhamento e execução das decisões do Colegiado'
+      'Sistema de suporte ao registro, acompanhamento e execução de seus processos e decisões'
   },
   {
     slug: 'avaliacao-periodica-desempenho',
@@ -330,70 +547,204 @@ const allEvidenceRequirements = [
     slug: 'implementacao-ajuste-praticas-gestao',
     title: 'Implementação ou ajuste de práticas de gestão'
   },
+
+  // 2.16 — Produção científica/cultural/artística/tecnológica
   {
-    slug: 'relacao-producoes-3-anos',
-    title: 'Relação de produções nos últimos 3 anos'
+    slug: 'producao-ultimos-3-anos',
+    title: 'Percentual de docentes e número de produções nos últimos 3 anos'
   },
-  // Dimensão 3
+
+  // Dimensão 3 — Infraestrutura
+  // 3.1 — Espaço de trabalho para docentes em tempo integral
   {
-    slug: 'espacos-trabalho-docentes-ti',
-    title: 'Espaços de trabalho para docentes em Tempo Integral'
+    slug: 'viabilizacao-acoes-academicas',
+    title: 'Viabilização das ações acadêmicas'
   },
-  { slug: 'sala-coordenacao', title: 'Sala da coordenação' },
   {
-    slug: 'registro-bens-sala-coordenacao',
-    title: 'Registro de bens da sala da coordenação'
+    slug: 'atendimento-necessidades-institucionais',
+    title: 'Atendimento às necessidades institucionais'
   },
-  { slug: 'sala-coletiva-professores', title: 'Sala coletiva de professores' },
   {
-    slug: 'registro-bens-sala-coletiva',
-    title: 'Registro de bens da sala coletiva de professores'
+    slug: 'recursos-tic',
+    title: 'Recursos de tecnologias da informação e comunicação'
   },
-  { slug: 'salas-aula', title: 'Salas de aula' },
+  {
+    slug: 'privacidade-atendimento-guardas',
+    title:
+      'Privacidade para uso dos recursos, atendimento a discentes e orientandos'
+  },
+  {
+    slug: 'guarda-materiais-equipamentos',
+    title: 'Guarda de material e equipamentos pessoais'
+  },
+
+  // 3.2 — Espaço de trabalho para o coordenador
+  {
+    slug: 'viabilizacao-acoes-academico-administrativas',
+    title: 'Viabilização das ações acadêmico-administrativas'
+  },
+  { slug: 'equipamentos', title: 'Equipamentos' },
+  {
+    slug: 'atendimento-individuos-grupos',
+    title: 'Atendimento de indivíduos ou grupos'
+  },
+  {
+    slug: 'infraestrutura-tecnologica-diferenciada',
+    title: 'Infraestrutura tecnológica diferenciada'
+  },
+  { slug: 'formas-distintas-trabalho', title: 'Formas distintas de trabalho' },
+
+  // 3.3 — Sala coletiva de professores
+  {
+    slug: 'viabilizacao-trabalho-docente',
+    title: 'Viabilização do trabalho docente'
+  },
+  { slug: 'quantitativo-docentes', title: 'Quantitativo de docentes' },
+  {
+    slug: 'descanso-lazer-integracao',
+    title: 'Descanso e atividades de lazer e integração'
+  },
+  {
+    slug: 'apoio-tecnico-administrativo',
+    title: 'Apoio técnico-administrativo'
+  },
+  {
+    slug: 'espaco-guarda-equipamentos-materiais',
+    title: 'Espaço para a guarda de equipamentos e materiais'
+  },
+
+  // 3.4 — Salas de aula
+  {
+    slug: 'atendimento-necessidades-institucionais-curso',
+    title: 'Atendimento às necessidades institucionais e do curso'
+  },
   { slug: 'manutencao-periodica', title: 'Manutenção periódica' },
+  { slug: 'conforto', title: 'Conforto' },
+  { slug: 'flexibilidade-espacial', title: 'Flexibilidade espacial' },
   {
-    slug: 'memorando-criacao-laboratorio',
-    title: 'Memorando e documentos de criação de laboratório'
+    slug: 'distintas-situacoes-ensino-aprendizagem',
+    title: 'Distintas situações de ensino-aprendizagem'
   },
   {
-    slug: 'meios-acesso-equipamentos-informatica',
-    title: 'Meios de acesso a equipamentos de informática'
+    slug: 'recursos-utilizacao-exitosa',
+    title: 'Recursos cuja utilização é exitosa'
+  },
+
+  // 3.5 — Acesso a equipamentos de informática
+  {
+    slug: 'laboratorio-ou-meio-acesso-informatica',
+    title:
+      'Laboratório de informática, ou outro meio de acesso a equipamentos de informática'
   },
   {
-    slug: 'normas-uso-laboratorios-informatica',
-    title: 'Normas para uso dos laboratórios de informática'
+    slug: 'disponibilidade-equipamentos',
+    title: 'Disponibilidade de equipamentos'
   },
-  { slug: 'contratacao-internet', title: 'Contratação internet' },
-  { slug: 'evidencias-acervo-tombado', title: 'Evidências do acervo tombado' },
+  {
+    slug: 'estabilidade-velocidade-internet-wifi',
+    title: 'Estabilidade e velocidade de acesso à internet e à rede sem fio'
+  },
+  { slug: 'espaco-fisico', title: 'Espaço físico' },
+  {
+    slug: 'atualizacao-hardware-softwares',
+    title: 'Atualização de hardware e softwares'
+  },
+  {
+    slug: 'avaliacao-periodica-adequacao-qualidade-pertinencia',
+    title: 'Avaliação periódica de sua adequação, qualidade e pertinência'
+  },
+
+  // 3.6 — Bibliografia básica por UC
+  { slug: 'tombamento-acervo-fisico', title: 'Tombamento do acervo físico' },
+  {
+    slug: 'informatizacao-acervo-fisico',
+    title: 'Informatização do acervo físico'
+  },
+  { slug: 'contrato-acervo-virtual', title: 'Contrato do acervo virtual' },
+  {
+    slug: 'registros-acervos-fisico-virtual',
+    title: 'Registros dos acervos físico e virtual'
+  },
+  {
+    slug: 'acervo-bibliografia-basica',
+    title: 'Acervo da bibliografia básica'
+  },
+  {
+    slug: 'atualizacao-bibliografia-basica',
+    title: 'Atualização do acervo da bibliografia básica'
+  },
   { slug: 'relatorio-adequacao-nde', title: 'Relatório de adequação do NDE' },
   {
-    slug: 'contratos-bibliotecas-virtuais',
-    title: 'Contratos de bibliotecas virtuais'
+    slug: 'acesso-fisico-titulos-virtuais',
+    title: 'Acesso físico aos títulos virtuais na IES'
+  },
+  {
+    slug: 'periodicos-especializados',
+    title:
+      'Exemplares ou assinaturas de acesso virtual de periódicos especializados'
   },
   { slug: 'gerenciamento-acervo', title: 'Gerenciamento do acervo' },
-  { slug: 'praticas-exitosas', title: 'Práticas exitosas' },
-  { slug: 'links-acesso', title: 'Links para acesso' },
-  { slug: 'regulamento-guia-usuario', title: 'Regulamento e guia do usuário' },
+  { slug: 'plano-contingencia', title: 'Plano de contingência' },
+
+  // 3.7 — Bibliografia complementar por UC
   {
-    slug: 'plano-atualizacao-expansao-acervo',
-    title: 'Plano de atualização e expansão do acervo'
+    slug: 'acervo-bibliografia-complementar',
+    title: 'Acervo da bibliografia complementar'
   },
   {
-    slug: 'memorial-descritivo-biblioteca',
-    title: 'Memorial descritivo da biblioteca'
+    slug: 'atualizacao-bibliografia-complementar',
+    title: 'Atualização do acervo da bibliografia complementar'
   },
-  { slug: 'portfolio-biblioteca', title: 'Portfólio da Biblioteca' },
-  { slug: 'planta-baixa-biblioteca', title: 'Planta baixa da biblioteca' },
-  { slug: 'laboratorios-recorte-ppc', title: 'Laboratórios - recorte do PPC' },
-  { slug: 'laboratorios-informatica', title: 'Laboratórios de Informática' },
-  { slug: 'laboratorio-educacao', title: 'Laboratório de Educação' },
-  { slug: 'resultados', title: 'Resultados' },
-  { slug: 'laboratorios-especificos', title: 'Laboratórios específicos' },
-  { slug: 'regimento-interno-cep', title: 'Regimento interno - CEP IFMA' },
-  { slug: 'membros-cep', title: 'Membros do CEP IFMA' },
+
+  // 3.8 — Laboratórios didáticos de formação básica
   {
-    slug: 'pagina-institucional-cep',
-    title: 'Página institucional do CEP IFMA'
+    slug: 'atendimento-necessidades-curso',
+    title: 'Atendimento às necessidades do curso'
+  },
+  {
+    slug: 'normas-funcionamento-seguranca',
+    title: 'Normas de funcionamento, utilização e segurança'
+  },
+  { slug: 'apoio-tecnico', title: 'Apoio técnico' },
+  {
+    slug: 'quantidade-insumos-materiais-equipamentos',
+    title: 'Quantidade de insumos, materiais e equipamentos'
+  },
+  { slug: 'avaliacao-periodica', title: 'Avaliação periódica' },
+  {
+    slug: 'uso-resultados-gestao-academica',
+    title: 'Utilização dos resultados das avaliações pela gestão acadêmica'
+  },
+
+  // 3.9 — Laboratórios didáticos de formação específica
+
+  // 3.10 — Laboratórios de ensino para a área de saúde (sem itens no quadro)
+  // 3.11 — Laboratórios de habilidades (sem itens no quadro)
+  // 3.12 — Unidades hospitalares/convenios — NSA
+  // 3.13 — Biotérios — NSA
+  // 3.14 — Logística material didático — NSA
+  // 3.15 — Núcleo de práticas jurídicas — NSA
+
+  // 3.16 — Comitê de Ética em Pesquisa (CEP)
+  { slug: 'homologacao-cep-conep', title: 'Homologação do CEP pela CONEP' },
+  { slug: 'cep-ifma', title: 'CEP do IFMA' },
+  {
+    slug: 'atendimento-instituicoes-parceiras-cep',
+    title: 'Atendimento a instituições parceiras'
+  },
+
+  // 3.17 — Comitê de Ética na Utilização de Animais (CEUA)
+  { slug: 'homologacao-ceua-conep', title: 'Homologação do CEUA pela CONEP' },
+  { slug: 'ceua-ifma', title: 'CEUA do IFMA' },
+  {
+    slug: 'atendimento-instituicoes-parceiras-ceua',
+    title: 'Atendimento a instituições parceiras'
+  },
+
+  // 3.18 — Ambientes profissionais vinculados ao curso
+  {
+    slug: 'ambientes-profissionais-vinculados-ao-curso',
+    title: 'Ambientes profissionais vinculados ao curso'
   }
 ];
 
@@ -432,16 +783,13 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'politica-ensino',
-      'politica-extensao',
-      'politica-pesquisa',
-      'pdi',
-      'ppc',
-      'implantacao-ensino',
-      'implantacao-extensao',
-      'implantacao-pesquisa',
-      'perfil-egresso-recorte',
-      'praticas-exitosas-inovadoras'
+      "politica-institucional-ensino",
+      "politica-institucional-extensao",
+      "politica-institucional-pesquisa",
+      "pdi",
+      "implantacao-no-ambito-do-curso",
+      "politicas-promocao-aprendizagem-perfil-egresso",
+      "praticas-exitosas-ou-inovadoras"
     ]
   },
   {
@@ -477,10 +825,12 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'objetivos-recorte',
-      'perfil-profissional-egresso-recorte',
-      'estrutura-curricular-recorte'
+      'objetivos-do-curso',
+      'perfil-profissional-do-egresso',
+      'estrutura-curricular',
+      'contexto-educacional',
+      'caracteristicas-locais-regionais',
+      'novas-praticas-emergentes'
     ]
   },
   {
@@ -514,7 +864,13 @@ export const indicatorsData = [
           'O perfil profissional do egresso consta no PPC, está de acordo com as DCN (quando houver), expressa as competências a serem desenvolvidas pelo discente e as articula com necessidades locais e regionais, sendo ampliado em função de novas demandas apresentadas pelo mundo do trabalho.'
       }
     ],
-    evidenceSlugs: ['ppc', 'perfil-profissional-egresso-recorte', 'dcn']
+    evidenceSlugs: [
+      'perfil-profissional-do-egresso',
+      'dcn',
+      'competencias-a-desenvolver',
+      'necessidades-locais-regionais',
+      'ampliacao-por-demandas-do-trabalho'
+    ]
   },
   {
     code: '1.4',
@@ -549,12 +905,15 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'estrutura-curricular-recorte',
+      'estrutura-curricular',
+      'flexibilidade',
+      'interdisciplinaridade',
       'acessibilidade-metodologica',
+      'compatibilidade-carga-horaria-total',
+      'articulacao-teoria-pratica',
       'disciplina-libras',
-      'articulacao-componentes-curriculares-recorte',
-      'elementos-inovadores-recorte'
+      'articulacao-componentes-curriculares',
+      'elementos-inovadores'
     ]
   },
   {
@@ -590,14 +949,17 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'conteudos-curriculares-recorte',
-      'perfil-profissional-egresso-recorte',
+      'conteudos-curriculares',
+      'perfil-profissional-do-egresso',
+      'atualizacao-da-area',
+      'adequacao-cargas-horarias',
+      'adequacao-bibliografia',
       'acessibilidade-metodologica',
-      'educacao-ambiental-recorte',
-      'educacao-direitos-humanos-recorte',
-      'educacao-relacoes-etnico-raciais-recorte',
-      'ensino-historia-cultura-afro-indigena-recorte',
+      'educacao-ambiental',
+      'educacao-direitos-humanos',
+      'educacao-relacoes-etnico-raciais',
+      'historia-cultura-afro-africana-indigena',
+      'diferencial-do-curso',
       'conhecimento-recente-inovador'
     ]
   },
@@ -634,15 +996,16 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
+      'metodologia',
       'dcn',
-      'metodologia-recorte',
-      'conteudos-curriculares-recorte',
-      'acessibilidade-metodologica',
+      'atendimento-desenvolvimento-conteudos',
+      'atendimento-estrategias-aprendizagem',
+      'atendimento-acompanhamento-atividades',
+      'atendimento-acessibilidade-metodologica',
+      'atendimento-autonomia-discente',
       'praticas-pedagogicas-acao-discente',
-      'relacao-teoria-pratica',
-      'praticas-exitosas-inovadoras',
-      'aprendizagem-diferenciada'
+      'metodologias-inovadoras',
+      'recursos-aprendizagens-diferenciadas'
     ]
   },
   {
@@ -678,13 +1041,12 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'resolucao-estagio',
-      'ppc',
-      'estagio-supervisionado-recorte',
-      'planos-estagios',
+      'institucionalizacao-estagio',
+      'carga-horaria-estagio',
+      'orientacao-coordenacao-supervisao',
       'convenios-estagios',
       'integracao-ensino-mundo-trabalho',
-      'perfil-egresso-recorte',
+      'perfil-do-egresso',
       'interlocucao-institucionalizada',
       'insumos'
     ]
@@ -789,12 +1151,12 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'resolucao-160-2022-atividades-complementares',
-      'carga-horaria-diversidade-atividades-recorte',
-      'formas-aproveitamento-recorte',
-      'ppc',
-      'objetivos-gerais-especificos-recorte',
-      'mecanismos-gestao-aproveitamento'
+      'institucionalizacao-atividades-complementares',
+      'carga-horaria-atividades-complementares',
+      'diversidade-atividades-complementares',
+      'formas-aproveitamento',
+      'aderencia-formacao-geral-especifica',
+      'mecanismos-exitosos-inovadores-gestao-aproveitamento'
     ]
   },
   {
@@ -830,12 +1192,11 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'resolucao-088-2017-tcc',
-      'ppc',
-      'tcc-recorte',
+      'institucionalizacao-tcc',
+      'carga-horaria-tcc',
+      'formas-apresentacao-orientacao-coordenacao',
       'manuais-apoio-tcc',
-      'regras-apresentacao-artigo',
-      'repositorio'
+      'repositorios-institucionais'
     ]
   },
   {
@@ -867,8 +1228,7 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'apoio-discente-recorte',
+      'apoio-ao-discente',
       'acoes-acolhimento-permanencia',
       'acessibilidade-metodologica-instrumental',
       'monitoria',
@@ -877,8 +1237,7 @@ export const indicatorsData = [
       'apoio-psicopedagogico',
       'centros-academicos',
       'intercambios',
-      'acoes-exitosas-inovadoras',
-      'cae'
+      'acoes-exitosas-ou-inovadoras'
     ]
   },
   {
@@ -914,11 +1273,10 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'avaliacao-curso-recorte',
+      'gestao-do-curso',
       'autoavaliacao-institucional',
-      'gestao-avaliacoes-externas',
-      'apropriacao-resultados-avaliacoes',
+      'aprimoramento-planejamento-avaliacoes-externas',
+      'apropiacao-resultados-avaliacoes',
       'autoavaliacao-periodica-curso'
     ]
   },
@@ -1023,11 +1381,11 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'tics-recorte',
+      'tics',
       'acessibilidade-digital-comunicacional',
       'interatividade-docentes-discentes',
-      'pud'
+      'acesso-materiais-recursos-didaticos',
+      'experiencias-diferenciadas-aprendizagem'
     ]
   },
   {
@@ -1131,11 +1489,10 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'avaliacao-aprendizagem-recorte-ppc',
-      'ppi',
-      'avaliacao-aprendizagem-recorte-ppi',
-      'acompanhamento-avaliacao-planos-ensino',
+      'procedimentos-acompanhamento-avaliacao',
+      'desenvolvimento-autonomia-discente',
+      'informacoes-sistematizadas-estudantes',
+      'mecanismos-natureza-formativa',
       'acoes-melhoria-aprendizagem'
     ]
   },
@@ -1173,8 +1530,9 @@ export const indicatorsData = [
     ],
     evidenceSlugs: [
       'estudo-numero-vagas',
-      'resolucao-criacao-curso',
-      'resolucao-numero-vagas'
+      'pesquisas-comunidade-academica',
+      'adequacao-corpo-docente',
+      'condicoes-infraestrutura-ensino-pesquisa'
     ]
   },
   {
@@ -1348,19 +1706,17 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'regulamento-nde',
-      'portaria-nde-composicao-atual',
+      'nde-minimo-cinco-docentes',
       'regime-trabalho-membros-nde',
       'titulacao-stricto-sensu',
-      'portaria-nomeacao-coordenacao',
-      'ppc',
-      'nde-recorte-ppc',
-      'docentes-curso-recorte-ppc',
-      'dcn',
-      'atas-reunioes',
-      'atualizacao-ppc',
-      'perfil-egresso-recorte',
-      'portarias-nde-composicoes-anteriores'
+      'coordenador-integrante-nde',
+      'atuacao-nde-ppc',
+      'estudos-atualizacao-periodica',
+      'verificacao-impacto-avaliacao-aprendizagem',
+      'analise-adequacao-perfil-egresso',
+      'consideracao-dcn',
+      'consideracao-demandas-trabalho',
+      'manutencao-membros-ato-regulatorio'
     ]
   },
   {
@@ -1428,13 +1784,15 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'normas-coordenadorias',
-      'ppc',
-      'gestao-curso-recorte-ppc',
-      'portarias-colegiado',
-      'planos-acao',
-      'indicadores-desempenho',
-      'gestao-potencialidade-corpo-docente'
+      'atuacao-do-coordenador',
+      'atendimento-demanda-existente',
+      'gestao-do-curso',
+      'relacao-docentes-discentes',
+      'representatividade-colegiados-superiores',
+      'planos-de-acao',
+      'indicadores-de-desempenho',
+      'administracao-potencialidade-corpo-docente',
+      'integracao-melhoria-continua'
     ]
   },
   {
@@ -1471,13 +1829,14 @@ export const indicatorsData = [
     ],
     evidenceSlugs: [
       'regime-trabalho-coordenador',
-      'horarios-atendimento-coordenacao',
-      'ppc',
-      'gestao-curso-recorte-ppc',
+      'atendimento-demanda-existente',
+      'gestao-do-curso',
+      'relacao-docentes-discentes',
       'representatividade-colegiados-superiores',
-      'planos-acao',
-      'indicadores-desempenho',
-      'administracao-potencialidade-corpo-docente'
+      'planos-de-acao',
+      'indicadores',
+      'administracao-potencialidade-corpo-docente',
+      'integracao-melhoria-continua'
     ]
   },
   {
@@ -1513,15 +1872,12 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'ementas-recorte-ppc',
-      'pud',
-      'bases-dados-periodicos',
+      'analise-conteudos-componentes',
+      'relevancia-atuacao-profissional-academica',
+      'fomento-raciocinio-critico',
       'acesso-conteudos-pesquisa-ponta',
-      'perfil-egresso-recorte',
-      'autoavaliacao-docente',
-      'grupos-pesquisa',
-      'publicacoes'
+      'relacao-pesquisa-objetivos-perfil',
+      'incentivo-producao-conhecimento'
     ]
   },
   {
@@ -1557,8 +1913,12 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'pit-rit',
       'regime-trabalho-corpo-docente',
+      'atendimento-integral-demanda',
+      'dedicacao-docencia-atendimento',
+      'participacao-colegiado',
+      'planejamento-didatico-avaliacoes',
+      'documentacao-atividade-docente',
       'planejamento-gestao-melhoria-continua'
     ]
   },
@@ -1596,10 +1956,10 @@ export const indicatorsData = [
     ],
     evidenceSlugs: [
       'experiencia-profissional-mundo-trabalho',
-      'pud',
-      'ppc',
-      'interdisciplinaridade-recorte-ppc',
-      'curriculos'
+      'contextualizacao-problemas-praticos',
+      'atualizacao-interacao-conteudo-pratica',
+      'compreensao-interdisciplinaridade-laboral',
+      'analise-competencias-ppc-profissao'
     ]
   },
   {
@@ -1669,11 +2029,14 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'declaracao-docencia-superior',
-      'pud',
-      'avaliacao-cpa',
-      'atividades-promocao-aprendizagem-dificuldades',
-      'curriculos'
+      'experiencia-docencia-superior',
+      'acoes-identificacao-dificuldades',
+      'linguagem-aderente-turma',
+      'exemplos-contextualizados',
+      'atividades-especificas-dificuldades',
+      'avaliacoes-diagnosticas-formativas-somativas',
+      'redefinicao-pratica-docente',
+      'lideranca-producao'
     ]
   },
   {
@@ -1776,11 +2139,9 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'colegiado-recorte-ppc',
       'atuacao-colegiado',
       'institucionalizacao-colegiado',
-      'representatividade-segmentos-portaria-colegiado',
+      'representatividade-segmentos',
       'periodicidade-reunioes',
       'registro-reunioes-decisoes',
       'fluxo-encaminhamento-decisoes',
@@ -1923,7 +2284,7 @@ export const indicatorsData = [
           'Pelo menos 50% dos docentes possuem, no mínimo, 9 produções nos últimos 3 anos.'
       }
     ],
-    evidenceSlugs: ['relacao-producoes-3-anos', 'curriculos']
+    evidenceSlugs: ['producao-ultimos-3-anos']
   },
 
   // ----- DIMENSÃO 3 -----
@@ -1959,7 +2320,13 @@ export const indicatorsData = [
           'Os espaços de trabalho para docentes em Tempo Integral viabilizam ações acadêmicas, como planejamento didático-pedagógico, atendem às necessidades institucionais, possuem recursos de tecnologias da informação e comunicação apropriados, garantem privacidade para uso dos recursos, para o atendimento a discentes e orientandos, e para a guarda de material e equipamentos pessoais, com segurança.'
       }
     ],
-    evidenceSlugs: ['espacos-trabalho-docentes-ti']
+    evidenceSlugs: [
+      'viabilizacao-acoes-academicas',
+      'atendimento-necessidades-institucionais',
+      'recursos-tic',
+      'privacidade-atendimento-guardas',
+      'guarda-materiais-equipamentos'
+    ]
   },
   {
     code: '3.2',
@@ -1993,7 +2360,14 @@ export const indicatorsData = [
           'O espaço de trabalho para o coordenador viabiliza as ações acadêmico-administrativas, possui equipamentos adequados, atende às necessidades institucionais, permite o atendimento de indivíduos ou grupos com privacidade e dispõe de infraestrutura tecnológica diferenciada, que possibilita formas distintas de trabalho.'
       }
     ],
-    evidenceSlugs: ['sala-coordenacao', 'registro-bens-sala-coordenacao']
+    evidenceSlugs: [
+      'viabilizacao-acoes-academico-administrativas',
+      'equipamentos',
+      'atendimento-necessidades-institucionais',
+      'atendimento-individuos-grupos',
+      'infraestrutura-tecnologica-diferenciada',
+      'formas-distintas-trabalho'
+    ]
   },
   {
     code: '3.3',
@@ -2027,7 +2401,14 @@ export const indicatorsData = [
           'A sala coletiva de professores viabiliza o trabalho docente, possui recursos de tecnologias da informação e comunicação apropriados para o quantitativo de docentes, permite o descanso e atividades de lazer e integração e dispõe de apoio técnico-administrativo próprio e espaço para a guarda de equipamentos e materiais.'
       }
     ],
-    evidenceSlugs: ['sala-coletiva-professores', 'registro-bens-sala-coletiva']
+    evidenceSlugs: [
+      'viabilizacao-trabalho-docente',
+      'recursos-tic',
+      'quantitativo-docentes',
+      'descanso-lazer-integracao',
+      'apoio-tecnico-administrativo',
+      'espaco-guarda-equipamentos-materiais'
+    ]
   },
   {
     code: '3.4',
@@ -2061,7 +2442,15 @@ export const indicatorsData = [
           'As salas de aula atendem às necessidades institucionais e do curso, apresentando manutenção periódica, conforto, disponibilidade de recursos de tecnologias da informação e comunicação adequados às atividades a serem desenvolvidas, flexibilidade relacionada às configurações espaciais, oportunizando distintas situações de ensino-aprendizagem, e possuem outros recursos cuja utilização é comprovadamente exitosa.'
       }
     ],
-    evidenceSlugs: ['salas-aula', 'manutencao-periodica']
+    evidenceSlugs: [
+      'atendimento-necessidades-institucionais-curso',
+      'manutencao-periodica',
+      'conforto',
+      'recursos-tic',
+      'flexibilidade-espacial',
+      'distintas-situacoes-ensino-aprendizagem',
+      'recursos-utilizacao-exitosa'
+    ]
   },
   {
     code: '3.5',
@@ -2096,10 +2485,14 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'memorando-criacao-laboratorio',
-      'meios-acesso-equipamentos-informatica',
-      'normas-uso-laboratorios-informatica',
-      'contratacao-internet'
+      'laboratorio-ou-meio-acesso-informatica',
+      'atendimento-necessidades-institucionais-curso',
+      'disponibilidade-equipamentos',
+      'conforto',
+      'estabilidade-velocidade-internet-wifi',
+      'espaco-fisico',
+      'atualizacao-hardware-softwares',
+      'avaliacao-periodica-adequacao-qualidade-pertinencia'
     ]
   },
   {
@@ -2135,18 +2528,17 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'evidencias-acervo-tombado',
+      'tombamento-acervo-fisico',
+      'informatizacao-acervo-fisico',
+      'contrato-acervo-virtual',
+      'registros-acervos-fisico-virtual',
+      'acervo-bibliografia-basica',
+      'atualizacao-bibliografia-basica',
       'relatorio-adequacao-nde',
-      'contratos-bibliotecas-virtuais',
-      'bases-dados-periodicos',
+      'acesso-fisico-titulos-virtuais',
+      'periodicos-especializados',
       'gerenciamento-acervo',
-      'praticas-exitosas',
-      'links-acesso',
-      'regulamento-guia-usuario',
-      'plano-atualizacao-expansao-acervo',
-      'memorial-descritivo-biblioteca',
-      'portfolio-biblioteca',
-      'planta-baixa-biblioteca'
+      'plano-contingencia'
     ]
   },
   {
@@ -2182,18 +2574,17 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'evidencias-acervo-tombado',
+      'tombamento-acervo-fisico',
+      'informatizacao-acervo-fisico',
+      'contrato-acervo-virtual',
+      'registros-acervos-fisico-virtual',
+      'acervo-bibliografia-complementar',
+      'atualizacao-bibliografia-complementar',
       'relatorio-adequacao-nde',
-      'contratos-bibliotecas-virtuais',
-      'bases-dados-periodicos',
+      'acesso-fisico-titulos-virtuais',
+      'periodicos-especializados',
       'gerenciamento-acervo',
-      'praticas-exitosas',
-      'links-acesso',
-      'regulamento-guia-usuario',
-      'plano-atualizacao-expansao-acervo',
-      'memorial-descritivo-biblioteca',
-      'portfolio-biblioteca',
-      'planta-baixa-biblioteca'
+      'plano-contingencia'
     ]
   },
   {
@@ -2229,12 +2620,15 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'laboratorios-recorte-ppc',
-      'laboratorios-informatica',
-      'laboratorio-educacao',
+      'atendimento-necessidades-curso',
+      'normas-funcionamento-seguranca',
+      'conforto',
       'manutencao-periodica',
-      'resultados'
+      'apoio-tecnico',
+      'recursos-tic',
+      'quantidade-insumos-materiais-equipamentos',
+      'avaliacao-periodica',
+      'uso-resultados-gestao-academica'
     ]
   },
   {
@@ -2270,11 +2664,15 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'ppc',
-      'laboratorios-recorte-ppc',
-      'laboratorios-especificos',
+      'atendimento-necessidades-curso',
+      'normas-funcionamento-seguranca',
+      'conforto',
       'manutencao-periodica',
-      'resultados'
+      'apoio-tecnico',
+      'recursos-tic',
+      'quantidade-insumos-materiais-equipamentos',
+      'avaliacao-periodica',
+      'uso-resultados-gestao-academica'
     ]
   },
   {
@@ -2509,9 +2907,9 @@ export const indicatorsData = [
       }
     ],
     evidenceSlugs: [
-      'regimento-interno-cep',
-      'membros-cep',
-      'pagina-institucional-cep'
+      'homologacao-cep-conep',
+      'cep-ifma',
+      'atendimento-instituicoes-parceiras-cep'
     ]
   },
   {
@@ -2545,7 +2943,11 @@ export const indicatorsData = [
           'O Comitê de Ética na Utilização de Animais (CEUA) está homologado pela CONEP, pertence à própria instituição e presta atendimento a instituições parceiras.'
       }
     ],
-    evidenceSlugs: []
+    evidenceSlugs: [
+      'homologacao-ceua-conep',
+      'ceua-ifma',
+      'atendimento-instituicoes-parceiras-ceua'
+    ]
   },
   {
     code: '3.18',
@@ -2579,7 +2981,9 @@ export const indicatorsData = [
           'Os ambientes profissionais estão articulados com a sede ou com os polos onde há oferta do curso e atendem aos objetivos constantes no PPC, considerando a função de espaços complementares para práticas laboratoriais e/ou profissionais que possibilitam experiências diferenciadas de aprendizagem, as quais passam por avaliações periódicas devidamente documentadas, que resultam em ações de melhoria contínua.'
       }
     ],
-    evidenceSlugs: []
+    evidenceSlugs: [
+      'ambientes-profissionais-vinculados-ao-curso'
+    ]
   }
 ];
 
