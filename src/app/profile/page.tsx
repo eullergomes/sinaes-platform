@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth-client';
 import uploadToCloudinary from '@/services/uploadToCloudinary';
-import { updateProfileAction } from '@/app/actions/profile';
+import { updateProfileAction } from '@/actions/profile';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';

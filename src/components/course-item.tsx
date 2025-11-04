@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
-import { deleteCourse } from '@/app/actions/course';
+import { deleteCourse } from '@/actions/course';
 import { Loader2, Trash2, Edit } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
 import React, { useEffect, useRef } from 'react';
@@ -151,7 +151,7 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
                 href={course.ppcDocumentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className='text-blue-500 underline'
+                className="text-blue-500 underline"
               >
                 PPC
               </a>

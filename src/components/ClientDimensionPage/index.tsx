@@ -61,14 +61,13 @@ const ClientDimensionPage = ({
         const response = await fetch(
           `/api/courses/${slug}/dimensions/${dimId}`
         );
-        console.log("Indicadores: ", response);
         
         if (!response.ok)
           throw new Error(
-            (await response.json()).error || 'Falha ao carregar os dados'
-          );
-
-        const result: DimensionApiResponse = await response.json();
+        (await response.json()).error || 'Falha ao carregar os dados'
+      );
+      
+      const result: DimensionApiResponse = await response.json();
         setApiData(result);
 
         const allYears = new Set(
@@ -202,6 +201,20 @@ const ClientDimensionPage = ({
     return (
       <div className="text-muted-foreground p-8 text-center">
         Nenhum dado encontrado.
+      </div>
+    );
+  }
+
+  if (apiData && availableYears.length === 0) {
+    return (
+      <div className="flex h-[70vh] flex-col items-center justify-center gap-4 p-6 text-center">
+        <h2 className="text-2xl font-semibold">Nenhum ciclo de avaliação encontrado</h2>
+        <p className="max-w-md text-muted-foreground">
+          Para avaliar os indicadores desta dimensão, crie um novo ciclo de avaliação do curso.
+        </p>
+        <Button onClick={() => router.push(`/courses/${slug}/dimensions`)}>
+          Criar novo ciclo
+        </Button>
       </div>
     );
   }
