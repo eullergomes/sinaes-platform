@@ -204,9 +204,6 @@ const DimensionList = ({
                 </Select>
               </div>
             </div>
-            <div>
-              <ReportButton />
-            </div>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {dimensionsWithGrades.map((dim) => (
@@ -220,8 +217,9 @@ const DimensionList = ({
           </div>
 
           <Card>
-            <CardHeader>
+            <CardHeader className='flex justify-between items-center'>
               <CardTitle>Visão Geral — Notas por Dimensão</CardTitle>
+              <ReportButton />
             </CardHeader>
             <CardContent>
               <div className="h-80">
