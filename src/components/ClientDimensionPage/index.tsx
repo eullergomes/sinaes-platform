@@ -16,11 +16,6 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent
-} from '@/components/ui/tooltip';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,6 +27,7 @@ import { IndicatorStatus } from '@prisma/client';
 import { DimensionApiResponse, IndicatorGrade } from '@/types/dimension-types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import StatusBadge from '../status-badge';
+import IndicatorsTable, { IndicatorRow } from './IndicatorsTable';
 
 const ClientDimensionPage = ({
   slug,
@@ -61,13 +57,13 @@ const ClientDimensionPage = ({
         const response = await fetch(
           `/api/courses/${slug}/dimensions/${dimId}`
         );
-        
+
         if (!response.ok)
           throw new Error(
-        (await response.json()).error || 'Falha ao carregar os dados'
-      );
-      
-      const result: DimensionApiResponse = await response.json();
+            (await response.json()).error || 'Falha ao carregar os dados'
+          );
+
+        const result: DimensionApiResponse = await response.json();
         setApiData(result);
 
         const allYears = new Set(
@@ -163,28 +159,6 @@ const ClientDimensionPage = ({
     );
   };
 
-  const getGradeBadge = (grade: IndicatorGrade) => {
-    switch (grade) {
-      case IndicatorGrade.G5:
-      case IndicatorGrade.G4:
-        return (
-          <Badge className="bg-green-600 hover:bg-green-700">
-            {grade.slice(1)}
-          </Badge>
-        );
-      case IndicatorGrade.G3:
-        return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600">
-            {grade.slice(1)}
-          </Badge>
-        );
-      case IndicatorGrade.G2:
-      case IndicatorGrade.G1:
-        return <Badge variant="destructive">{grade.slice(1)}</Badge>;
-      default:
-        return <Badge variant="secondary">NSA</Badge>;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -208,9 +182,12 @@ const ClientDimensionPage = ({
   if (apiData && availableYears.length === 0) {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-4 p-6 text-center">
-        <h2 className="text-2xl font-semibold">Nenhum ciclo de avaliação encontrado</h2>
-        <p className="max-w-md text-muted-foreground">
-          Para avaliar os indicadores desta dimensão, crie um novo ciclo de avaliação do curso.
+        <h2 className="text-2xl font-semibold">
+          Nenhum ciclo de avaliação encontrado
+        </h2>
+        <p className="text-muted-foreground max-w-md">
+          Para avaliar os indicadores desta dimensão, crie um novo ciclo de
+          avaliação do curso.
         </p>
         <Button onClick={() => router.push(`/courses/${slug}/dimensions`)}>
           Criar novo ciclo
@@ -329,113 +306,14 @@ const ClientDimensionPage = ({
         </CardHeader>
 
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="border px-4 py-2 text-left">Código</th>
-                  <th className="border px-4 py-2 text-left">Indicador</th>
-                  <th className="border px-4 py-2 text-center">Nota</th>
-                  <th className="border px-4 py-2 text-center">Status</th>
-                  <th className="border px-4 py-2 text-center">
-                    Última Atualização
-                  </th>
-                  <th className="border px-4 py-2 text-center">Ações</th>
-                  <th className="border px-4 py-2 text-center">NSA</th>
-                </tr>
-              </thead>
-              <tbody>
-                {processedIndicators.length > 0 ? (
-                  processedIndicators.map((indicator) => {
-                    const isVisible = visibility[indicator.code] ?? true;
-                    return (
-                      <tr
-                        key={indicator.code}
-                        className={
-                          !isVisible
-                            ? 'text-muted-foreground bg-gray-50'
-                            : 'hover:bg-gray-50'
-                        }
-                      >
-                        <td className="border px-4 py-2">{indicator.code}</td>
-                        <td className="max-w-xs border px-4 py-2 whitespace-normal">
-                          {indicator.name}
-                        </td>
-                        <td className="border px-4 py-2 text-center">
-                          {isVisible ? getGradeBadge(indicator.grade) : '—'}
-                        </td>
-                        <td className="border px-4 py-2 text-center">
-                          {isVisible ? (
-                            <StatusBadge status={indicator.status} />
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                        <td className="border px-4 py-2 text-center">
-                          {isVisible ? indicator.lastUpdate : '—'}
-                        </td>
-                        <td className="border px-4 py-2 text-center">
-                          {indicator.hasEvaluation ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(indicator.code)}
-                              disabled={!isVisible}
-                              className="hover:cursor-pointer"
-                            >
-                              Editar
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => handleEdit(indicator.code)}
-                              disabled={!isVisible}
-                              className="hover:cursor-pointer"
-                            >
-                              Registrar
-                            </Button>
-                          )}
-                        </td>
-                        <td className="border px-4 py-2 text-center">
-                          {!indicator.nsaLocked && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Checkbox
-                                  checked={isVisible}
-                                  disabled={indicator.nsaLocked}
-                                  className="hover:cursor-pointer aria-[checked=true]:border-blue-600 aria-[checked=true]:bg-blue-600 aria-[checked=true]:text-white"
-                                  onCheckedChange={(val) =>
-                                    setVisibility((prev) => ({
-                                      ...prev,
-                                      [indicator.code]: Boolean(val)
-                                    }))
-                                  }
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  {isVisible ? 'Desativar' : 'Ativar'} Indicador
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="border px-4 py-8 text-center text-gray-500"
-                    >
-                      Nenhum indicador encontrado com os filtros atuais.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <IndicatorsTable
+            data={processedIndicators as IndicatorRow[]}
+            visibility={visibility}
+            onToggleVisibility={(code, val) =>
+              setVisibility((prev) => ({ ...prev, [code]: val }))
+            }
+            onEdit={handleEdit}
+          />
         </CardContent>
       </Card>
     </div>

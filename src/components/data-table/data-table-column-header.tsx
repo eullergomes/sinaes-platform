@@ -1,0 +1,85 @@
+import { type Column } from '@tanstack/react-table';
+
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDown } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+
+interface DataTableColumnHeaderProps<TData, TValue>
+  extends React.HTMLAttributes<HTMLDivElement> {
+  column: Column<TData, TValue>;
+  title: string;
+}
+
+export function DataTableColumnHeader<TData, TValue>({
+  column,
+  title,
+  className
+}: DataTableColumnHeaderProps<TData, TValue>) {
+  if (!column.getCanSort()) {
+    return <div className={cn(className)}>{title}</div>;
+  }
+
+  const isSorted = column.getIsSorted();
+  const nextSort: 'asc' | 'desc' | 'none' = !isSorted
+    ? 'asc'
+    : isSorted === 'asc'
+      ? 'desc'
+      : 'none';
+
+  function handleClick() {
+    const state = column.getIsSorted();
+    if (!state) {
+      // go to asc
+      column.toggleSorting(false);
+    } else if (state === 'asc') {
+      // go to desc
+      column.toggleSorting(true);
+    } else {
+      // clear sorting
+      const c = column as unknown as {
+        clearSorting?: () => void;
+        getTable?: () => { setSorting: (updater: unknown) => void };
+      };
+      if (c.clearSorting) c.clearSorting();
+      else c.getTable?.().setSorting([]);
+    }
+  }
+
+  const tooltipText =
+    nextSort === 'asc'
+      ? 'Ordenar por ascendente'
+      : nextSort === 'desc'
+        ? 'Ordenar por descendente'
+        : 'Remover ordenação';
+
+  return (
+    <div className={cn('flex items-center space-x-2', className)}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            aria-label={tooltipText}
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8"
+            onClick={handleClick}
+          >
+            <span>{title}</span>
+            {isSorted === 'desc' ? (
+              <ArrowDownIcon className="ml-2 h-4 w-4" aria-hidden="true" />
+            ) : isSorted === 'asc' ? (
+              <ArrowUpIcon className="ml-2 h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronsUpDown className="ml-2 h-4 w-4" aria-hidden="true" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{tooltipText}</TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
