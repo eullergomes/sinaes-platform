@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
-import { Poppins } from 'next/font/google';
+import { Open_Sans } from 'next/font/google';
 import './globals.css';
 import AppShell from './sell';
 import { Toaster } from '@/components/ui/sonner';
+import ReactQueryProvider from '@/components/ReactQueryProvider';
 
-const poppins = Poppins({
+const openSans = Open_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   style: 'normal',
   display: 'swap'
 });
@@ -23,9 +24,11 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body
         suppressHydrationWarning
-        className={`${poppins.className} flex min-h-screen flex-col bg-gray-50 text-gray-800`}
+        className={`${openSans.className} flex min-h-screen flex-col bg-gray-50 text-gray-800`}
       >
-        <AppShell>{children}</AppShell>
+        <AppShell>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </AppShell>
         <Toaster />
       </body>
     </html>
