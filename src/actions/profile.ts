@@ -3,15 +3,16 @@
 import prisma from '@/utils/prisma';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { User } from 'better-auth';
 
-async function getAuthenticatedUserIdFromCookies(): Promise<string | null> {
+export async function getAuthenticatedUserIdFromCookies(): Promise<User | null> {
   const cookieHeader = (await headers()).get('cookie') ?? '';
 
   try {
     const session = await auth.api.getSession({
       headers: { cookie: cookieHeader }
     });
-    return session?.user?.id ?? null;
+    return session?.user ?? null;
   } catch {
     return null;
   }
@@ -33,9 +34,9 @@ export async function updateProfileAction(
   input: UpdateProfileInput
 ): Promise<UpdateProfileResult> {
   try {
-    const userId = await getAuthenticatedUserIdFromCookies();
+    const userSession = await getAuthenticatedUserIdFromCookies();
 
-    if (!userId) return { ok: false, error: 'Não autenticado' };
+    if (!userSession) return { ok: false, error: 'Não autenticado' };
 
     const name = typeof input.name === 'string' ? input.name.trim() : '';
     if (name.length < 3 || name.length > 150) {
@@ -51,7 +52,7 @@ export async function updateProfileAction(
     }
 
     const updated = await prisma.user.update({
-      where: { id: userId },
+      where: { id: userSession.id },
       data,
       select: { id: true, name: true, email: true, image: true }
     });
