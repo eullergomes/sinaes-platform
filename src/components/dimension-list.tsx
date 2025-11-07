@@ -25,6 +25,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Download, PlusCircle } from 'lucide-react';
+import ReportButton from './report-button';
 
 type DimensionWithGrade = DimensionDefinition & {
   averageGrade: number;
@@ -95,6 +96,16 @@ const DimensionList = ({
       throw new Error(data?.error || 'Falha ao criar ciclo');
     }
     toast.success('Primeiro ciclo criado com sucesso.');
+    setCurrentYearState(y);
+    setAvailableYears((prev) => {
+      if (prev.includes(y)) return prev;
+      const next = [...prev, y];
+      next.sort((a, b) => a - b);
+      return next;
+    });
+    const url = new URL(window.location.href);
+    url.searchParams.set('year', String(y));
+    window.history.replaceState({}, '', url.toString());
     router.refresh();
   }
 
@@ -112,7 +123,7 @@ const DimensionList = ({
             Acompanhe o desempenho do curso nas 3 dimensões do SINAES.
           </p>
         </div>
-        <div className='flex items-center gap-4'>
+        <div className="flex items-center gap-4">
           <Button
             variant="outline"
             className="inline-flex items-center gap-2 hover:cursor-pointer"
@@ -132,7 +143,7 @@ const DimensionList = ({
             onOpenChange={setDialogIsOpen}
             onCreate={handleCreateCycle}
             trigger={
-              <Button className="bg-green-600 hover:cursor-pointer hover:bg-green-700">
+              <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
                 Criar ciclo
               </Button>
             }
@@ -151,7 +162,7 @@ const DimensionList = ({
               onOpenChange={setDialogIsOpen}
               onCreate={handleCreateCycle}
               trigger={
-                <Button className="bg-green-600 hover:cursor-pointer hover:bg-green-700">
+                <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Iniciar Primeiro Ciclo Avaliativo
                 </Button>
@@ -161,35 +172,40 @@ const DimensionList = ({
         </Card>
       ) : (
         <>
-          <div className="flex flex-col gap-2">
-            <div className="text-muted-foreground text-sm font-bold">
-              Selecione o ciclo avaliativo
+          <div className="flex justify-between">
+            <div className="flex flex-col gap-2">
+              <div className="text-muted-foreground text-sm font-bold">
+                Selecione o ciclo avaliativo
+              </div>
+              <div className="w-48">
+                <Select
+                  value={currentYearState ? String(currentYearState) : ''}
+                  onValueChange={(v) => {
+                    const yr = parseInt(v, 10);
+                    if (Number.isInteger(yr)) {
+                      setCurrentYearState(yr);
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('year', String(yr));
+                      window.history.replaceState({}, '', url.toString());
+                      router.refresh();
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Ano do ciclo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableYears.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="w-48">
-              <Select
-                value={currentYearState ? String(currentYearState) : ''}
-                onValueChange={(v) => {
-                  const yr = parseInt(v, 10);
-                  if (Number.isInteger(yr)) {
-                    setCurrentYearState(yr);
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('year', String(yr));
-                    window.history.replaceState({}, '', url.toString());
-                    router.refresh();
-                  }
-                }}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Ano do ciclo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableYears.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div>
+              <ReportButton />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

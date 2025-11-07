@@ -15,7 +15,7 @@ type CloudinaryUploadResponse = {
   // Adicionar outros campos se precisar
 };
 
-async function uploadToCloudinary(
+export async function uploadToCloudinary(
   file: File,
   folder: string
 ): Promise<CloudinaryUploadResponse> {
@@ -55,5 +55,3 @@ async function uploadToCloudinary(
   const data: CloudinaryUploadResponse = await upRes.json();
   return data;
 }
-
-export default uploadToCloudinary;

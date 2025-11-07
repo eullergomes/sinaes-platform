@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth-client';
-import uploadToCloudinary from '@/services/uploadToCloudinary';
+import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 import { updateProfileAction } from '@/actions/profile';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -237,7 +237,7 @@ export default function ProfilePage() {
                 <Button
                   type="submit"
                   disabled={!canSubmit}
-                  className="bg-green-600 hover:cursor-pointer hover:bg-green-700"
+                  className="cursor-pointer bg-green-600 hover:bg-green-700"
                 >
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

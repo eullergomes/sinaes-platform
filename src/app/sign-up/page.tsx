@@ -23,7 +23,7 @@ import { authClient } from '@/lib/auth-client';
 import { mapAuthErrorCode } from '@/lib/errors/auth';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import uploadToCloudinary from '@/services/uploadToCloudinary';
+import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 
 const SignUpForm = () => {
   const formSchema = z
@@ -90,7 +90,7 @@ const SignUpForm = () => {
         image: imageUrl,
         fetchOptions: {
           onSuccess: () => {
-            router.push('/');
+            router.push('/courses');
           },
           onError: (error) => {
             console.log(error);
@@ -267,7 +267,7 @@ const SignUpForm = () => {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-green-600 hover:cursor-pointer hover:bg-green-700"
+                    className="w-full bg-green-500 cursor-pointer hover:bg-green-600"
                   >
                     {isSubmitting ? (
                       <>

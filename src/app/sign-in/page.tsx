@@ -43,7 +43,7 @@ const SignInPage = () => {
         email: values.email,
         password: values.password,
         fetchOptions: {
-          onSuccess: () => router.push('/'),
+          onSuccess: () => router.push('/courses'),
           onError: (error) => {
             console.log(error);
 
@@ -127,7 +127,7 @@ const SignInPage = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-green-600 hover:cursor-pointer hover:bg-green-700"
+                    className="w-full bg-green-500 cursor-pointer hover:bg-green-600"
                   >
                     Entrar
                   </Button>
