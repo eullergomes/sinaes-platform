@@ -38,7 +38,8 @@ const NewCycle: React.FC<NewCycleProps> = ({
 
   const yearNum = useMemo(() => parseInt(newYear, 10), [newYear]);
   const yearValid = useMemo(
-    () => Number.isInteger(yearNum) && yearNum >= MIN_YEAR && yearNum <= MAX_YEAR,
+    () =>
+      Number.isInteger(yearNum) && yearNum >= MIN_YEAR && yearNum <= MAX_YEAR,
     [yearNum]
   );
 
@@ -66,12 +67,12 @@ const NewCycle: React.FC<NewCycleProps> = ({
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button className="bg-green-600 hover:cursor-pointer hover:bg-green-700">
+          <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
             Criar ciclo
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-xs rounded sm:w-full">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -104,7 +105,7 @@ const NewCycle: React.FC<NewCycleProps> = ({
             </label>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-4 md:gap-0">
           <Button
             variant="outline"
             className="hover:cursor-pointer"
@@ -116,7 +117,7 @@ const NewCycle: React.FC<NewCycleProps> = ({
           <Button
             onClick={handleCreate}
             disabled={!yearValid || isCreating}
-            className="bg-green-600 hover:cursor-pointer hover:bg-green-700 disabled:opacity-60"
+            className="cursor-pointer bg-green-500 hover:bg-green-600 disabled:opacity-60"
           >
             {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isCreating ? 'Criando ciclo...' : 'Criar ciclo'}
