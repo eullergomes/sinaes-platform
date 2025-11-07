@@ -5,7 +5,33 @@ import prisma from '@/utils/prisma';
 import { IndicatorGrade, IndicatorStatus, StorageKind } from '@prisma/client';
 import { z } from 'zod';
 
-// Schema Zod para validar os dados recebidos do formulário
+type EvidenceFileInfo = {
+  storageKey: string;
+  externalUrl: string;
+  fileName: string;
+  sizeBytes: number;
+  mimeType: string;
+};
+
+type ParsedRawData = {
+  courseId?: string;
+  courseSlug?: string;
+  indicatorDefId?: string;
+  evaluationYear?: number | string;
+  grade?: IndicatorGrade | string;
+  justification?: string;
+  correctiveAction?: string;
+  responsible?: string;
+  evidences: Record<
+    string,
+    {
+      links?: string[];
+      linksRich?: { text: string; url: string }[];
+      files?: EvidenceFileInfo[];
+    }
+  >;
+};
+
 const EvaluationFormSchema = z.object({
   courseId: z.string(),
   indicatorDefId: z.string(),
@@ -14,17 +40,31 @@ const EvaluationFormSchema = z.object({
   justification: z.string().optional(),
   correctiveAction: z.string().optional(),
   responsible: z.string().optional(),
-  // Estrutura para receber os dados das evidências
-  evidences: z.record(z.object({ // O record key será o evidenceSlug
+  evidences: z.record(
+    z.string(),
+    z.object({
       links: z.array(z.string().url().or(z.literal(''))).optional(), // Array de links (permite vazios que serão filtrados)
-      files: z.array(z.object({ // Array de arquivos enviados para Cloudinary
-          storageKey: z.string(), // public_id do Cloudinary
-          externalUrl: z.string().url(), // secure_url do Cloudinary
-          fileName: z.string(),
-          sizeBytes: z.number().int(),
-          mimeType: z.string(), // ex: application/pdf
-      })).optional(),
-  })),
+      linksRich: z
+        .array(
+          z.object({
+            text: z.string().min(1),
+            url: z.string().url()
+          })
+        )
+        .optional(),
+      files: z
+        .array(
+          z.object({
+            storageKey: z.string(),
+            externalUrl: z.string().url(),
+            fileName: z.string(),
+            sizeBytes: z.number().int(),
+            mimeType: z.string()
+          })
+        )
+        .optional()
+    })
+  )
 });
 
 // usar em alguma variável ou exportar se necessário
@@ -43,47 +83,116 @@ export async function saveIndicatorEvaluation(
   formData: FormData
 ): Promise<SaveIndicatorState> {
 
-  // Extrair e estruturar os dados do FormData
-  const rawData: Record<string, any> = { evidences: {} };
-  const evidenceFiles: Record<string, any[]> = {};
+  const rawData: ParsedRawData = { evidences: {} };
+  const evidenceFiles: Record<string, EvidenceFileInfo[]> = {};
   const evidenceLinks: Record<string, string[]> = {};
+  const evidenceLinkItems: Record<string, { text: string; url: string }[]> = {};
 
   for (const [key, value] of formData.entries()) {
-    if (key.startsWith('evidence-') && key.endsWith('-link')) {
-        // Ex: evidence-ppc-link[0], evidence-ppc-link[1]...
-        const slug = key.split('-')[1];
-        if (!evidenceLinks[slug]) evidenceLinks[slug] = [];
-        if (value) evidenceLinks[slug].push(value as string); // Adiciona apenas links não vazios
-    } else if (key.startsWith('evidence-') && key.endsWith('-fileInfo')) {
-        // Ex: evidence-ppc-fileInfo[0], evidence-ppc-fileInfo[1]... (JSON stringificado)
-        const slug = key.split('-')[1];
-         if (!evidenceFiles[slug]) evidenceFiles[slug] = [];
-         try {
-             evidenceFiles[slug].push(JSON.parse(value as string));
-         } catch (e) { console.error("Erro ao parsear fileInfo:", value); }
-    } else if (key === 'grade') {
-        rawData[key] = value as IndicatorGrade; // Tratar enum
+    const linkMatch = key.match(/^evidence-(.+?)-link(?:\[\d+\])?$/);
+    const fileInfoMatch = key.match(/^evidence-(.+?)-fileInfo(?:\[\d+\])?$/);
+    const linkItemsMatch = key.match(/^evidence-(.+?)-linkItems$/);
+
+    if (linkMatch) {
+      const slug = linkMatch[1];
+      if (!evidenceLinks[slug]) evidenceLinks[slug] = [];
+      if (typeof value === 'string' && value) {
+        evidenceLinks[slug].push(value);
+      }
+      continue;
+    }
+
+    if (linkItemsMatch) {
+      const slug = linkItemsMatch[1];
+      try {
+        const parsed = JSON.parse(value as string);
+        if (Array.isArray(parsed)) {
+          if (!evidenceLinkItems[slug]) evidenceLinkItems[slug] = [];
+          evidenceLinkItems[slug].push(
+            ...parsed.filter((it) => it && it.url && it.text)
+          );
+        }
+      } catch (e) {
+        console.error('Erro ao parsear linkItems JSON:', e);
+      }
+      continue;
+    }
+
+    if (fileInfoMatch) {
+      const slug = fileInfoMatch[1];
+      try {
+        const parsed = JSON.parse(value as string);
+        if (Array.isArray(parsed)) {
+          if (parsed.length > 0) {
+            if (!evidenceFiles[slug]) evidenceFiles[slug] = [];
+            evidenceFiles[slug].push(...parsed);
+          }
+        } else if (parsed) {
+          if (!evidenceFiles[slug]) evidenceFiles[slug] = [];
+          evidenceFiles[slug].push(parsed as EvidenceFileInfo);
+        }
+      } catch {
+        console.error('Erro ao parsear fileInfo:', value);
+      }
+      continue;
+    }
+
+    if (key === 'grade') {
+      rawData.grade = value as IndicatorGrade;
     } else {
-        rawData[key] = value;
+      switch (key) {
+        case 'courseId':
+          rawData.courseId = value as string;
+          break;
+        case 'courseSlug':
+          rawData.courseSlug = value as string;
+          break;
+        case 'indicatorDefId':
+          rawData.indicatorDefId = value as string;
+          break;
+        case 'evaluationYear':
+          rawData.evaluationYear = value as string;
+          break;
+        case 'justification':
+          rawData.justification = value as string;
+          break;
+        case 'correctiveAction':
+          rawData.correctiveAction = value as string;
+          break;
+        case 'responsible':
+          rawData.responsible = value as string;
+          break;
+        default:
+          // Ignora campos desconhecidos
+          break;
+      }
     }
   }
-  
-  // Combina links e files na estrutura esperada pelo Zod
-  Object.keys(evidenceLinks).forEach(slug => {
+
+  Object.keys(evidenceLinks).forEach((slug) => {
     if (!rawData.evidences[slug]) rawData.evidences[slug] = {};
     rawData.evidences[slug].links = evidenceLinks[slug];
   });
-   Object.keys(evidenceFiles).forEach(slug => {
+  Object.keys(evidenceLinkItems).forEach((slug) => {
+    if (!rawData.evidences[slug]) rawData.evidences[slug] = {};
+    rawData.evidences[slug].linksRich = evidenceLinkItems[slug];
+  });
+  Object.keys(evidenceFiles).forEach((slug) => {
     if (!rawData.evidences[slug]) rawData.evidences[slug] = {};
     rawData.evidences[slug].files = evidenceFiles[slug];
   });
 
-  // Validar com Zod
   const validatedFields = EvaluationFormSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
-      console.error("Zod Validation Errors:", validatedFields.error.flatten().fieldErrors);
-    return { errors: validatedFields.error.flatten().fieldErrors, success: false };
+    console.error(
+      'Zod Validation Errors:',
+      validatedFields.error.flatten().fieldErrors
+    );
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      success: false
+    };
   }
 
   const {
@@ -94,24 +203,35 @@ export async function saveIndicatorEvaluation(
     justification,
     correctiveAction,
     responsible,
-    evidences,
+    evidences
   } = validatedFields.data;
 
   try {
-    // Usar transação Prisma para garantir atomicidade
     await prisma.$transaction(async (tx) => {
-      // 1. Atualiza ou cria o registro CourseIndicator (avaliação principal)
-      const evaluation = await tx.courseIndicator.upsert({
+      await tx.courseIndicator.upsert({
         where: {
-          courseId_indicatorDefId_evaluationYear: { courseId, indicatorDefId, evaluationYear },
+          courseId_indicatorDefId_evaluationYear: {
+            courseId,
+            indicatorDefId,
+            evaluationYear
+          }
         },
         update: {
           grade,
           status: IndicatorStatus.EM_EDICAO,
-          justification: (grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA) ? null : justification, // Limpa plano se nota for 5 ou NSA
-          correctiveAction: (grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA) ? null : correctiveAction,
-          responsible: (grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA) ? null : responsible,
-          lastUpdate: new Date(),
+          justification:
+            grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
+              ? null
+              : justification, // Limpa plano se nota for 5 ou NSA
+          correctiveAction:
+            grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
+              ? null
+              : correctiveAction,
+          responsible:
+            grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
+              ? null
+              : responsible,
+          lastUpdate: new Date()
         },
         create: {
           courseId,
@@ -121,59 +241,106 @@ export async function saveIndicatorEvaluation(
           status: IndicatorStatus.EM_EDICAO,
           justification,
           correctiveAction,
-          responsible,
+          responsible
           // nsaApplicable/nsaLocked devem ser definidos ao criar o ciclo
-        },
+        }
       });
 
-      // 2. Processa cada evidência (links e arquivos)
       for (const [evidenceSlug, data] of Object.entries(evidences)) {
-        const requirement = await tx.evidenceRequirement.findUnique({ where: { slug: evidenceSlug } });
+        const requirement = await tx.evidenceRequirement.findUnique({
+          where: { slug: evidenceSlug }
+        });
         if (!requirement) {
-          console.warn(`Evidence requirement com slug ${evidenceSlug} não encontrado.`);
-          continue; // Pula para a próxima evidência
+          console.warn(
+            `Evidence requirement com slug ${evidenceSlug} não encontrado.`
+          );
+          continue;
         }
 
-        // Encontra ou cria a EvidenceSubmission para este curso e requisito
         const submission = await tx.evidenceSubmission.upsert({
-            where: { courseId_requirementId: { courseId, requirementId: requirement.id } },
-            update: {
-                folderUrls: data.links || [], // Atualiza/sobrescreve os links
-                // Poderia concatenar em vez de sobrescrever se desejado: folderUrls: { push: data.links }
-            },
-            create: {
-                courseId,
-                requirementId: requirement.id,
-                folderUrls: data.links || [],
-                // createdByUserId: id do usuário logado (obter da sessão)
-            },
+          where: {
+            courseId_requirementId: { courseId, requirementId: requirement.id }
+          },
+          update: {
+            folderUrls: data.links
+              ? data.links
+              : data.linksRich
+                ? data.linksRich.map((l) => l.url)
+                : undefined
+          },
+          create: {
+            courseId,
+            requirementId: requirement.id,
+            folderUrls: data.links
+              ? data.links
+              : data.linksRich
+                ? data.linksRich.map((l) => l.url)
+                : []
+          }
         });
 
-        // 3. Cria os registros EvidenceFile para os novos arquivos enviados
+        if (data.linksRich && Array.isArray(data.linksRich)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const evidenceLink = (tx as any).evidenceLink;
+          await evidenceLink.deleteMany({
+            where: { submissionId: submission.id }
+          });
+          if (data.linksRich.length > 0) {
+            await evidenceLink.createMany({
+              data: data.linksRich.map((it, idx) => ({
+                submissionId: submission.id,
+                text: it.text,
+                url: it.url,
+                order: idx
+              }))
+            });
+          }
+        } else if (data.links && Array.isArray(data.links)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const evidenceLink = (tx as any).evidenceLink;
+          await evidenceLink.deleteMany({
+            where: { submissionId: submission.id }
+          });
+          if (data.links.length > 0) {
+            await evidenceLink.createMany({
+              data: data.links.map((u, idx) => ({
+                submissionId: submission.id,
+                text: u,
+                url: u,
+                order: idx
+              }))
+            });
+          }
+        }
+
         if (data.files && data.files.length > 0) {
           await tx.evidenceFile.createMany({
-            data: data.files.map(file => ({
+            data: data.files.map((file) => ({
               submissionId: submission.id,
-              kind: StorageKind.EXTERNAL, // Usamos Cloudinary como externo
-              storageKey: file.storageKey, // public_id
-              externalUrl: file.externalUrl, // secure_url
+              kind: StorageKind.EXTERNAL,
+              storageKey: file.storageKey,
+              externalUrl: file.externalUrl,
               fileName: file.fileName,
               mimeType: file.mimeType,
-              sizeBytes: file.sizeBytes,
-              // uploadedByUserId: id do usuário logado
-            })),
+              sizeBytes: file.sizeBytes
+            }))
           });
         }
       }
-    }); // Fim da transação
+    });
 
-    // Revalida o path para atualizar a UI
-    // Idealmente, revalidar o path específico do indicador
-    revalidatePath(`/courses/${courseId}/dimensions`); // Revalida a página da dimensão
+    const courseSlug = rawData.courseSlug;
+    if (courseSlug) {
+      revalidatePath(`/courses/${courseSlug}/dimensions`);
+    } else {
+      revalidatePath(`/courses/${courseId}/dimensions`);
+    }
     return { success: true };
-
   } catch (error) {
     console.error('Falha ao salvar avaliação do indicador:', error);
-    return { errors: { _form: ['Erro inesperado ao salvar no banco de dados.'] }, success: false };
+    return {
+      errors: { _form: ['Erro inesperado ao salvar no banco de dados.'] },
+      success: false
+    };
   }
 }
