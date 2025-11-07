@@ -17,6 +17,7 @@ import { useSession } from '@/lib/auth-client';
 
 import NavUser from '@/components/nav-user';
 import Footer from '@/components/footer';
+import { UserRole } from '@prisma/client';
 
 function extractCourseId(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
@@ -28,7 +29,11 @@ function extractCourseId(pathname: string): string | null {
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [courseName, setCourseName] = useState<string | null>(null);
-  const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up' || pathname === '/profile';
+  const isAuthPage =
+    pathname === '/sign-in' ||
+    pathname === '/sign-up' ||
+    pathname === '/profile' ||
+    pathname === '/admin/users';
   const hideSidebar =
     pathname === '/courses' ||
     pathname === '/courses/new' ||
@@ -38,6 +43,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   const { data, isPending } = useSession();
   const user = data?.user ?? null;
+  const hasRole = (u: unknown): u is { role?: UserRole } => {
+    return (
+      !!u && typeof u === 'object' && 'role' in (u as Record<string, unknown>)
+    );
+  };
+  const isAdmin = hasRole(user) && user.role === UserRole.ADMIN;
 
   useEffect(() => {
     let cancelled = false;
@@ -101,17 +112,26 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   <span className="text-lg font-semibold">IFMA Avalia</span>
                 </Link>
 
-                {isPending ? (
-                  UserSkeleton
-                ) : user ? (
-                  <NavUser user={user} hideInfo={true} />
-                ) : (
-                  <Button asChild variant="outline">
-                    <Link href="/sign-in" className="text-black">
-                      Login
-                    </Link>
-                  </Button>
-                )}
+                <div className="flex items-center gap-3">
+                  {isAdmin && (
+                    <Button asChild variant="outline">
+                      <Link href="/admin/users" className="text-black">
+                        Admin
+                      </Link>
+                    </Button>
+                  )}
+                  {isPending ? (
+                    UserSkeleton
+                  ) : user ? (
+                    <NavUser user={user} hideInfo={true} />
+                  ) : (
+                    <Button asChild variant="outline">
+                      <Link href="/sign-in" className="text-black">
+                        Login
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -131,6 +151,13 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                 )}
                 <div className="ml-auto flex items-center gap-4">
                   <PendingAlerts />
+                  {isAdmin && (
+                    <Button asChild variant="outline">
+                      <Link href="/admin/users" className="text-black">
+                        Admin
+                      </Link>
+                    </Button>
+                  )}
                   {isPending ? (
                     UserSkeleton
                   ) : user ? (
@@ -148,7 +175,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           </header>
         )}
 
-        <div className="flex flex-1 flex-col gap-4 min-h-[calc(100svh-4rem)]">{children}</div>
+        <div className="flex min-h-[calc(100svh-4rem)] flex-1 flex-col gap-4">
+          {children}
+        </div>
         <Footer />
       </SidebarInset>
     </SidebarProvider>

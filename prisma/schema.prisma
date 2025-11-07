@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum UserRole {
+  ADMIN
   DIRECTOR
   COORDINATOR
   VISITOR
@@ -220,6 +221,7 @@ model EvidenceSubmission {
   firstIndicatorDefId String?              @db.ObjectId
   firstIndicatorDef   IndicatorDefinition? @relation(fields: [firstIndicatorDefId], references: [id])
   files               EvidenceFile[]
+  links               EvidenceLink[]
 
   createdByUserId String? @db.ObjectId
   createdByUser   User?   @relation(fields: [createdByUserId], references: [id])
@@ -246,4 +248,17 @@ model EvidenceFile {
 
   uploadedByUserId String? @db.ObjectId
   uploadedByUser   User?   @relation(fields: [uploadedByUserId], references: [id])
+}
+
+model EvidenceLink {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  submissionId String             @db.ObjectId
+  submission   EvidenceSubmission @relation(fields: [submissionId], references: [id])
+  text         String
+  url          String
+  order        Int?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([submissionId])
 }

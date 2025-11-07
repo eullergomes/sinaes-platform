@@ -3302,7 +3302,7 @@ async function main() {
   console.log('👤 Criando usuários...');
   await prisma.user.create({
     data: {
-      email: 'direcao@instituicao.edu.br',
+      email: 'direcao@teste.com',
       name: 'Ana Direção',
       role: UserRole.DIRECTOR
     }
@@ -3310,7 +3310,7 @@ async function main() {
 
   const coordAdsUser = await prisma.user.create({
     data: {
-      email: 'coord.ads@instituicao.edu.br',
+      email: 'coordenador.ads@teste.com',
       name: 'Carlos Coordenador ADS',
       role: UserRole.COORDINATOR
     }
@@ -3318,9 +3318,17 @@ async function main() {
 
   const coordEngUser = await prisma.user.create({
     data: {
-      email: 'coord.eng@instituicao.edu.br',
+      email: 'coordenador.eng@teste.com',
       name: 'Beatriz Coordenadora ENG',
       role: UserRole.COORDINATOR
+    }
+  });
+
+  await prisma.user.create({
+    data: {
+      email: 'visitor@teste.com',
+      name: 'Euller Visitante',
+      role: UserRole.VISITOR
     }
   });
   console.log(`✅ ${await prisma.user.count()} usuários criados.`);
