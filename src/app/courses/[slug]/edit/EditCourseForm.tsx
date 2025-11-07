@@ -17,15 +17,16 @@ import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import CoordinatorAutocomplete from '@/components/coordinator-autocomplete';
 import { CourseLevel, CourseModality } from '@prisma/client';
-import { updateCourse } from '@/app/actions/course';
-import type { CreateCourseState } from '@/app/actions/course';
+import { labelForCourseLevel, labelForCourseModality } from '@/utils/labels';
+import { updateCourse } from '@/actions/course';
+import type { CreateCourseState } from '@/actions/course';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { validateLink } from '@/utils/validateLink';
 
 type Coordinator = { id: string; name: string };
 
-// Melhorar essa tipagem
+// feat: melhorar essa tipagem
 export type EditCourseInitial = {
   id: string;
   name: string;
@@ -42,7 +43,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
     <Button
       type="submit"
       disabled={pending || disabled}
-      className="bg-green-600 hover:cursor-pointer hover:bg-green-700"
+      className="cursor-pointer bg-green-600 hover:bg-green-700"
     >
       {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {pending ? 'Salvando...' : 'Salvar alterações'}
@@ -181,7 +182,7 @@ export default function EditCourseForm({
                   <SelectContent>
                     {Object.values(CourseLevel).map((lv) => (
                       <SelectItem key={lv} value={lv}>
-                        {lv}
+                        {labelForCourseLevel(lv)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -271,7 +272,7 @@ export default function EditCourseForm({
                   <SelectContent>
                     {Object.values(CourseModality).map((md) => (
                       <SelectItem key={md} value={md}>
-                        {md}
+                        {labelForCourseModality(md)}
                       </SelectItem>
                     ))}
                   </SelectContent>

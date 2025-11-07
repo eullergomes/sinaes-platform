@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import prisma from '@/utils/prisma';
 import { CourseLevel, CourseModality } from '@prisma/client';
@@ -55,25 +55,14 @@ export async function createCourse(
   const slug = createSlug(name);
 
   try {
-    const existingCourseBySlug = await prisma.course.findUnique({
-      where: { slug }
-    });
+    const existingCourseBySlug = await prisma.course.findUnique({ where: { slug } });
     if (existingCourseBySlug) {
-      return {
-        error: `Um curso com o nome "${name}" já existe.`,
-        eventId: newEvent()
-      };
+      return { error: `Um curso com o nome "${name}" já existe.`, eventId: newEvent() };
     }
-
     if (emecCode) {
-      const existingCourseByEmec = await prisma.course.findUnique({
-        where: { emecCode }
-      });
+      const existingCourseByEmec = await prisma.course.findUnique({ where: { emecCode } });
       if (existingCourseByEmec) {
-        return {
-          error: `O código e-MEC "${emecCode}" já está em uso por outro curso.`,
-          eventId: newEvent()
-        };
+        return { error: `O código e-MEC "${emecCode}" já está em uso.`, eventId: newEvent() };
       }
     }
 
@@ -91,13 +80,13 @@ export async function createCourse(
   } catch (error) {
     console.error('Falha detalhada ao criar curso:', error);
     return {
-      error:
-        'Não foi possível criar o curso devido a um erro inesperado no banco de dados.',
+      error: 'Não foi possível criar o curso devido a um erro inesperado no banco de dados.',
       eventId: newEvent()
     };
   }
 
-  revalidatePath('/courses');
+  revalidateTag('courses');
+  
   const e = newEvent();
   redirect(`/courses?created=1&e=${e}`);
 
@@ -113,34 +102,19 @@ export async function deleteCourse(formData: FormData) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.courseIndicator.deleteMany({
-        where: { courseId: courseId }
-      });
-
-      const submissions = await tx.evidenceSubmission.findMany({
-        where: { courseId: courseId },
-        select: { id: true }
-      });
+      await tx.courseIndicator.deleteMany({ where: { courseId: courseId } });
+      const submissions = await tx.evidenceSubmission.findMany({ where: { courseId: courseId }, select: { id: true } });
       const submissionIds = submissions.map((s) => s.id);
-
-      await tx.evidenceFile.deleteMany({
-        where: { submissionId: { in: submissionIds } }
-      });
-
-      await tx.evidenceSubmission.deleteMany({
-        where: { courseId: courseId }
-      });
-
-      await tx.course.delete({
-        where: { id: courseId }
-      });
+      await tx.evidenceFile.deleteMany({ where: { submissionId: { in: submissionIds } } });
+      await tx.evidenceSubmission.deleteMany({ where: { courseId: courseId } });
+      await tx.course.delete({ where: { id: courseId } });
     });
   } catch (error) {
     console.error('Falha ao apagar o curso:', error);
     throw new Error('Não foi possível apagar o curso.');
   }
 
-  revalidatePath('/courses');
+  revalidateTag('courses');
 }
 
 export async function updateCourse(
@@ -178,29 +152,13 @@ export async function updateCourse(
   const slug = createSlug(name);
 
   try {
-    const existing = await prisma.course.findUnique({
-      where: { id: courseId }
-    });
-    if (!existing) {
-      return { error: 'Curso não encontrado.', eventId: newEvent() };
-    }
-
+    const existing = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!existing) { return { error: 'Curso não encontrado.', eventId: newEvent() }; }
     const bySlug = await prisma.course.findUnique({ where: { slug } });
-    if (bySlug && bySlug.id !== courseId) {
-      return {
-        error: `Já existe um curso com o nome "${name}".`,
-        eventId: newEvent()
-      };
-    }
-
+    if (bySlug && bySlug.id !== courseId) { return { error: `Já existe um curso com o nome "${name}".`, eventId: newEvent() }; }
     if (emecCode) {
       const byEmec = await prisma.course.findUnique({ where: { emecCode } });
-      if (byEmec && byEmec.id !== courseId) {
-        return {
-          error: `O código e-MEC "${emecCode}" já está em uso por outro curso.`,
-          eventId: newEvent()
-        };
-      }
+      if (byEmec && byEmec.id !== courseId) { return { error: `O código e-MEC "${emecCode}" já está em uso.`, eventId: newEvent() }; }
     }
 
     await prisma.course.update({
@@ -218,13 +176,13 @@ export async function updateCourse(
   } catch (error) {
     console.error('Falha ao atualizar curso:', error);
     return {
-      error:
-        'Não foi possível atualizar o curso devido a um erro inesperado no banco de dados.',
+      error: 'Não foi possível atualizar o curso devido a um erro inesperado no banco de dados.',
       eventId: newEvent()
     };
   }
 
-  revalidatePath('/courses');
+  revalidateTag('courses');
+  
   const e = newEvent();
   redirect(`/courses?updated=1&e=${e}`);
 

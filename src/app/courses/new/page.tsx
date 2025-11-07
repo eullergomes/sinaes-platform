@@ -17,9 +17,10 @@ import { Loader2, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import CoordinatorAutocomplete from '@/components/coordinator-autocomplete';
-import { createCourse } from '@/app/actions/course';
-import type { CreateCourseState } from '@/app/actions/course';
+import { createCourse } from '@/actions/course';
+import type { CreateCourseState } from '@/actions/course';
 import { CourseLevel, CourseModality } from '@prisma/client';
+import { labelForCourseLevel, labelForCourseModality } from '@/utils/labels';
 import { validateLink } from '@/utils/validateLink';
 
 function SubmitButton({ disabled }: { disabled: boolean }) {
@@ -28,7 +29,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
     <Button
       type="submit"
       disabled={pending || disabled}
-      className="bg-green-600 hover:cursor-pointer hover:bg-green-700"
+      className="cursor-pointer bg-green-600 hover:bg-green-700"
     >
       {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {pending ? 'Salvando...' : 'Salvar'}
@@ -139,7 +140,7 @@ export default function NewCoursePage() {
                   <SelectContent>
                     {Object.values(CourseLevel).map((lv) => (
                       <SelectItem key={lv} value={lv}>
-                        {lv}
+                        {labelForCourseLevel(lv)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -231,7 +232,7 @@ export default function NewCoursePage() {
                   <SelectContent>
                     {Object.values(CourseModality).map((md) => (
                       <SelectItem key={md} value={md}>
-                        {md}
+                        {labelForCourseModality(md)}
                       </SelectItem>
                     ))}
                   </SelectContent>
