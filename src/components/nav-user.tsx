@@ -30,12 +30,12 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
           size="lg"
           className={`data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:cursor-pointer ${hideInfo ? 'w-auto' : 'w-full'}`}
         >
-          <Avatar className="h-8 w-8 rounded-full border-1 border-[#e5e5e5]">
+          <Avatar className="h-8 w-8 rounded-full border-1 border-gray-500">
             <AvatarImage
               src={user?.image ?? undefined}
               alt={user?.name ?? ''}
             />
-            <AvatarFallback className="bg-[#e5e5e5]">
+            <AvatarFallback className="bg-gray-200">
               {user?.name
                 ?.split(' ')
                 .map((n) => n[0])
@@ -55,19 +55,19 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg p-0"
         side={hideInfo ? 'bottom' : 'right'}
         align="end"
         sideOffset={4}
       >
-        <DropdownMenuLabel className="p-0 font-normal">
+        <DropdownMenuLabel className="p-0 font-normal bg-green-600">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="h-8 w-8 rounded-full border-1 border-[#e5e5e5]">
               <AvatarImage
                 src={user?.image ?? undefined}
                 alt={user?.name ?? ''}
               />
-              <AvatarFallback className="bg-[#e5e5e5]">
+              <AvatarFallback className="bg-gray-400 text-white">
                 {user?.name
                   ?.split(' ')
                   .map((n) => n[0])
@@ -76,12 +76,11 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs">{user.email}</span>
+              <span className="truncate font-medium text-white">{user.name}</span>
+              <span className="truncate text-xs text-white">{user.email}</span>
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild className='hover:cursor-pointer'>
             <Link href="/profile" className='flex gap-4'>

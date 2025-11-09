@@ -65,10 +65,10 @@ export function DataTableColumnHeader<TData, TValue>({
             aria-label={tooltipText}
             variant="ghost"
             size="sm"
-            className="-ml-3 h-8"
+            className="-ml-3 h-8 text-white hover:bg-green-700 hover:text-white"
             onClick={handleClick}
           >
-            <span>{title}</span>
+            <span className='p-2 text-left'>{title}</span>
             {isSorted === 'desc' ? (
               <ArrowDownIcon className="ml-2 h-4 w-4" aria-hidden="true" />
             ) : isSorted === 'asc' ? (

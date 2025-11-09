@@ -117,7 +117,7 @@ export default function UsersTable({
   return (
     <div className="rounded-md border">
       <Table>
-        <TableHeader>
+        <TableHeader className='bg-green-600'>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
