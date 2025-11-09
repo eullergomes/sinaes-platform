@@ -11,7 +11,9 @@ import {
   DialogTrigger
 } from './ui/dialog';
 import { Input } from './ui/input';
+import { Checkbox } from './ui/checkbox';
 import { MAX_YEAR, MIN_YEAR } from '@/constants/year';
+import { Label } from './ui/label';
 
 type NewCycleProps = {
   open: boolean;
@@ -93,16 +95,18 @@ const NewCycle: React.FC<NewCycleProps> = ({
             Mínimo {MIN_YEAR}, máximo {MAX_YEAR}.
           </div>
           <div className="flex items-center gap-2 pt-2">
-            <input
+            <Checkbox
               id="copyPrev"
-              type="checkbox"
-              className="size-4 hover:cursor-pointer"
               checked={copyFromPrevious}
-              onChange={(e) => setCopyFromPrevious(e.target.checked)}
+              onCheckedChange={(val) => setCopyFromPrevious(!!val)}
+              className="hover:cursor-pointer"
             />
-            <label htmlFor="copyPrev" className="text-sm">
+            <Label
+              htmlFor="copyPrev"
+              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Copiar dados do ciclo anterior (se existir)
-            </label>
+            </Label>
           </div>
         </div>
         <DialogFooter className="gap-4 md:gap-0">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, ChevronsUpDown, LogOut, UserCircle } from 'lucide-react';
+import { ChevronsUpDown, LogOut, UserCircle } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -46,10 +46,20 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
           {!hideInfo && (
             <>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className={`truncate font-medium ${hideInfo ? 'text-black' : 'text-white'}`}>{user?.name}</span>
-                <span className={`truncate text-xs ${hideInfo ? 'text-black' : 'text-white'}`}>{user?.email}</span>
+                <span
+                  className={`truncate font-medium ${hideInfo ? 'text-black' : 'text-white'}`}
+                >
+                  {user?.name}
+                </span>
+                <span
+                  className={`truncate text-xs ${hideInfo ? 'text-black' : 'text-white'}`}
+                >
+                  {user?.email}
+                </span>
               </div>
-              <ChevronsUpDown className={`ml-auto size-4 ${hideInfo ? 'text-black' : 'text-white'}`} />
+              <ChevronsUpDown
+                className={`ml-auto size-4 ${hideInfo ? 'text-black' : 'text-white'}`}
+              />
             </>
           )}
         </SidebarMenuButton>
@@ -60,7 +70,7 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
         align="end"
         sideOffset={4}
       >
-        <DropdownMenuLabel className="p-0 font-normal bg-green-600">
+        <DropdownMenuLabel className="bg-green-600 p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="h-8 w-8 rounded-full border-1 border-[#e5e5e5]">
               <AvatarImage
@@ -76,22 +86,18 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium text-white">{user.name}</span>
+              <span className="truncate font-medium text-white">
+                {user.name}
+              </span>
               <span className="truncate text-xs text-white">{user.email}</span>
             </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild className='hover:cursor-pointer'>
-            <Link href="/profile" className='flex gap-4'>
+          <DropdownMenuItem asChild className="hover:cursor-pointer">
+            <Link href="/profile" className="flex gap-4">
               <UserCircle />
               Perfil
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className='hover:cursor-pointer'>
-            <Link href="/notifications" className='flex gap-4'>
-              <Bell />
-              Notificações
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -99,7 +105,7 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
         <DropdownMenuItem asChild>
           <Button
             variant="ghost"
-            className='w-full flex justify-start hover:cursor-pointer'
+            className="flex w-full justify-start hover:cursor-pointer"
             onClick={() => signOut()}
           >
             <LogOut />

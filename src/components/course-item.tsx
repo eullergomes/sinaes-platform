@@ -161,7 +161,7 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
 
         <div className="flex items-center justify-between">
           <Link
-            href={`/courses/${course.slug}`}
+            href={`/courses/${course.slug}/dashboard`}
             className="text-primary underline"
           >
             Abrir dashboard
