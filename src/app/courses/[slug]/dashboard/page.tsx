@@ -1,33 +1,49 @@
 import prisma from '@/utils/prisma';
 import CourseDashboardClient from '@/components/CourseDashboardClient';
 import { notFound } from 'next/navigation';
+import { mapGrade } from '@/utils/mapGrade';
 
 type DimId = '1' | '2' | '3';
 type Status = 'Concluído' | 'Em edição' | 'Não atingido';
 
-function mapGrade(grade: string | null) {
-  if (grade === null) return null;
-  if (grade === 'NSA') return null;
-  const n = Number(grade);
-  return Number.isFinite(n) ? n : null;
-}
-
 export default async function CourseDashboardPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ year?: string }>;
 }) {
   const { slug } = await params;
+  const { year } = await searchParams;
 
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) return notFound();
 
-  const indicators = await prisma.courseIndicator.findMany({
+  const allYearsRaw = await prisma.courseIndicator.findMany({
     where: { courseId: course.id },
-    include: { indicatorDef: true }
+    select: { evaluationYear: true }
+  });
+  const availableYears = Array.from(
+    new Set(allYearsRaw.map((y) => y.evaluationYear))
+  ).sort((a, b) => b - a);
+  const selectedYear = (() => {
+    const y = year ? parseInt(year, 10) : NaN;
+    return !Number.isNaN(y) && availableYears.includes(y)
+      ? y
+      : (availableYears[0] ?? null);
+  })();
+
+  const indicatorsOfYear = await prisma.courseIndicator.findMany({
+    where: {
+      courseId: course.id,
+      evaluationYear: selectedYear ?? undefined,
+      nsaApplicable: true
+    },
+    include: { indicatorDef: { include: { dimension: true } } },
+    orderBy: { indicatorDefId: 'asc' }
   });
 
-  const clientIndicators = indicators.map((ci) => {
+  const clientIndicators = indicatorsOfYear.map((ci) => {
     const status: Status =
       ci.status === 'CONCLUIDO'
         ? 'Concluído'
@@ -36,7 +52,8 @@ export default async function CourseDashboardPage({
           : 'Em edição';
     return {
       id: ci.id,
-      dimension: (ci.indicatorDef.dimensionId ?? '1') as DimId,
+      dimension: String(ci.indicatorDef.dimension.number) as DimId,
+      code: ci.indicatorDef.code,
       grade: mapGrade(ci.grade as unknown as string | null),
       status,
       lastUpdate: ci.lastUpdate
@@ -46,6 +63,11 @@ export default async function CourseDashboardPage({
   });
 
   return (
-    <CourseDashboardClient course={course} indicators={clientIndicators} />
+    <CourseDashboardClient
+      course={course}
+      indicators={clientIndicators}
+      availableYears={availableYears}
+      selectedYear={selectedYear ?? undefined}
+    />
   );
 }
