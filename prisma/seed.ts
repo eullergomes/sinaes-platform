@@ -3404,10 +3404,10 @@ async function main() {
 
   // 5. CRIAÇÃO DOS CURSOS COM OS NOVOS CAMPOS
   console.log('🏫 Criando cursos...');
-  const courseAds = await prisma.course.create({
+  const courseBcc = await prisma.course.create({
     data: {
-      name: 'Análise e Desenvolvimento de Sistemas',
-      slug: 'ads',
+      name: 'Bacharelado em Ciência da Computação',
+      slug: 'bcc',
       emecCode: 12345,
       level: CourseLevel.BACHARELADO,
       modality: CourseModality.PRESENCIAL,
@@ -3415,12 +3415,12 @@ async function main() {
     }
   });
 
-  const courseEng = await prisma.course.create({
+  const courseLicBio = await prisma.course.create({
     data: {
-      name: 'Engenharia Civil',
-      slug: 'eng-civil',
+      name: 'Licenciatura em Ciências Biológicas',
+      slug: 'lic-bio',
       emecCode: 67890,
-      level: CourseLevel.BACHARELADO,
+      level: CourseLevel.LICENCIATURA,
       modality: CourseModality.PRESENCIAL,
       coordinatorId: coordEngUser.id
     }
@@ -3430,7 +3430,7 @@ async function main() {
   // 6. INSTANCIAÇÃO DOS INDICADORES COM HISTÓRICO POR ANO
   console.log('🖇️  Criando histórico de avaliações para os cursos...');
   const allIndicatorDefs = await prisma.indicatorDefinition.findMany();
-  const allCourses = [courseAds, courseEng];
+  const allCourses = [courseBcc, courseLicBio];
   const evaluationYears = [2024, 2021]; // Anos que queremos popular
 
   for (const course of allCourses) {
