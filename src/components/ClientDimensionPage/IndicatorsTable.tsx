@@ -1,13 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ColumnDef,
-  SortingState,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
 import {
@@ -21,11 +18,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { DataTablePagination } from '@/components/data-table/data-table-pagination';
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
 import StatusBadge from '@/components/status-badge';
-import { IndicatorGrade } from '@/types/dimension-types';
-import { IndicatorStatus } from '@prisma/client';
+import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export type IndicatorRow = {
   code: string;
@@ -35,6 +38,7 @@ export type IndicatorRow = {
   lastUpdate: string;
   hasEvaluation: boolean;
   nsaLocked: boolean;
+  nsaApplicable: boolean; // indica se o indicador é aplicável (true) ou está como NSA (false)
 };
 
 function GradeBadge({ grade }: { grade: IndicatorGrade }) {
@@ -48,13 +52,13 @@ function GradeBadge({ grade }: { grade: IndicatorGrade }) {
       );
     case IndicatorGrade.G3:
       return (
-        <Badge className="bg-yellow-500 hover:bg-yellow-600">
+        <Badge className="bg-yellow-400 hover:bg-yellow-500">
           {grade.slice(1)}
         </Badge>
       );
     case IndicatorGrade.G2:
     case IndicatorGrade.G1:
-      return <Badge variant="destructive">{grade.slice(1)}</Badge>;
+      return <Badge className="bg-red-600">{grade.slice(1)}</Badge>;
     default:
       return <Badge variant="secondary">NSA</Badge>;
   }
@@ -62,24 +66,93 @@ function GradeBadge({ grade }: { grade: IndicatorGrade }) {
 
 export default function IndicatorsTable({
   data,
-  visibility,
-  onToggleVisibility,
-  onEdit
+  nsaStatus,
+  onToggleNsa,
+  onEdit,
+  courseSlug,
+  dimensionId,
+  year,
+  onDiffChange
 }: {
   data: IndicatorRow[];
-  visibility: Record<string, boolean>;
-  onToggleVisibility: (code: string, visible: boolean) => void;
+  nsaStatus: Record<string, boolean>; // true => aplicável, false => NSA
+  onToggleNsa: (code: string, applicable: boolean) => void;
   onEdit: (code: string) => void;
+  courseSlug: string;
+  dimensionId: string;
+  year: number;
+  onDiffChange?: (
+    diff: { indicatorCode: string; nsaApplicable: boolean }[]
+  ) => void;
 }) {
+  const [statusOverrides, setStatusOverrides] = useState<
+    Record<string, IndicatorStatus>
+  >({});
+
+  const nsaDiff = useMemo(() => {
+    return data
+      .filter((row) => !row.nsaLocked)
+      .filter((row) => {
+        const currentApplicable = nsaStatus[row.code] ?? true;
+        return currentApplicable !== row.nsaApplicable;
+      })
+      .map((row) => ({
+        indicatorCode: row.code,
+        nsaApplicable: nsaStatus[row.code] ?? true
+      }));
+  }, [data, nsaStatus]);
+
+  useEffect(() => {
+    onDiffChange?.(nsaDiff);
+  }, [nsaDiff, onDiffChange]);
   const columns = useMemo<ColumnDef<IndicatorRow>[]>(
     () => [
+      {
+        id: 'nsa',
+        header: () => {
+          const editableRows = data.filter((r) => !r.nsaLocked);
+          const allChecked = editableRows.every(
+            (r) => (nsaStatus[r.code] ?? true) === true
+          );
+          const masterChecked = allChecked;
+          return (
+            <div className="flex items-center justify-center">
+              <Checkbox
+                checked={masterChecked}
+                onCheckedChange={(val) => {
+                  const nextVal = Boolean(val);
+                  editableRows.forEach((r) => onToggleNsa(r.code, nextVal));
+                }}
+                aria-label="Alternar todos aplicáveis"
+              />
+            </div>
+          );
+        },
+        cell: ({ row }) => {
+          const isApplicable = nsaStatus[row.original.code] ?? true;
+          return (
+            <div className="flex items-center justify-center">
+              {!row.original.nsaLocked && (
+                <Checkbox
+                  checked={isApplicable}
+                  disabled={row.original.nsaLocked}
+                  onCheckedChange={(val) =>
+                    onToggleNsa(row.original.code, Boolean(val))
+                  }
+                  aria-label={`Alternar NSA para ${row.original.code}`}
+                />
+              )}
+            </div>
+          );
+        }
+      },
       {
         accessorKey: 'code',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Código" />
         ),
         cell: ({ row }) => <div className="w-[80px]">{row.original.code}</div>,
-        enableSorting: true
+        enableSorting: false
       },
       {
         accessorKey: 'name',
@@ -91,7 +164,7 @@ export default function IndicatorsTable({
             {row.original.name}
           </div>
         ),
-        enableSorting: true
+        enableSorting: false
       },
       {
         accessorKey: 'grade',
@@ -99,14 +172,14 @@ export default function IndicatorsTable({
           <DataTableColumnHeader column={column} title="Nota" />
         ),
         cell: ({ row }) => {
-          const isVisible = visibility[row.original.code] ?? true;
+          const isVisible = nsaStatus[row.original.code] ?? true;
           return (
             <div className="text-center">
               {isVisible ? <GradeBadge grade={row.original.grade} /> : '—'}
             </div>
           );
         },
-        enableSorting: true
+        enableSorting: false
       },
       {
         accessorKey: 'status',
@@ -114,14 +187,72 @@ export default function IndicatorsTable({
           <DataTableColumnHeader column={column} title="Status" />
         ),
         cell: ({ row }) => {
-          const isVisible = visibility[row.original.code] ?? true;
+          const isVisible = nsaStatus[row.original.code] ?? true;
+          const code = row.original.code;
+          const effectiveStatus = statusOverrides[code] ?? row.original.status;
+          const disabled = !isVisible || !row.original.hasEvaluation;
           return (
-            <div className="text-center">
-              {isVisible ? <StatusBadge status={row.original.status} /> : '—'}
+            <div className="flex items-center justify-center">
+              {isVisible ? (
+                <Select
+                  value={effectiveStatus}
+                  onValueChange={(val) => {
+                    const next = val as IndicatorStatus;
+                    setStatusOverrides((prev) => ({ ...prev, [code]: next }));
+                    fetch(
+                      `/api/courses/${courseSlug}/dimensions/${dimensionId}/indicators/${code}/status`,
+                      {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: next, year })
+                      }
+                    )
+                      .then(async (res) => {
+                        if (!res.ok)
+                          throw new Error(
+                            (await res.json()).error ||
+                              'Falha ao atualizar status'
+                          );
+                      })
+                      .catch((err) => {
+                        setStatusOverrides((prev) => {
+                          const copy = { ...prev };
+                          copy[code] = row.original.status;
+                          return copy;
+                        });
+                        toast.error(
+                          err instanceof Error
+                            ? err.message
+                            : 'Erro ao atualizar status'
+                        );
+                      });
+                  }}
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue>
+                      <div className="flex items-center justify-center">
+                        <StatusBadge status={effectiveStatus} />
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[160px]">
+                    {Object.values(IndicatorStatus).map((s) => (
+                      <SelectItem key={s} value={s} className="cursor-pointer">
+                        <div className="flex items-center">
+                          <StatusBadge status={s} />
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                '—'
+              )}
             </div>
           );
         },
-        enableSorting: true
+        enableSorting: false
       },
       {
         accessorKey: 'lastUpdate',
@@ -129,20 +260,20 @@ export default function IndicatorsTable({
           <DataTableColumnHeader column={column} title="Última Atualização" />
         ),
         cell: ({ row }) => {
-          const isVisible = visibility[row.original.code] ?? true;
+          const isVisible = nsaStatus[row.original.code] ?? true;
           return (
             <div className="text-center">
               {isVisible ? row.original.lastUpdate : '—'}
             </div>
           );
         },
-        enableSorting: true
+        enableSorting: false
       },
       {
         id: 'actions',
         header: () => <div className="text-center">Ações</div>,
         cell: ({ row }) => {
-          const isVisible = visibility[row.original.code] ?? true;
+          const isVisible = nsaStatus[row.original.code] ?? true;
           const { code, hasEvaluation } = row.original;
           return (
             <div className="text-center">
@@ -169,49 +300,31 @@ export default function IndicatorsTable({
             </div>
           );
         }
-      },
-      {
-        id: 'nsa',
-        header: () => <div className="text-center">NSA</div>,
-        cell: ({ row }) => {
-          const isVisible = visibility[row.original.code] ?? true;
-          return (
-            <div className="flex items-center justify-center">
-              {!row.original.nsaLocked && (
-                <Checkbox
-                  checked={isVisible}
-                  disabled={row.original.nsaLocked}
-                  className="hover:cursor-pointer aria-[checked=true]:border-blue-600 aria-[checked=true]:bg-blue-600 aria-[checked=true]:text-white"
-                  onCheckedChange={(val) =>
-                    onToggleVisibility(row.original.code, Boolean(val))
-                  }
-                />
-              )}
-            </div>
-          );
-        }
       }
     ],
-    [onEdit, onToggleVisibility, visibility]
+    [
+      onEdit,
+      onToggleNsa,
+      nsaStatus,
+      courseSlug,
+      dimensionId,
+      year,
+      statusOverrides,
+      data
+    ]
   );
-
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel()
+    getCoreRowModel: getCoreRowModel()
   });
 
   return (
     <div className="space-y-3">
       <div className="rounded-md border">
         <Table>
-          <TableHeader className='bg-green-600'>
+          <TableHeader className="bg-green-600">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -229,18 +342,30 @@ export default function IndicatorsTable({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const isApplicable =
+                  nsaStatus[(row.original as IndicatorRow).code] ?? true;
+                return (
+                  <TableRow
+                    key={row.id}
+                    className={
+                      isApplicable
+                        ? undefined
+                        : 'bg-muted/50 text-muted-foreground'
+                    }
+                    aria-disabled={isApplicable ? undefined : true}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell
@@ -254,7 +379,6 @@ export default function IndicatorsTable({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} pageSizeOptions={[10, 20, 50]} />
     </div>
   );
 }
