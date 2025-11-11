@@ -150,7 +150,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   </div>
                 )}
                 <div className="ml-auto flex items-center gap-4">
-                  <PendingAlerts />
+                  {currentCourseId && <PendingAlerts />}
                   {isAdmin && (
                     <Button asChild variant="outline">
                       <Link href="/admin/users" className="text-black">
