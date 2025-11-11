@@ -51,8 +51,6 @@ export async function GET(
       );
     }
 
-    console.log('indicatorDef: ', indicatorDef);
-
     const evaluationData = await prisma.courseIndicator.findFirst({
       where: {
         courseId: course.id,
