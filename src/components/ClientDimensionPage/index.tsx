@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,97 +23,110 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Filter, Loader2 } from 'lucide-react';
-import { IndicatorStatus } from '@prisma/client';
-import { DimensionApiResponse, IndicatorGrade } from '@/types/dimension-types';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
+import { DimensionApiResponse } from '@/types/dimension-types';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import StatusBadge from '../status-badge';
 import IndicatorsTable, { IndicatorRow } from './IndicatorsTable';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { updateNsaStatusBatch } from '@/actions/indicator';
 
 const ClientDimensionPage = ({
   slug,
   dimId,
-  year
+  year,
+  initialDimension
 }: {
   slug: string;
   dimId: string;
   year?: string;
+  initialDimension?: DimensionApiResponse;
 }) => {
   const router = useRouter();
 
   const [apiData, setApiData] = useState<DimensionApiResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(0);
   const [gradeFilters, setGradeFilters] = useState<Set<string>>(new Set());
   const [statusFilters, setStatusFilters] = useState<Set<string>>(new Set());
 
-  const [visibility, setVisibility] = useState<Record<string, boolean>>({});
+  const [nsaStatus, setNsaStatus] = useState<Record<string, boolean>>({});
+  const [nsaDiff, setNsaDiff] = useState<
+    { indicatorCode: string; nsaApplicable: boolean }[]
+  >([]);
+  const [savingNsa, setSavingNsa] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const fetchData = useCallback(
-    async (yearToSelect?: number) => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(
-          `/api/courses/${slug}/dimensions/${dimId}`
+  const {
+    data: dimensionData,
+    isLoading,
+    isError,
+    error,
+    isFetching
+  } = useQuery<DimensionApiResponse, Error>({
+    queryKey: ['dimension', slug, dimId],
+    queryFn: async () => {
+      const res = await fetch(`/api/courses/${slug}/dimensions/${dimId}`);
+      if (!res.ok) {
+        throw new Error(
+          (await res.json()).error || 'Falha ao carregar os dados'
         );
-
-        if (!response.ok)
-          throw new Error(
-            (await response.json()).error || 'Falha ao carregar os dados'
-          );
-
-        const result: DimensionApiResponse = await response.json();
-        setApiData(result);
-
-        const allYears = new Set(
-          result.indicators.flatMap((i) => i.evaluations.map((ev) => ev.year))
-        );
-        const sortedYears = Array.from(allYears).sort((a, b) => b - a);
-
-        setAvailableYears(sortedYears);
-
-        setSelectedYear((prev) => {
-          const next =
-            yearToSelect && allYears.has(yearToSelect)
-              ? yearToSelect
-              : prev !== 0 && allYears.has(prev)
-                ? prev
-                : sortedYears[0] || 0;
-          return prev === next ? prev : next;
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Ocorreu um erro.');
-      } finally {
-        setIsLoading(false);
       }
+      return res.json();
     },
-    [slug, dimId]
-  );
+    staleTime: 5 * 60 * 1000, // 5 minutos sem refetch
+    gcTime: 30 * 60 * 1000, // coleta após 30 minutos
+    refetchOnWindowFocus: false,
+    initialData: initialDimension,
+    initialDataUpdatedAt: initialDimension ? Date.now() : undefined
+  });
 
+  // Sincroniza estado local quando dados chegam (mantém lógica existente de anos e seleção)
   useEffect(() => {
-    if (slug && dimId) fetchData(year ? parseInt(year, 10) : undefined);
-  }, [slug, dimId, year, fetchData]);
+    if (!dimensionData) return;
+    setApiData(dimensionData);
+    const allYears = new Set(
+      dimensionData.indicators.flatMap((i) =>
+        i.evaluations.map((ev) => ev.year)
+      )
+    );
+    const sortedYears = Array.from(allYears).sort((a, b) => b - a);
+    setAvailableYears(sortedYears);
+    setSelectedYear((prev) => {
+      const requestedYear = year ? parseInt(year, 10) : undefined;
+      const next =
+        requestedYear && allYears.has(requestedYear)
+          ? requestedYear
+          : prev !== 0 && allYears.has(prev)
+            ? prev
+            : sortedYears[0] || 0;
+      return prev === next ? prev : next;
+    });
+  }, [dimensionData, year]);
 
   useEffect(() => {
     if (!apiData) return;
-    setVisibility((prev) => {
-      const next: Record<string, boolean> = { ...prev };
-      for (const indicator of apiData.indicators) {
-        const evaluation = indicator.evaluations.find(
-          (ev) => ev.year === selectedYear
-        );
-        // checked = exibe dados; padrão segue o nsaApplicable vindo da API (true => exibe)
-        const initialVisible = evaluation?.nsaApplicable ?? true;
-        if (typeof next[indicator.code] === 'undefined') {
-          next[indicator.code] = initialVisible;
-        }
-      }
-      return next;
-    });
+    const next: Record<string, boolean> = {};
+    for (const indicator of apiData.indicators) {
+      const evaluation = indicator.evaluations.find(
+        (ev) => ev.year === selectedYear
+      );
+      next[indicator.code] = evaluation?.nsaApplicable ?? true;
+    }
+    setNsaStatus(next);
   }, [apiData, selectedYear]);
 
-  // --- LÓGICA DE FILTRAGEM E MAPEAMENTO ---
   const processedIndicators = useMemo(() => {
     if (!apiData) return [];
 
@@ -159,8 +172,7 @@ const ClientDimensionPage = ({
     );
   };
 
-
-  if (isLoading) {
+  if (isLoading && !apiData) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
@@ -168,8 +180,10 @@ const ClientDimensionPage = ({
       </div>
     );
   }
-  if (error) {
-    return <div className="text-destructive p-8 text-center">{error}</div>;
+  if (isError) {
+    return (
+      <div className="text-destructive p-8 text-center">{error?.message}</div>
+    );
   }
   if (!apiData) {
     return (
@@ -202,8 +216,16 @@ const ClientDimensionPage = ({
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>
-            Indicadores da Dimensão {dimId} — Ciclo {selectedYear || 'N/A'}
+          <CardTitle className="flex items-center gap-2">
+            <span>
+              Indicadores da Dimensão {dimId} — Ciclo {selectedYear || 'N/A'}
+            </span>
+            {isFetching && (
+              <Loader2
+                className="text-muted-foreground h-4 w-4 animate-spin"
+                aria-label="Atualizando"
+              />
+            )}
           </CardTitle>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -250,7 +272,6 @@ const ClientDimensionPage = ({
                       id={`grade-${g}`}
                       checked={gradeFilters.has(g)}
                       onCheckedChange={() => toggleInSet(g, setGradeFilters)}
-                      className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
                     />
                     <Label
                       htmlFor={`grade-${g}`}
@@ -290,7 +311,6 @@ const ClientDimensionPage = ({
                       id={`status-${s}`}
                       checked={statusFilters.has(s)}
                       onCheckedChange={() => toggleInSet(s, setStatusFilters)}
-                      className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
                     />
                     <Label
                       htmlFor={`status-${s}`}
@@ -302,20 +322,87 @@ const ClientDimensionPage = ({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            {nsaDiff.length > 0 && (
+              <Button
+                variant="secondary"
+                className="bg-amber-500 text-white hover:bg-amber-600"
+                onClick={() => setShowConfirm(true)}
+                disabled={savingNsa}
+              >
+                {savingNsa ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando
+                    NSA...
+                  </>
+                ) : (
+                  `Salvar Alterações NSA (${nsaDiff.length})`
+                )}
+              </Button>
+            )}
           </div>
         </CardHeader>
 
         <CardContent>
           <IndicatorsTable
             data={processedIndicators as IndicatorRow[]}
-            visibility={visibility}
-            onToggleVisibility={(code, val) =>
-              setVisibility((prev) => ({ ...prev, [code]: val }))
+            nsaStatus={nsaStatus}
+            onToggleNsa={(code, val) =>
+              setNsaStatus((prev) => ({ ...prev, [code]: val }))
             }
+            onDiffChange={(diff) => setNsaDiff(diff)}
             onEdit={handleEdit}
+            courseSlug={slug}
+            dimensionId={dimId}
+            year={selectedYear}
           />
         </CardContent>
       </Card>
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar alterações NSA</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você confirma a alteração do status &quot;Não Se Aplica&quot; para
+              os indicadores modificados? Essa ação atualizará imediatamente o
+              ciclo {selectedYear}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={savingNsa}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={savingNsa}
+              onClick={async () => {
+                try {
+                  setSavingNsa(true);
+                  const res = await updateNsaStatusBatch({
+                    courseSlug: slug,
+                    dimensionId: dimId,
+                    evaluationYear: selectedYear,
+                    updates: nsaDiff
+                  });
+                  if (!res.success) {
+                    throw new Error(
+                      res.error || 'Falha ao salvar alterações NSA.'
+                    );
+                  }
+                  toast.success('Alterações NSA salvas.');
+                  setShowConfirm(false);
+                } catch (e) {
+                  toast.error(
+                    e instanceof Error
+                      ? e.message
+                      : 'Erro ao salvar alterações NSA.'
+                  );
+                } finally {
+                  setSavingNsa(false);
+                }
+              }}
+            >
+              {savingNsa ? 'Salvando...' : 'Confirmar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
