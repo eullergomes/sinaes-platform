@@ -1,13 +1,4 @@
-import { IndicatorStatus } from '@prisma/client';
-
-export enum IndicatorGrade {
-  G1 = 'G1',
-  G2 = 'G2',
-  G3 = 'G3',
-  G4 = 'G4',
-  G5 = 'G5',
-  NSA = 'NSA'
-}
+import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
 
 export type Evaluation = {
   year: number;

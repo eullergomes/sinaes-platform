@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -33,19 +34,9 @@ import {
 } from '@/actions/indicator';
 import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 import { useSearchParams } from 'next/navigation';
+import { IndicatorGrade } from '@prisma/client';
+import { ExistingFile } from '@/types/indicator-types';
 
-// --- SIMULAÇÃO DE DEPENDÊNCIAS EXTERNAS PARA O PREVIEW ---
-const IndicatorGrade = {
-  G1: 'G1',
-  G2: 'G2',
-  G3: 'G3',
-  G4: 'G4',
-  G5: 'G5',
-  NSA: 'NSA'
-} as const;
-type IndicatorGradeEnum = keyof typeof IndicatorGrade;
-
-// Tipo para metadados de arquivos enviados ao Cloudinary
 type UploadedFileInfo = {
   storageKey: string;
   externalUrl: string;
@@ -54,26 +45,18 @@ type UploadedFileInfo = {
   mimeType: string;
 };
 
-// --- COMPONENTE FILEUPLOAD (Integrado e modificado) ---
-type ExistingFile = {
-  fileName: string;
-  sizeBytes?: number | null;
-  url?: string | null;
-  publicId?: string;
-};
-
 type LinkItem = { text: string; url: string };
 
-// --- Tipagem para os dados da API ---
 type CriterionRow = { concept: string; criterion: string };
 type ApiIndicatorData = {
   course: { id: string; slug: string };
   indicator: { id: string; code: string; name: string; criteriaTable: unknown };
   evaluation: {
-    grade: IndicatorGradeEnum;
+    grade: IndicatorGrade;
     justification: string | null;
     correctiveAction: string | null;
     responsible: string | null;
+    nsaApplicable?: boolean | null;
   } | null;
   requiredEvidences: {
     id: string;
@@ -90,11 +73,13 @@ type ApiIndicatorData = {
 const ClientIndicatorPage = ({
   slug,
   indicadorCode,
-  dimensionId
+  dimensionId,
+  initialIndicator
 }: {
   slug: string;
   indicadorCode: string;
   dimensionId: string;
+  initialIndicator?: ApiIndicatorData;
 }) => {
   const params = {
     slug,
@@ -110,7 +95,8 @@ const ClientIndicatorPage = ({
 
   const [data, setData] = useState<ApiIndicatorData | null>(null);
 
-  const [grade, setGrade] = useState<IndicatorGradeEnum>(IndicatorGrade.NSA);
+  const [grade, setGrade] = useState<IndicatorGrade>(IndicatorGrade.NSA);
+  const [nsaAuto, setNsaAuto] = useState<boolean>(false);
   const [justification, setJustification] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState('');
   const [responsible, setResponsible] = useState('');
@@ -152,13 +138,21 @@ const ClientIndicatorPage = ({
   } = useQuery({
     queryKey,
     queryFn,
-    enabled: !!courseSlug && !!indicatorCode && !!year
+    enabled: !!courseSlug && !!indicatorCode && !!year,
+    initialData: initialIndicator,
+    initialDataUpdatedAt: initialIndicator ? Date.now() : undefined
   });
 
+  const initKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (!apiData) return;
+    const key = `${apiData.indicator.id}-${year ?? 'na'}`;
+    if (initKeyRef.current === key) return;
+    initKeyRef.current = key;
+
     setData(apiData);
     setGrade(apiData.evaluation?.grade || IndicatorGrade.NSA);
+    setNsaAuto(apiData.evaluation?.nsaApplicable === false);
     setJustification(apiData.evaluation?.justification || '');
     setCorrectiveAction(apiData.evaluation?.correctiveAction || '');
     setResponsible(apiData.evaluation?.responsible || '');
@@ -181,7 +175,7 @@ const ClientIndicatorPage = ({
       }
     );
     setEvidenceStates(initialEvidences);
-  }, [apiData]);
+  }, [apiData, year]);
 
   useEffect(() => {
     if (formState?.errors?._form)
@@ -203,7 +197,28 @@ const ClientIndicatorPage = ({
       slug: string,
       state: { links: string[]; filesToUpload: File[]; linkItems?: LinkItem[] }
     ) => {
-      setEvidenceStates((prev) => ({ ...prev, [slug]: state }));
+      setEvidenceStates((prev) => {
+        const prevState = prev[slug];
+        const isSame = (() => {
+          if (!prevState) return false;
+          const sameLinks =
+            prevState.links.length === state.links.length &&
+            prevState.links.every((v, i) => v === state.links[i]);
+          const sameFiles =
+            prevState.filesToUpload.length === state.filesToUpload.length;
+          const prevItems = prevState.linkItems || [];
+          const nextItems = state.linkItems || [];
+          const sameItems =
+            prevItems.length === nextItems.length &&
+            prevItems.every(
+              (v, i) =>
+                v.text === nextItems[i]?.text && v.url === nextItems[i]?.url
+            );
+          return sameLinks && sameFiles && sameItems;
+        })();
+        if (isSame) return prev;
+        return { ...prev, [slug]: state };
+      });
     },
     []
   );
@@ -263,9 +278,7 @@ const ClientIndicatorPage = ({
 
     try {
       if (uploadPromises.length > 0) {
-        toast.info('Enviando arquivos...', { id: 'uploading-toast' });
         await Promise.all(uploadPromises);
-        toast.dismiss('uploading-toast');
       }
 
       if (uploadFailed) {
@@ -275,8 +288,6 @@ const ClientIndicatorPage = ({
         setIsSubmittingManual(false);
         return;
       }
-
-      toast.info('Salvando avaliação...', { id: 'saving-toast' });
 
       Object.entries(evidenceStates).forEach(([slug, state]) => {
         const validLinks = state.links.filter((link) => link.trim());
@@ -308,7 +319,7 @@ const ClientIndicatorPage = ({
     }
   };
 
-  if (queryLoading) {
+  if (queryLoading && !initialIndicator) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -436,25 +447,37 @@ const ClientIndicatorPage = ({
             </div>
 
             <div className="space-y-2">
-              <Label>
-                Nota atribuída <span className="text-destructive">*</span>
+              <Label className="flex items-center gap-2">
+                <span>
+                  Nota atribuída <span className="text-destructive">*</span>
+                </span>
+                {nsaAuto && grade === 'NSA' && (
+                  <Badge
+                    variant="secondary"
+                    title="A nota foi ajustada automaticamente por estar marcada como Não Se Aplica na dimensão."
+                  >
+                    NSA automática
+                  </Badge>
+                )}
               </Label>
               <Select
                 name="grade"
                 value={grade}
-                onValueChange={(v) => setGrade(v as IndicatorGradeEnum)}
+                onValueChange={(v) => setGrade(v as IndicatorGrade)}
                 required
-                disabled={isSubmittingManual}
+                disabled={isSubmittingManual || nsaAuto}
               >
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(IndicatorGrade).map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g === 'NSA' ? 'NSA' : g.slice(1)}
-                    </SelectItem>
-                  ))}
+                  {Object.keys(IndicatorGrade)
+                    .filter((g) => g !== 'NSA')
+                    .map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g.slice(1)}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               {formState?.errors?.grade && (
@@ -490,13 +513,13 @@ const ClientIndicatorPage = ({
                     </colgroup>
                     <thead className="bg-green-600">
                       <tr>
-                        <th className="border p-2 text-left text-white">
+                        <th className="p-2 text-left text-white">
                           Justificativa
                         </th>
-                        <th className="border p-2 text-left text-white">
+                        <th className="p-2 text-left text-white">
                           Ação Corretiva
                         </th>
-                        <th className="border p-2 text-left text-white">
+                        <th className="p-2 text-left text-white">
                           Responsável
                         </th>
                       </tr>
@@ -557,7 +580,7 @@ const ClientIndicatorPage = ({
             <Button
               type="submit"
               disabled={isSubmittingManual}
-              className="w-full bg-green-500 cursor-pointer hover:bg-green-600 md:w-36"
+              className="w-full cursor-pointer bg-green-600 hover:bg-green-700 md:w-36"
             >
               {isSubmittingManual && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

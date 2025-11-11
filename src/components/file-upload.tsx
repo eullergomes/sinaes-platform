@@ -1,4 +1,26 @@
+import React, {
+  ChangeEvent,
+  DragEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useState
+} from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { validateLink } from '@/utils/validateLink';
+import { Label } from './ui/label';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from './ui/dialog';
+import { toast } from 'sonner';
 import {
   FileIcon,
   LinkIcon,
@@ -8,26 +30,7 @@ import {
   Trash2,
   Loader2
 } from 'lucide-react';
-import {
-  ChangeEvent,
-  DragEvent,
-  useCallback,
-  useEffect,
-  useId,
-  useState
-} from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { validateLink } from '@/utils/validateLink';
-
-type ExistingFile = {
-  fileName: string;
-  sizeBytes?: number | null;
-  url?: string | null;
-  publicId?: string;
-};
+import { ExistingFile } from '@/types/indicator-types';
 
 interface LinkItem {
   id?: string;
@@ -53,7 +56,7 @@ interface FileUploadProps {
   isLoading: boolean;
 }
 
-const FileUpload = ({
+const FileUpload: React.FC<FileUploadProps> = ({
   evidenceSlug,
   initialLinks = [''],
   initialLinkItems,
@@ -66,7 +69,7 @@ const FileUpload = ({
   evaluationYear,
   onLinkSaved,
   isLoading
-}: FileUploadProps) => {
+}) => {
   const reactId = useId();
   const idBase = `file-upload-${reactId}-${evidenceSlug}`;
   const [linkItems, setLinkItems] = useState<LinkItem[]>([]);
@@ -76,6 +79,12 @@ const FileUpload = ({
     useState<ExistingFile[]>(initialFiles);
   const [isDragging, setIsDragging] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
+
+  const [saveError, setSaveError] = useState('');
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
 
   useEffect(() => {
     let base: LinkItem[] = [];
@@ -87,10 +96,7 @@ const FileUpload = ({
       }));
     } else if (initialLinks && initialLinks.length > 0) {
       base = initialLinks.map((u) => ({ text: '', url: u }));
-    } else {
-      base = [];
     }
-
     setLinkItems(base);
     setLinkErrors(Array(base.length).fill(''));
     setCurrentFiles(initialFiles);
@@ -98,8 +104,6 @@ const FileUpload = ({
   }, [evidenceSlug, initialLinks, initialLinkItems, initialFiles]);
 
   const queryClient = useQueryClient();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
 
   interface DeleteFileContext {
     previous: ExistingFile[];
@@ -121,35 +125,23 @@ const FileUpload = ({
     },
     onMutate: async ({ publicId }) => {
       const previous = currentFiles;
-      setDeletingId(publicId);
+      setDeletingFileId(publicId);
       setCurrentFiles((prev) => prev.filter((f) => f.publicId !== publicId));
       return { previous };
     },
-    onError: (err: unknown, _vars, ctx?: DeleteFileContext) => {
+    onError: (_err, _vars, ctx?: DeleteFileContext) => {
       if (ctx?.previous) setCurrentFiles(ctx.previous);
-      console.error('Falha ao deletar arquivo:', err);
     },
     onSettled: async () => {
-      setDeletingId(null);
-      if (onLinkSaved) {
-        onLinkSaved();
-        return;
-      }
+      setDeletingFileId(null);
       if (courseSlug && indicatorCode && evaluationYear != null) {
-        try {
-          await queryClient.invalidateQueries({
-            queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
-          });
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-      try {
+        await queryClient.invalidateQueries({
+          queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
+        });
+      } else {
         await queryClient.invalidateQueries({ queryKey: ['indicator'] });
-      } catch {
-        /* ignore */
       }
+      onLinkSaved?.();
     }
   });
 
@@ -171,15 +163,11 @@ const FileUpload = ({
     },
     onMutate: async (newLink) => {
       setSaveError('');
-      setIsSavingLink(true);
-
       const previous = linkItems;
-
       setLinkItems((prev) => [
         ...prev,
         { text: newLink.text, url: newLink.url }
       ]);
-      setEditingLink(null);
       return { previous };
     },
     onSuccess: (data) => {
@@ -196,32 +184,21 @@ const FileUpload = ({
         });
       }
     },
-    onError: (err: unknown, newLink, context?: { previous: LinkItem[] }) => {
-      if (context?.previous) setLinkItems(context.previous);
-      setSaveError(err instanceof Error ? err.message : String(err));
+    onError: (err: unknown, _vars, ctx?: { previous: LinkItem[] }) => {
+      if (ctx?.previous) setLinkItems(ctx.previous);
+      const message =
+        err instanceof Error ? err.message : 'Erro ao salvar link';
+      toast.error(message);
     },
     onSettled: async () => {
-      setIsSavingLink(false);
-      if (onLinkSaved) {
-        onLinkSaved();
-        return;
-      }
       if (courseSlug && indicatorCode && evaluationYear != null) {
-        try {
-          await queryClient.invalidateQueries({
-            queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
-          });
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-      // fallback: try to invalidate generic indicator queries
-      try {
+        await queryClient.invalidateQueries({
+          queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
+        });
+      } else {
         await queryClient.invalidateQueries({ queryKey: ['indicator'] });
-      } catch {
-        /* ignore */
       }
+      onLinkSaved?.();
     }
   });
 
@@ -249,45 +226,30 @@ const FileUpload = ({
       setLinkItems((prev) => prev.filter((l) => l.id !== linkId));
       return { previous };
     },
-    onError: (err: unknown, _vars, ctx?: DeleteLinkContext) => {
+    onError: (_err, _vars, ctx?: DeleteLinkContext) => {
       if (ctx?.previous) setLinkItems(ctx.previous);
-      console.error('Falha ao deletar link:', err);
     },
     onSettled: async () => {
       setDeletingLinkId(null);
-      if (onLinkSaved) {
-        onLinkSaved();
-        return;
-      }
       if (courseSlug && indicatorCode && evaluationYear != null) {
-        try {
-          await queryClient.invalidateQueries({
-            queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
-          });
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-      try {
+        await queryClient.invalidateQueries({
+          queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
+        });
+      } else {
         await queryClient.invalidateQueries({ queryKey: ['indicator'] });
-      } catch {
-        /* ignore */
       }
+      onLinkSaved?.();
     }
   });
 
-  const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
-  const [isSavingLink, setIsSavingLink] = useState(false);
-  const [saveError, setSaveError] = useState('');
-
+  // propagate state upward
   useEffect(() => {
     onStateChange(evidenceSlug, {
-      links: linkItems.map((li) => li.url).filter((l) => l.trim()),
+      links: linkItems.map((li) => li.url),
       filesToUpload,
       linkItems
     });
-  }, [linkItems, filesToUpload, onStateChange, evidenceSlug]);
+  }, [evidenceSlug, linkItems, filesToUpload, onStateChange]);
 
   const handleFilesSelect = useCallback(
     (selectedFiles: FileList | null) => {
@@ -295,8 +257,7 @@ const FileUpload = ({
       const newFilesArray = Array.from(selectedFiles);
       let validationError = '';
       const allowedType = 'application/pdf';
-      const maxSize = 10 * 1024 * 1024; // 10MB
-
+      const maxSize = 10 * 1024 * 1024;
       for (const file of newFilesArray) {
         if (file.type !== allowedType) {
           validationError = 'Apenas arquivos PDF são permitidos.';
@@ -311,7 +272,6 @@ const FileUpload = ({
         setFileError(validationError);
         return;
       }
-
       setFileError('');
       const filesToAdd = newFilesArray.filter(
         (nf) =>
@@ -325,12 +285,9 @@ const FileUpload = ({
   );
 
   const removeFileToUpload = (indexToRemove: number) => {
-    setFilesToUpload((prev) =>
-      prev.filter((_, index) => index !== indexToRemove)
-    );
+    setFilesToUpload((prev) => prev.filter((_, i) => i !== indexToRemove));
     setFileError('');
   };
-
   const handleDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -386,7 +343,6 @@ const FileUpload = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 text-blue-700 hover:underline"
-                  onClick={() => {}}
                 >
                   {l.text || l.url}
                 </a>
@@ -396,14 +352,16 @@ const FileUpload = ({
                     variant="ghost"
                     size="icon"
                     className="text-muted-foreground hover:text-destructive h-6 w-6"
-                    disabled={deleteLinkMutation.isPending}
-                    onClick={() => {
+                    disabled={
+                      deleteLinkMutation.isPending && deletingLinkId === l.id
+                    }
+                    onClick={() =>
                       deleteLinkMutation.mutate({
                         courseId,
                         requirementId,
                         linkId: l.id!
-                      });
-                    }}
+                      })
+                    }
                     aria-label="Remover link"
                   >
                     {deleteLinkMutation.isPending && deletingLinkId === l.id ? (
@@ -419,81 +377,109 @@ const FileUpload = ({
         </div>
       ) : null}
 
-      <div className="space-y-3">
-        {editingLink && (
-          <div className="space-y-1 pt-2">
-            <p className="text-muted-foreground text-sm">
-              Preencha os campos e clique em Salvar.
-            </p>
-            <div className="grid grid-cols-1 items-start gap-2 sm:[grid-template-columns:1fr_2fr_auto]">
-              <div className="relative">
-                <Input
-                  id={`${idBase}-edit-link-text`}
-                  placeholder={`Texto do link`}
-                  value={editingLink.text}
-                  onChange={(e) =>
-                    setEditingLink({ ...editingLink, text: e.target.value })
-                  }
-                  disabled={isSavingLink}
-                />
-              </div>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setSaveError('');
+            setLinkErrors([]);
+            setEditingLink({ text: '', url: '' });
+            setIsAddDialogOpen(true);
+          }}
+          disabled={isLoading}
+          className="cursor-pointer"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" /> Adicionar link
+        </Button>
+      </div>
+
+      <Dialog
+        open={isAddDialogOpen}
+        onOpenChange={(open) => {
+          if (saveLinkMutation.isPending) return;
+          setIsAddDialogOpen(open);
+          if (!open) {
+            setEditingLink(null);
+            setSaveError('');
+            setLinkErrors([]);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-bold">Adicionar link</DialogTitle>
+            <DialogDescription>
+              Informe o texto e a URL do link da evidência.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`${idBase}-dialog-link-text`}>
+                Texto do link
+              </Label>
+              <Input
+                id={`${idBase}-dialog-link-text`}
+                placeholder="Texto"
+                value={editingLink?.text || ''}
+                onChange={(e) =>
+                  setEditingLink((prev) => ({
+                    ...(prev || { text: '', url: '' }),
+                    text: e.target.value
+                  }))
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`${idBase}-dialog-link-url`}>URL</Label>
               <div className="relative">
                 <LinkIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                 <Input
-                  id={`${idBase}-edit-link-url`}
-                  placeholder={`URL`}
-                  value={editingLink.url}
-                  onChange={(e) =>
-                    setEditingLink({ ...editingLink, url: e.target.value })
-                  }
-                  onBlur={() => validateLink(editingLink.url, setLinkErrors, 0)}
+                  id={`${idBase}-dialog-link-url`}
+                  placeholder="Digite ou cole um link"
                   className={`pl-10 ${linkErrors[0] ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  disabled={isSavingLink}
+                  value={editingLink?.url || ''}
+                  onChange={(e) =>
+                    setEditingLink((prev) => ({
+                      ...(prev || { text: '', url: '' }),
+                      url: e.target.value
+                    }))
+                  }
+                  onBlur={() =>
+                    editingLink &&
+                    validateLink(editingLink.url, setLinkErrors, 0)
+                  }
                 />
               </div>
-              <div className="flex justify-end gap-2 sm:self-center">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditingLink(null)}
-                  disabled={isSavingLink}
-                  aria-label="Cancelar"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              {linkErrors[0] && (
+                <p className="mt-1 text-sm text-red-600">{linkErrors[0]}</p>
+              )}
             </div>
             {saveError && <p className="text-sm text-red-600">{saveError}</p>}
           </div>
-        )}
-        <div className="flex items-center gap-2">
-          {!editingLink ? (
+          <DialogFooter>
             <Button
               type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setEditingLink({ text: '', url: '' })}
-              disabled={isLoading}
-              className="cursor-pointer"
+              variant="secondary"
+              onClick={() => setIsAddDialogOpen(false)}
             >
-              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar link
+              Cancelar
             </Button>
-          ) : (
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              className="bg-green-600 text-white hover:bg-green-700"
               onClick={() => {
                 setSaveError('');
-                if (!editingLink) return;
-                if (!editingLink.text.trim()) {
+                const payload = editingLink;
+                if (!payload) return;
+                if (!payload.text.trim()) {
                   setSaveError('Informe o texto do link');
                   return;
                 }
-                validateLink(editingLink.url, setLinkErrors, 0);
+                validateLink(payload.url, setLinkErrors, 0);
                 try {
-                  new URL(editingLink.url);
+                  new URL(payload.url);
                 } catch {
                   setLinkErrors((prev) => {
                     const next = [...prev];
@@ -502,29 +488,25 @@ const FileUpload = ({
                   });
                   return;
                 }
-
                 if (!courseId || !requirementId) {
                   setSaveError('Dados insuficientes para salvar.');
                   return;
                 }
-
+                setIsAddDialogOpen(false);
+                setEditingLink(null);
                 saveLinkMutation.mutate({
                   courseId,
                   requirementId,
-                  text: editingLink.text.trim(),
-                  url: editingLink.url.trim()
+                  text: payload.text.trim(),
+                  url: payload.url.trim()
                 });
               }}
-              disabled={isSavingLink || saveLinkMutation.isPending}
-              className="bg-green-600 text-white hover:cursor-pointer hover:bg-green-700"
             >
-              {isSavingLink || saveLinkMutation.isPending
-                ? 'Salvando...'
-                : 'Salvar link'}
+              Salvar link
             </Button>
-          )}
-        </div>
-      </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-2">
         <Label
@@ -544,21 +526,24 @@ const FileUpload = ({
                 key={`existing-${f.publicId || index}`}
                 className="bg-muted/30 flex h-12 items-center justify-between rounded-md border p-3 text-sm"
               >
-                <div className="flex min-w-0 items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <FileIcon className="text-muted-foreground h-5 w-5 flex-shrink-0" />
-                  <div className="min-w-0">
+                  <div className="w-full min-w-0">
                     {f.url ? (
                       <a
                         href={f.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="truncate font-medium text-blue-600 hover:underline"
+                        className="block w-full truncate font-medium text-blue-600 hover:underline"
                         title={f.fileName}
                       >
                         {f.fileName}
                       </a>
                     ) : (
-                      <span className="truncate font-medium" title={f.fileName}>
+                      <span
+                        className="block w-full truncate font-medium"
+                        title={f.fileName}
+                      >
                         {f.fileName}
                       </span>
                     )}
@@ -573,7 +558,7 @@ const FileUpload = ({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-destructive h-7 w-7"
+                  className="text-muted-foreground hover:text-destructive h-7 w-7 flex-shrink-0"
                   disabled={isLoading || deleteFileMutation.isPending}
                   onClick={() => {
                     if (!courseId || !requirementId || !f.publicId) return;
@@ -585,10 +570,11 @@ const FileUpload = ({
                   }}
                   aria-label="Remover arquivo"
                 >
-                  {deleteFileMutation.isPending && deletingId === f.publicId ? (
+                  {deleteFileMutation.isPending &&
+                  deletingFileId === f.publicId ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Trash2 size={14} />
+                    <Trash2 className="h-3.5 w-3.5" />
                   )}
                 </Button>
               </div>
