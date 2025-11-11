@@ -1,8 +1,8 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import prisma from '@/utils/prisma';
 import { IndicatorGrade, IndicatorStatus, StorageKind } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 type EvidenceFileInfo = {
@@ -43,7 +43,7 @@ const EvaluationFormSchema = z.object({
   evidences: z.record(
     z.string(),
     z.object({
-      links: z.array(z.string().url().or(z.literal(''))).optional(), // Array de links (permite vazios que serão filtrados)
+      links: z.array(z.string().url().or(z.literal(''))).optional(),
       linksRich: z
         .array(
           z.object({
@@ -82,7 +82,6 @@ export async function saveIndicatorEvaluation(
   prevState: SaveIndicatorState,
   formData: FormData
 ): Promise<SaveIndicatorState> {
-
   const rawData: ParsedRawData = { evidences: {} };
   const evidenceFiles: Record<string, EvidenceFileInfo[]> = {};
   const evidenceLinks: Record<string, string[]> = {};
@@ -342,5 +341,81 @@ export async function saveIndicatorEvaluation(
       errors: { _form: ['Erro inesperado ao salvar no banco de dados.'] },
       success: false
     };
+  }
+}
+
+export async function updateNsaStatusBatch(input: {
+  courseId?: string;
+  courseSlug?: string;
+  dimensionId?: string; // opcional, para revalidatePath mais preciso
+  evaluationYear: number;
+  updates: { indicatorCode: string; nsaApplicable: boolean }[];
+}): Promise<{ success: true } | { success: false; error: string }> {
+  'use server';
+
+  try {
+    let courseId = input.courseId;
+    if (!courseId && input.courseSlug) {
+      const course = await prisma.course.findUnique({
+        where: { slug: input.courseSlug }
+      });
+      if (!course) return { success: false, error: 'Curso não encontrado.' };
+      courseId = course.id;
+    }
+    if (!courseId) return { success: false, error: 'courseId é obrigatório.' };
+
+    const year = input.evaluationYear;
+    const updates = input.updates || [];
+
+    await prisma.$transaction(async (tx) => {
+      for (const up of updates) {
+        const def = await tx.indicatorDefinition.findUnique({
+          where: { code: up.indicatorCode },
+          select: { id: true }
+        });
+        if (!def) continue; // pula indicadores inválidos
+
+        // Quando nsaApplicable = false, grade deve ser NSA
+        const setGrade = up.nsaApplicable ? undefined : IndicatorGrade.NSA;
+
+        // Tenta update; se não existir, cria (segurança)
+        await tx.courseIndicator.upsert({
+          where: {
+            courseId_indicatorDefId_evaluationYear: {
+              courseId,
+              indicatorDefId: def.id,
+              evaluationYear: year
+            }
+          },
+          update: {
+            nsaApplicable: up.nsaApplicable,
+            ...(setGrade ? { grade: setGrade } : {}),
+            lastUpdate: new Date()
+          },
+          create: {
+            courseId,
+            indicatorDefId: def.id,
+            evaluationYear: year,
+            nsaApplicable: up.nsaApplicable,
+            grade: setGrade ?? IndicatorGrade.NSA,
+            status: IndicatorStatus.EM_EDICAO
+          }
+        });
+      }
+    });
+
+    // Revalidate dimension page
+    if (input.courseSlug && input.dimensionId) {
+      revalidatePath(
+        `/courses/${input.courseSlug}/dimensions/${input.dimensionId}`
+      );
+    } else if (input.courseSlug) {
+      revalidatePath(`/courses/${input.courseSlug}/dimensions`);
+    }
+
+    return { success: true } as const;
+  } catch (err) {
+    console.error('Falha no updateNsaStatusBatch:', err);
+    return { success: false, error: 'Erro ao atualizar status NSA.' };
   }
 }
