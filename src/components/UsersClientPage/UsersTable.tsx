@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useState, useMemo } from 'react';
 import {
   ColumnDef,
   SortingState,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
+import { labelForUserRole } from '@/utils/labels';
 
 export type UserRow = {
   id: string;
@@ -35,13 +36,13 @@ type UsersTableProps = {
   onChangeRole: (id: string, toRole: 'DIRECTOR' | 'VISITOR') => void;
 };
 
-export default function UsersTable({
+const UsersTable = ({
   data,
   currentUserId,
   isPending,
   onChangeRole
-}: UsersTableProps) {
-  const columns = React.useMemo<ColumnDef<UserRow>[]>(
+}: UsersTableProps) => {
+  const columns = useMemo<ColumnDef<UserRow>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -66,7 +67,7 @@ export default function UsersTable({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Papel" />
         ),
-        cell: ({ row }) => row.original.role,
+        cell: ({ row }) => labelForUserRole(row.original.role),
         enableSorting: true
       },
       {
@@ -104,7 +105,7 @@ export default function UsersTable({
     [currentUserId, isPending, onChangeRole]
   );
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     data,
     columns,
@@ -156,3 +157,5 @@ export default function UsersTable({
     </div>
   );
 }
+
+export default UsersTable;

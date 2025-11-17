@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { useAppContext } from '@/context/AppContext';
+import { isVisitor as isVisitorRole, canToggleNsaIndicator } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +55,11 @@ const ClientDimensionPage = ({
   year?: string;
   initialDimension?: DimensionApiResponse;
 }) => {
+  // Visitor view detection using shared permissions
+  const { role } = useAppContext();
+  const visitorView = isVisitorRole(role);
+  const { userId, courseCoordinatorId } = useAppContext();
+  const userCanToggleNsa = canToggleNsaIndicator({ role, userId: userId ?? null, courseCoordinatorId });
   const router = useRouter();
 
   const [apiData, setApiData] = useState<DimensionApiResponse | null>(null);
@@ -148,12 +155,17 @@ const ClientDimensionPage = ({
       };
     });
 
-    return mapped.filter((i) => {
+    let filtered = mapped.filter((i) => {
       const gradeOk = gradeFilters.size === 0 || gradeFilters.has(i.grade);
       const statusOk = statusFilters.size === 0 || statusFilters.has(i.status);
       return gradeOk && statusOk;
     });
-  }, [apiData, selectedYear, gradeFilters, statusFilters]);
+    // Hide indicators with NSA disabled (nsaApplicable === false) for users without toggle permission
+    if (!userCanToggleNsa) {
+      filtered = filtered.filter((i) => i.nsaApplicable);
+    }
+    return filtered;
+  }, [apiData, selectedYear, gradeFilters, statusFilters, userCanToggleNsa]);
 
   const toggleInSet = (
     value: string,
@@ -244,85 +256,92 @@ const ClientDimensionPage = ({
                 ))}
               </SelectContent>
             </Select>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="inline-flex items-center gap-2"
-                >
-                  <Filter className="h-4 w-4" /> Nota{' '}
-                  {gradeFilters.size > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {gradeFilters.size}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-36" align="start">
-                <DropdownMenuLabel>Filtrar por nota</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {Object.values(IndicatorGrade).map((g) => (
-                  <DropdownMenuItem
-                    key={g}
-                    className="flex items-center gap-2"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <Checkbox
-                      id={`grade-${g}`}
-                      checked={gradeFilters.has(g)}
-                      onCheckedChange={() => toggleInSet(g, setGradeFilters)}
-                    />
-                    <Label
-                      htmlFor={`grade-${g}`}
-                      className="w-full cursor-pointer"
+            {!visitorView && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="inline-flex items-center gap-2"
                     >
-                      {g === 'NSA' ? 'NSA' : `${g.slice(1)}`}
-                    </Label>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                      <Filter className="h-4 w-4" /> Nota{' '}
+                      {gradeFilters.size > 0 && (
+                        <Badge variant="secondary" className="ml-1">
+                          {gradeFilters.size}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-36" align="start">
+                    <DropdownMenuLabel>Filtrar por nota</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {Object.values(IndicatorGrade).map((g) => (
+                      <DropdownMenuItem
+                        key={g}
+                        className="flex items-center gap-2"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Checkbox
+                          id={`grade-${g}`}
+                          checked={gradeFilters.has(g)}
+                          onCheckedChange={() =>
+                            toggleInSet(g, setGradeFilters)
+                          }
+                        />
+                        <Label
+                          htmlFor={`grade-${g}`}
+                          className="w-full cursor-pointer"
+                        >
+                          {g === 'NSA' ? 'NSA' : `${g.slice(1)}`}
+                        </Label>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="inline-flex items-center gap-2"
-                >
-                  <Filter className="h-4 w-4" /> Status{' '}
-                  {statusFilters.size > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {statusFilters.size}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-44" align="start">
-                <DropdownMenuLabel>Filtrar por status</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {Object.values(IndicatorStatus).map((s) => (
-                  <DropdownMenuItem
-                    key={s}
-                    className="flex items-center gap-2"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <Checkbox
-                      id={`status-${s}`}
-                      checked={statusFilters.has(s)}
-                      onCheckedChange={() => toggleInSet(s, setStatusFilters)}
-                    />
-                    <Label
-                      htmlFor={`status-${s}`}
-                      className="w-full cursor-pointer"
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="inline-flex items-center gap-2"
                     >
-                      <StatusBadge status={s} />
-                    </Label>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {nsaDiff.length > 0 && (
+                      <Filter className="h-4 w-4" /> Status{' '}
+                      {statusFilters.size > 0 && (
+                        <Badge variant="secondary" className="ml-1">
+                          {statusFilters.size}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-44" align="start">
+                    <DropdownMenuLabel>Filtrar por status</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {Object.values(IndicatorStatus).map((s) => (
+                      <DropdownMenuItem
+                        key={s}
+                        className="flex items-center gap-2"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Checkbox
+                          id={`status-${s}`}
+                          checked={statusFilters.has(s)}
+                          onCheckedChange={() =>
+                            toggleInSet(s, setStatusFilters)
+                          }
+                        />
+                        <Label
+                          htmlFor={`status-${s}`}
+                          className="w-full cursor-pointer"
+                        >
+                          <StatusBadge status={s} />
+                        </Label>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+            {userCanToggleNsa && nsaDiff.length > 0 && (
               <Button
                 variant="secondary"
                 className="bg-amber-500 text-white hover:bg-amber-600"
@@ -335,7 +354,7 @@ const ClientDimensionPage = ({
                     NSA...
                   </>
                 ) : (
-                  `Salvar Alterações NSA (${nsaDiff.length})`
+                  `Salvar alterações NSA (${nsaDiff.length})`
                 )}
               </Button>
             )}
@@ -354,6 +373,8 @@ const ClientDimensionPage = ({
             courseSlug={slug}
             dimensionId={dimId}
             year={selectedYear}
+            isVisitor={visitorView}
+            showNsaControls={userCanToggleNsa}
           />
         </CardContent>
       </Card>
@@ -370,6 +391,7 @@ const ClientDimensionPage = ({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={savingNsa}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
+              className="cursor-pointer bg-green-600 hover:bg-green-700"
               disabled={savingNsa}
               onClick={async () => {
                 try {

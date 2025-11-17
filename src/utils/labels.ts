@@ -1,6 +1,6 @@
 import { CourseLevel, CourseModality } from '@prisma/client';
 
-export function labelForCourseLevel(level: CourseLevel): string {
+export const labelForCourseLevel = (level: CourseLevel): string => {
   switch (level) {
     case 'TECNOLOGO':
       return 'Tecnólogo';
@@ -15,7 +15,7 @@ export function labelForCourseLevel(level: CourseLevel): string {
   }
 }
 
-export function labelForCourseModality(modality: CourseModality): string {
+export const labelForCourseModality = (modality: CourseModality): string => {
   switch (modality) {
     case 'PRESENCIAL':
       return 'Presencial';
@@ -25,6 +25,23 @@ export function labelForCourseModality(modality: CourseModality): string {
       return 'EaD';
     default:
       return String(modality)
+        .toLowerCase()
+        .replace(/^(.)/, (c) => c.toUpperCase());
+  }
+}
+
+export const labelForUserRole = (role: string): string => {
+  switch (role) {
+    case 'ADMIN':
+      return 'Administrador';
+    case 'DIRECTOR':
+      return 'Direção';
+    case 'COORDINATOR':
+      return 'Coordenador';
+    case 'VISITOR':
+      return 'Visitante';
+    default:
+      return String(role)
         .toLowerCase()
         .replace(/^(.)/, (c) => c.toUpperCase());
   }

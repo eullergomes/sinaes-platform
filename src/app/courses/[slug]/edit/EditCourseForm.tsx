@@ -291,7 +291,7 @@ export default function EditCourseForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ppcDocumentUrl">URL do Documento PPC</Label>
+                <Label htmlFor="ppcDocumentUrl">Link do Documento PPC</Label>
                 <Input
                   id="ppcDocumentUrl"
                   name="ppcDocumentUrl"
