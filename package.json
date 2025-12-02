@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "minio:setup": "tsx src/services/setupMinio.ts",
     "prisma:format": "prisma format",
     "prisma:generate": "npm run prisma:format && prisma generate",
     "prisma:push": "npm run prisma:format && prisma db push",
@@ -17,6 +18,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
+    "@aws-sdk/s3-request-presigner": "^3.940.0",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.17.1",
     "@radix-ui/react-accordion": "^1.2.12",
