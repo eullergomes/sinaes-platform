@@ -17,15 +17,13 @@ import NewCycle from '@/components/new-cycle-dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+// Removed direct Select imports; using reusable CycleYearSelect component
+import CycleYearSelect from '@/components/CycleYearSelect';
 import { Download, PlusCircle } from 'lucide-react';
 import ReportButton from './report-button';
+import { UserRole } from '@prisma/client';
+import { useAppContext } from '@/context/AppContext';
+import { isVisitor as isVisitorRole } from '@/lib/permissions';
 
 type DimensionWithGrade = DimensionDefinition & {
   averageGrade: number;
@@ -36,14 +34,22 @@ type Props = {
   dimensionsWithGrades: DimensionWithGrade[];
   hasCycles: boolean;
   currentYear: number | null;
+  canCreateCycleInitial?: boolean;
 };
 
 const DimensionList = ({
   slug,
   dimensionsWithGrades,
   hasCycles,
-  currentYear
+  currentYear,
+  canCreateCycleInitial
 }: Props) => {
+  const {
+    userId,
+    role,
+    courseCoordinatorId: ctxCoordinatorId
+  } = useAppContext();
+
   const courseName = slug
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (l) => l.toUpperCase());
@@ -63,6 +69,27 @@ const DimensionList = ({
   const [currentYearState, setCurrentYearState] = useState<number | null>(
     currentYear
   );
+  const [courseCoordinatorId, setCourseCoordinatorId] = useState<string | null>(
+    ctxCoordinatorId ?? null
+  );
+  // Reuse coordinatorId from context promptly
+  useEffect(() => {
+    if (ctxCoordinatorId !== undefined) {
+      setCourseCoordinatorId(ctxCoordinatorId ?? null);
+    }
+  }, [ctxCoordinatorId]);
+
+  const clientCanCreate = useMemo(() => {
+    if (!role) return false;
+    if (role === 'ADMIN' || role === UserRole.ADMIN) return true;
+    if ((role === 'COORDINATOR' || role === UserRole.COORDINATOR) && userId) {
+      return courseCoordinatorId === userId;
+    }
+    return false;
+  }, [role, userId, courseCoordinatorId]);
+
+  // Prefer client calculation when it turns true; otherwise fall back to SSR initial
+  const canCreateCycle = clientCanCreate || !!canCreateCycleInitial;
 
   useEffect(() => {
     let aborted = false;
@@ -84,6 +111,8 @@ const DimensionList = ({
       aborted = true;
     };
   }, [slug]);
+
+  // Avoid duplicate fetch: course coordinatorId comes from AppShell's context
 
   async function handleCreateCycle(y: number, copyFromPrevious: boolean) {
     const res = await fetch(`/api/courses/${encodeURIComponent(slug)}/cycles`, {
@@ -129,7 +158,7 @@ const DimensionList = ({
             className="inline-flex items-center gap-2 hover:cursor-pointer"
           >
             <a
-              href="/assets/pdf/pdf-1.pdf"
+              href="/assets/pdf/manual-instrucoes.pdf"
               download
               aria-label={`Baixar Manual de Instruções}`}
               className="inline-flex items-center gap-2"
@@ -138,16 +167,18 @@ const DimensionList = ({
               Manual de instruções
             </a>
           </Button>
-          <NewCycle
-            open={dialogIsOpen}
-            onOpenChange={setDialogIsOpen}
-            onCreate={handleCreateCycle}
-            trigger={
-              <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
-                Criar ciclo
-              </Button>
-            }
-          />
+          {canCreateCycle && (
+            <NewCycle
+              open={dialogIsOpen}
+              onOpenChange={setDialogIsOpen}
+              onCreate={handleCreateCycle}
+              trigger={
+                <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
+                  Criar ciclo
+                </Button>
+              }
+            />
+          )}
         </div>
       </div>
 
@@ -157,17 +188,19 @@ const DimensionList = ({
             <p className="text-lg">
               Este curso ainda não possui ciclos de avaliação.
             </p>
-            <NewCycle
-              open={dialogIsOpen}
-              onOpenChange={setDialogIsOpen}
-              onCreate={handleCreateCycle}
-              trigger={
-                <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Iniciar Primeiro Ciclo Avaliativo
-                </Button>
-              }
-            />
+            {canCreateCycle && (
+              <NewCycle
+                open={dialogIsOpen}
+                onOpenChange={setDialogIsOpen}
+                onCreate={handleCreateCycle}
+                trigger={
+                  <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Iniciar Primeiro Ciclo Avaliativo
+                  </Button>
+                }
+              />
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -178,30 +211,20 @@ const DimensionList = ({
                 Selecione o ciclo avaliativo
               </div>
               <div className="w-48">
-                <Select
-                  value={currentYearState ? String(currentYearState) : ''}
-                  onValueChange={(v) => {
-                    const yr = parseInt(v, 10);
-                    if (Number.isInteger(yr)) {
-                      setCurrentYearState(yr);
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('year', String(yr));
-                      window.history.replaceState({}, '', url.toString());
-                      router.refresh();
-                    }
+                {/* Select de Ano */}
+                <CycleYearSelect
+                  years={availableYears}
+                  value={currentYearState}
+                  placeholder="Ano do ciclo"
+                  updateQueryParam={false}
+                  onChange={(yr) => {
+                    setCurrentYearState(yr);
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('year', String(yr));
+                    window.history.replaceState({}, '', url.toString());
+                    router.refresh();
                   }}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Ano do ciclo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableYears.map((y) => (
-                      <SelectItem key={y} value={String(y)}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
             </div>
           </div>
@@ -217,9 +240,9 @@ const DimensionList = ({
           </div>
 
           <Card>
-            <CardHeader className='flex justify-between items-center'>
+            <CardHeader className="flex items-center justify-between">
               <CardTitle>Visão Geral — Notas por Dimensão</CardTitle>
-              <ReportButton />
+              {role && !isVisitorRole(role) && <ReportButton slug={slug} />}
             </CardHeader>
             <CardContent>
               <div className="h-80">
