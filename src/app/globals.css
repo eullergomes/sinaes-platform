@@ -176,6 +176,10 @@
   }
 }
 
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
 .print-footer {
   display: none;
 }

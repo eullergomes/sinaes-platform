@@ -123,7 +123,7 @@ const PendingAlerts = () => {
           className="relative rounded-md p-2 hover:cursor-pointer hover:bg-gray-100"
         >
           <Bell className="h-5 w-5" />
-          <span className="pointer-events-none absolute p-[10px] -top-1 -right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">
+          <span className="pointer-events-none absolute -top-1 -right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 p-[10px] text-[10px] font-semibold text-white">
             {count}
           </span>
         </button>
@@ -155,7 +155,7 @@ const PendingAlerts = () => {
               <DropdownMenuItem
                 key={`${a.dimensionId}-${a.code}`}
                 onSelect={() => router.push(url)}
-                className="hover:cursor-pointer"
+                className="hover:cursor-pointer hover:bg-gray-50"
               >
                 <div className="flex min-w-0 flex-col">
                   <span className="text-sm font-medium">
@@ -168,7 +168,7 @@ const PendingAlerts = () => {
           })}
 
         {remaining > 0 && !loading && !error && (
-          <div className="text-muted-foreground px-2 py-1 text-[11px]">
+          <div className="text-muted-foreground px-2 py-1 text-xs font-bold">
             …e mais {remaining} pendência(s)
           </div>
         )}

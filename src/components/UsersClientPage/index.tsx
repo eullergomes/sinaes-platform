@@ -118,7 +118,6 @@ const UsersClientPage = ({
           </div>
         </div>
         <div className="w-48">
-          <label className="text-sm font-semibold">Papel</label>
           <Select
             value={roleFilter}
             onValueChange={(v) =>

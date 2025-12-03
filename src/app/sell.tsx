@@ -113,7 +113,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
         />
       )}
 
-      <SidebarInset>
+      <SidebarInset className="w-[calc(100%-var(--sidebar-width))]">
         {!isAuthPage && (
           <header
             className={
@@ -211,7 +211,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
             sessionPending: isPending
           }}
         >
-          <div className={`flex flex-1 flex-col gap-4 ${hideFooter ? 'min-h-full' : 'min-h-[calc(100dvh-4rem)]'}`}>
+          <div className={`flex flex-1 flex-col gap-4 ${hideFooter ? 'min-h-dvh' : 'min-h-[calc(100dvh-4rem)]'}`}>
             {children}
           </div>
         </AppContext.Provider>
