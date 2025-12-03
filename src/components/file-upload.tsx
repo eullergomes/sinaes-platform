@@ -458,7 +458,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="md:max-w-lg max-w-xs rounded-lg">
           <DialogHeader>
             <DialogTitle className="font-bold">Adicionar link</DialogTitle>
             <DialogDescription>
@@ -483,12 +483,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor={`${idBase}-dialog-link-url`}>URL</Label>
+              <Label htmlFor={`${idBase}-dialog-link-url`}>Link</Label>
               <div className="relative">
                 <LinkIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                 <Input
                   id={`${idBase}-dialog-link-url`}
-                  placeholder="Digite ou cole um link"
+                  placeholder="Digite ou cole o link"
                   className={`pl-10 ${linkErrors[0] ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   value={editingLink?.url || ''}
                   onChange={(e) =>
@@ -509,7 +509,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             </div>
             {saveError && <p className="text-sm text-red-600">{saveError}</p>}
           </div>
-          <DialogFooter>
+          <DialogFooter className='gap-2'>
             <Button
               type="button"
               variant="secondary"
