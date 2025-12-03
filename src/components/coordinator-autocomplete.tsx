@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { ChevronsUpDown, Loader2, Search, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { Input } from "./ui/input";
+import { ChevronsUpDown, Loader2, Search, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Input } from './ui/input';
 
 type Coordinator = {
   id: string;
@@ -149,7 +149,10 @@ const CoordinatorAutocomplete = ({
             ) : (
               <ul className="max-h-64 overflow-y-auto py-1">
                 {items.map((c) => (
-                  <li key={c.id}>
+                  <li
+                    key={c.id}
+                    className="border-b last:border-b-0 sm:border-b-0"
+                  >
                     <button
                       type="button"
                       onClick={() => {
@@ -159,12 +162,16 @@ const CoordinatorAutocomplete = ({
                       }}
                       className="hover:bg-accent w-full px-2 py-1.5 text-left"
                     >
-                      <span className="text-sm font-medium">{c.name}</span>
-                      {c.email ? (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          {c.email}
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-medium">
+                          {c.name}
                         </span>
-                      ) : null}
+                        {c.email ? (
+                          <span className="text-muted-foreground truncate text-xs">
+                            {c.email}
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   </li>
                 ))}
@@ -175,5 +182,5 @@ const CoordinatorAutocomplete = ({
       </div>
     </div>
   );
-}
+};
 export default CoordinatorAutocomplete;
