@@ -3,7 +3,7 @@
 import { revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import prisma from '@/utils/prisma';
-import { CourseLevel, CourseModality } from '@prisma/client';
+import { CourseLevel, CourseModality, UserRole } from '@prisma/client';
 import { courseSchema, CourseInput } from '@/lib/validators/course';
 
 export type CreateCourseState = {
@@ -76,7 +76,7 @@ export async function createCourse(
         };
       }
     }
-    
+
     if (coordinatorId) {
       const existingByCoordinator = await prisma.course.findFirst({
         where: { coordinatorId }
@@ -92,16 +92,32 @@ export async function createCourse(
       }
     }
 
-    await prisma.course.create({
-      data: {
-        name,
-        slug,
-        level,
-        modality,
-        emecCode,
-        ppcDocumentUrl,
-        coordinatorId: coordinatorId
+    await prisma.$transaction(async (tx) => {
+      // Promote selected coordinator if currently VISITOR
+      if (coordinatorId) {
+        const coord = await tx.user.findUnique({
+          where: { id: coordinatorId },
+          select: { role: true }
+        });
+        if (coord?.role === UserRole.VISITOR) {
+          await tx.user.update({
+            where: { id: coordinatorId },
+            data: { role: UserRole.COORDINATOR }
+          });
+        }
       }
+
+      await tx.course.create({
+        data: {
+          name,
+          slug,
+          level,
+          modality,
+          emecCode,
+          ppcDocumentUrl,
+          coordinatorId: coordinatorId
+        }
+      });
     });
   } catch (error) {
     console.error('Falha detalhada ao criar curso:', error);
@@ -128,19 +144,7 @@ export async function deleteCourse(formData: FormData) {
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.courseIndicator.deleteMany({ where: { courseId: courseId } });
-      const submissions = await tx.evidenceSubmission.findMany({
-        where: { courseId: courseId },
-        select: { id: true }
-      });
-      const submissionIds = submissions.map((s) => s.id);
-      await tx.evidenceFile.deleteMany({
-        where: { submissionId: { in: submissionIds } }
-      });
-      await tx.evidenceSubmission.deleteMany({ where: { courseId: courseId } });
-      await tx.course.delete({ where: { id: courseId } });
-    });
+    await prisma.course.delete({ where: { id: courseId } });
   } catch (error) {
     console.error('Falha ao apagar o curso:', error);
     throw new Error('Não foi possível apagar o curso.');
@@ -223,17 +227,54 @@ export async function updateCourse(
       }
     }
 
-    await prisma.course.update({
-      where: { id: courseId },
-      data: {
-        name,
-        slug,
-        level,
-        modality,
-        emecCode,
-        ppcDocumentUrl,
-        coordinatorId
+    await prisma.$transaction(async (tx) => {
+      // Demote previous coordinator if being replaced
+      const prev = await tx.course.findUnique({
+        where: { id: courseId },
+        select: { coordinatorId: true }
+      });
+      const prevCoordinatorId = prev?.coordinatorId ?? null;
+
+      if (prevCoordinatorId && prevCoordinatorId !== coordinatorId) {
+        const prevUser = await tx.user.findUnique({
+          where: { id: prevCoordinatorId },
+          select: { role: true }
+        });
+        // Only demote if they are actually COORDINATOR (don't touch ADMIN/DIRECTOR)
+        if (prevUser?.role === UserRole.COORDINATOR) {
+          await tx.user.update({
+            where: { id: prevCoordinatorId },
+            data: { role: UserRole.VISITOR }
+          });
+        }
       }
+
+      // Promote new coordinator if currently VISITOR
+      if (coordinatorId) {
+        const newUser = await tx.user.findUnique({
+          where: { id: coordinatorId },
+          select: { role: true }
+        });
+        if (newUser?.role === UserRole.VISITOR) {
+          await tx.user.update({
+            where: { id: coordinatorId },
+            data: { role: UserRole.COORDINATOR }
+          });
+        }
+      }
+
+      await tx.course.update({
+        where: { id: courseId },
+        data: {
+          name,
+          slug,
+          level,
+          modality,
+          emecCode,
+          ppcDocumentUrl,
+          coordinatorId
+        }
+      });
     });
   } catch (error) {
     console.error('Falha ao atualizar curso:', error);

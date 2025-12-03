@@ -45,11 +45,16 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: User | null;
 };
 
-function buildNav(currentCourseId?: string | null) {
+function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
   const prefix = currentCourseId ? `/courses/${currentCourseId}` : '';
 
-  return [
-    {
+  const sections: Array<{
+    title: string;
+    items: Array<{ title: string; url: string; icon: any }>;
+  }> = [];
+
+  if (showDashboard) {
+    sections.push({
       title: 'Dashboard',
       items: [
         {
@@ -58,34 +63,38 @@ function buildNav(currentCourseId?: string | null) {
           icon: ChartNoAxesCombinedIcon
         }
       ]
-    },
-    {
-      title: 'Dimensões',
-      items: [
-        {
-          title: 'Dimensão 1',
-          url: `${prefix}/dimensions/1`,
-          icon: LayoutDashboard
-        },
-        {
-          title: 'Dimensão 2',
-          url: `${prefix}/dimensions/2`,
-          icon: BookOpen
-        },
-        { title: 'Dimensão 3', url: `${prefix}/dimensions/3`, icon: Users }
-      ]
-    },
-    {
-      title: 'Outros Documentos',
-      items: [
-        {
-          title: 'Outros Documentos',
-          url: `${prefix}/other-documents`,
-          icon: FileText
-        }
-      ]
-    }
-  ] as const;
+    });
+  }
+
+  sections.push({
+    title: 'Dimensões',
+    items: [
+      {
+        title: 'Dimensão 1',
+        url: `${prefix}/dimensions/1`,
+        icon: LayoutDashboard
+      },
+      {
+        title: 'Dimensão 2',
+        url: `${prefix}/dimensions/2`,
+        icon: BookOpen
+      },
+      { title: 'Dimensão 3', url: `${prefix}/dimensions/3`, icon: Users }
+    ]
+  });
+
+  sections.push({
+    title: 'Outros Documentos',
+    items: [
+      {
+        title: 'Outros Documentos',
+        url: `${prefix}/other-documents`,
+        icon: FileText
+      }
+    ]
+  });
+
+  return sections;
 }
 
 const AppSidebar = ({
@@ -98,7 +107,9 @@ const AppSidebar = ({
   const [hovered, setHovered] = useState(false);
   const pathname = usePathname();
 
-  const nav = buildNav(currentCourseId);
+  const role = (user as unknown as { role?: string } | null)?.role;
+  const canSeeDashboard = !!user && role !== 'VISITOR';
+  const nav = buildNav(currentCourseId, canSeeDashboard);
 
   return (
     <Sidebar {...props}>
@@ -197,7 +208,7 @@ const AppSidebar = ({
             title={currentCourseName ?? '—'}
           >
             <span className="opacity-80">Curso:</span>
-            <span className="font-medium flex-1 min-w-0 truncate">
+            <span className="min-w-0 flex-1 truncate font-medium">
               {currentCourseName ?? '—'}
             </span>
           </Link>
@@ -240,7 +251,7 @@ const AppSidebar = ({
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu> 
+        <SidebarMenu>
           <SidebarMenuItem className="space-y-2">
             <SidebarMenuButton
               className="flex w-full items-center gap-4 border border-white/20 bg-white/10"
@@ -254,7 +265,7 @@ const AppSidebar = ({
               </Link>
             </SidebarMenuButton>
 
-            {user && <NavUser user={user}/>}
+            {user && <NavUser user={user} isInSidebar={true} />}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

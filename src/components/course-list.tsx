@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger
 } from './ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { Filter } from 'lucide-react';
+import { Filter, Search } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
@@ -29,6 +29,8 @@ import { Card, CardContent } from './ui/card';
 import CourseItem from './course-item';
 import { toast } from 'sonner';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { canUpdateCourse } from '@/lib/permissions';
+import { useAppContext } from '@/context/AppContext';
 
 type CourseWithCoordinator = Course & {
   coordinator?: { id: string; name: string } | null;
@@ -49,6 +51,9 @@ const CourseList = ({
 
   const modalidadeOptions = useMemo(() => Object.values(CourseModality), []);
   const nivelOptions = useMemo(() => Object.values(CourseLevel), []);
+
+  const { role } = useAppContext();
+  const canCreate = canUpdateCourse(role);
 
   const toggleInSet = (
     value: string,
@@ -106,130 +111,140 @@ const CourseList = ({
   }, [searchParams, router]);
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+    <div className="space-y-8 p-6 md:space-y-6 md:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">Selecionar Curso</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm md:text-base">
             Escolha um curso do IFMA Campus Caxias para gerenciar os dados
             avaliativos do SINAES.
           </p>
         </div>
-        <Button asChild className="bg-green-600 hover:bg-green-700">
-          <Link href="/courses/new">Criar curso</Link>
-        </Button>
+        {canCreate && (
+          <Button asChild className="bg-green-600 hover:bg-green-700">
+            <Link href="/courses/new">Criar curso</Link>
+          </Button>
+        )}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
         <div className="flex-1">
-          <Input
-            placeholder="Buscar por nome ou sigla (ex.: ADS, eng-civil...)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+          <div className="relative">
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder="Buscar por nome"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
         </div>
 
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="inline-flex items-center gap-2 hover:cursor-pointer"
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="inline-flex items-center gap-2 hover:cursor-pointer"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Modalidade
+                    {modalidadeFilters.size > 0 && (
+                      <Badge variant="secondary" className="ml-1">
+                        {modalidadeFilters.size}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Filtrar por modalidade</p>
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent className="w-44 md:w-56" align="start">
+              <DropdownMenuLabel>Filtrar por modalidade</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {modalidadeOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  className="flex items-center gap-2 hover:bg-gray-100"
+                  onSelect={(e) => e.preventDefault()}
                 >
-                  <Filter className="h-4 w-4" />
-                  Modalidade
-                  {modalidadeFilters.size > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {modalidadeFilters.size}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Filtrar por modalidade</p>
-            </TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent className="w-56" align="start">
-            <DropdownMenuLabel>Filtrar por modalidade</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {modalidadeOptions.map((opt) => (
-              <DropdownMenuItem
-                key={opt}
-                className="flex items-center gap-2 hover:bg-gray-100"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Checkbox
-                  id={`modalidade-${opt}`}
-                  checked={modalidadeFilters.has(opt)}
-                  onCheckedChange={() => toggleInSet(opt, setModalidadeFilters)}
-                />
-                <Label
-                  htmlFor={`modalidade-${opt}`}
-                  className="w-full cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleInSet(opt, setModalidadeFilters);
-                  }}
-                >
-                  {opt}
-                </Label>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  <Checkbox
+                    id={`modalidade-${opt}`}
+                    checked={modalidadeFilters.has(opt)}
+                    onCheckedChange={() =>
+                      toggleInSet(opt, setModalidadeFilters)
+                    }
+                  />
+                  <Label
+                    htmlFor={`modalidade-${opt}`}
+                    className="w-full cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleInSet(opt, setModalidadeFilters);
+                    }}
+                  >
+                    {opt}
+                  </Label>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="inline-flex items-center gap-2 hover:cursor-pointer"
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="inline-flex items-center gap-2 hover:cursor-pointer"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Nível
+                    {nivelFilters.size > 0 && (
+                      <Badge variant="secondary" className="ml-1">
+                        {nivelFilters.size}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Filtrar por nível</p>
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent className="w-44 md:w-56" align="start">
+              <DropdownMenuLabel>Filtrar por nível</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {nivelOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  className="flex items-center gap-2 hover:bg-gray-100"
+                  onSelect={(e) => e.preventDefault()}
                 >
-                  <Filter className="h-4 w-4" />
-                  Nível
-                  {nivelFilters.size > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {nivelFilters.size}
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Filtrar por nível</p>
-            </TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent className="w-56" align="start">
-            <DropdownMenuLabel>Filtrar por nível</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {nivelOptions.map((opt) => (
-              <DropdownMenuItem
-                key={opt}
-                className="flex items-center gap-2 hover:bg-gray-100"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Checkbox
-                  id={`nivel-${opt}`}
-                  checked={nivelFilters.has(opt)}
-                  onCheckedChange={() => toggleInSet(opt, setNivelFilters)}
-                />
-                <Label
-                  htmlFor={`nivel-${opt}`}
-                  className="w-full cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleInSet(opt, setNivelFilters);
-                  }}
-                >
-                  {opt}
-                </Label>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  <Checkbox
+                    id={`nivel-${opt}`}
+                    checked={nivelFilters.has(opt)}
+                    onCheckedChange={() => toggleInSet(opt, setNivelFilters)}
+                  />
+                  <Label
+                    htmlFor={`nivel-${opt}`}
+                    className="w-full cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleInSet(opt, setNivelFilters);
+                    }}
+                  >
+                    {opt}
+                  </Label>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {filteredCourses.length === 0 ? (

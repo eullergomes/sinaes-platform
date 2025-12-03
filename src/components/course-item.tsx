@@ -19,6 +19,8 @@ import { deleteCourse } from '@/actions/course';
 import { Loader2, Trash2, Edit } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
 import React, { useEffect, useRef } from 'react';
+import { useAppContext } from '@/context/AppContext';
+import { canUpdateCourse, canDeleteCourse } from '@/lib/permissions';
 
 type CourseWithCoordinator = Course & {
   coordinator?: { id: string; name: string } | null;
@@ -57,6 +59,9 @@ function DeleteButton({
 const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const { role } = useAppContext();
+  const canUpdate = canUpdateCourse(role);
+  const canDelete = canDeleteCourse(role);
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -66,17 +71,19 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
           </Badge>
 
           <div className="flex items-center gap-1">
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground h-8 w-8 hover:bg-gray-100"
-              aria-label="Editar curso"
-            >
-              <Link href={`/courses/${course.slug}/edit`}>
-                <Edit className="h-4 w-4" />
-              </Link>
-            </Button>
+            {canUpdate && (
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground h-8 w-8 hover:bg-gray-100"
+                aria-label="Editar curso"
+              >
+                <Link href={`/courses/${course.slug}/edit`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
 
             <AlertDialog
               open={isDeleteDialogOpen}
@@ -85,22 +92,24 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
                 setIsDeleteDialogOpen(open);
               }}
             >
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 hover:cursor-pointer"
-                  aria-label="Apagar curso"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
+              {canDelete && (
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 hover:cursor-pointer"
+                    aria-label="Apagar curso"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+              )}
               <AlertDialogContent>
                 <form action={deleteCourse}>
                   <input type="hidden" name="courseId" value={course.id} />
                   <AlertDialogHeader>
-                    <AlertDialogTitle>
+                    <AlertDialogTitle className='font-bold'>
                       Você tem certeza absoluta?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
@@ -159,16 +168,10 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <Link
-            href={`/courses/${course.slug}/dashboard`}
-            className="text-primary underline"
-          >
-            Abrir dashboard
-          </Link>
-          <Button asChild className="bg-green-600 hover:bg-green-700">
+        <div className="flex items-center">
+          <Button asChild className="w-full bg-green-600 hover:bg-green-700">
             <Link href={`/courses/${course.slug}/dimensions`}>
-              Ir para dimensões
+              Abrir para dimensões
             </Link>
           </Button>
         </div>

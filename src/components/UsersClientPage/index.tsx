@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import UsersTable from './UsersTable';
 import { toast } from 'sonner';
@@ -14,16 +14,18 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { UserRole } from '@prisma/client';
+import { Search } from 'lucide-react';
 
 type UserItem = {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'DIRECTOR' | 'COORDINATOR' | 'VISITOR' | string;
+  role: UserRole;
   createdAt?: string;
 };
 
-export default function UsersClientPage({
+const UsersClientPage = ({
   users,
   currentUserId,
   totalCount,
@@ -39,22 +41,46 @@ export default function UsersClientPage({
   pageSize: number;
   q: string;
   roleFilter: string;
-}) {
+}) => {
   const [list, setList] = useState(users);
+  const [searchInput, setSearchInput] = useState(q);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  function updateQuery(params: Record<string, string | number | undefined>) {
-    const sp = new URLSearchParams(searchParams?.toString());
-    Object.entries(params).forEach(([k, v]) => {
-      if (v === undefined || v === '') sp.delete(k);
-      else sp.set(k, String(v));
-    });
-    const url = `/admin/users?${sp.toString()}`;
-    router.replace(url);
-    router.refresh();
-  }
+  const updateQuery = useCallback(
+    (params: Record<string, string | number | undefined>) => {
+      const sp = new URLSearchParams(searchParams?.toString());
+      Object.entries(params).forEach(([k, v]) => {
+        if (v === undefined || v === '') sp.delete(k);
+        else sp.set(k, String(v));
+      });
+      const url = `/admin/users?${sp.toString()}`;
+      router.replace(url);
+      router.refresh();
+    },
+    [searchParams, router]
+  );
+
+  // Sync local input if external q changes (e.g., navigation)
+  useEffect(() => {
+    setSearchInput(q);
+  }, [q]);
+
+  // Sync table data when server-provided users prop changes
+  useEffect(() => {
+    setList(users);
+  }, [users]);
+
+  // Debounce search updates on input change
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if (searchInput !== q) {
+        updateQuery({ q: searchInput, page: 1 });
+      }
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [searchInput, q, updateQuery]);
 
   const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
 
@@ -80,24 +106,19 @@ export default function UsersClientPage({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-end">
         <div className="flex-1">
-          <label className="text-sm font-medium" htmlFor="user-search">
-            Buscar
-          </label>
-          <Input
+          <div className="relative">
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
+            <Input
             id="user-search"
-            defaultValue={q}
+            value={searchInput}
             placeholder="Nome ou e-mail"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter')
-                updateQuery({
-                  q: (e.target as HTMLInputElement).value,
-                  page: 1
-                });
-            }}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className='pl-8'
           />
+          </div>
         </div>
         <div className="w-48">
-          <label className="text-sm font-medium">Papel</label>
+          <label className="text-sm font-semibold">Papel</label>
           <Select
             value={roleFilter}
             onValueChange={(v) =>
@@ -109,26 +130,12 @@ export default function UsersClientPage({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="ADMIN">ADMIN</SelectItem>
-              <SelectItem value="DIRECTOR">DIRECTOR</SelectItem>
-              <SelectItem value="COORDINATOR">COORDINATOR</SelectItem>
-              <SelectItem value="VISITOR">VISITOR</SelectItem>
+              <SelectItem value="ADMIN">Admin</SelectItem>
+              <SelectItem value="DIRECTOR">Direção</SelectItem>
+              <SelectItem value="COORDINATOR">Coordenador</SelectItem>
+              <SelectItem value="VISITOR">Visitante</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        <div>
-          <Button
-            onClick={() =>
-              updateQuery({
-                q,
-                role: roleFilter === 'ALL' ? undefined : roleFilter,
-                page: 1
-              })
-            }
-            variant="outline"
-          >
-            Aplicar
-          </Button>
         </div>
       </div>
       <UsersTable
@@ -199,3 +206,5 @@ export default function UsersClientPage({
     </div>
   );
 }
+
+export default UsersClientPage;

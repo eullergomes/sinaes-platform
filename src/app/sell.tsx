@@ -18,6 +18,9 @@ import { useSession } from '@/lib/auth-client';
 import NavUser from '@/components/nav-user';
 import Footer from '@/components/footer';
 import { UserRole } from '@prisma/client';
+import { AppContext } from '@/context/AppContext';
+import { canViewPendingAlerts } from '@/lib/permissions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 function extractCourseId(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
@@ -28,7 +31,10 @@ function extractCourseId(pathname: string): string | null {
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const [courseName, setCourseName] = useState<string | null>(null);
+  const [courseCoordinatorId, setCourseCoordinatorId] = useState<string | null>(null);
+  const [courseInfoLoading, setCourseInfoLoading] = useState<boolean>(false);
   const isAuthPage =
     pathname === '/sign-in' ||
     pathname === '/sign-up' ||
@@ -39,9 +45,13 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     pathname === '/courses/new' ||
     /\/courses\/.+\/edit$/.test(pathname) ||
     isAuthPage;
+  const hideFooter =
+    pathname === '/profile' ||
+    pathname === '/admin/users';
   const currentCourseId = extractCourseId(pathname);
 
   const { data, isPending } = useSession();
+
   const user = data?.user ?? null;
   const hasRole = (u: unknown): u is { role?: UserRole } => {
     return (
@@ -49,17 +59,30 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     );
   };
   const isAdmin = hasRole(user) && user.role === UserRole.ADMIN;
+  const userId = user && typeof user === 'object' && 'id' in (user as Record<string, unknown>)
+    ? (user as { id?: string }).id
+    : undefined;
+  const role = hasRole(user) ? user.role : undefined;
 
   useEffect(() => {
     let cancelled = false;
     async function loadCourseName(slug: string) {
       try {
+        setCourseInfoLoading(true);
         const res = await fetch(`/api/courses/${encodeURIComponent(slug)}`);
         if (!res.ok) throw new Error('Falha ao carregar curso');
-        const data: { name: string } = await res.json();
-        if (!cancelled) setCourseName(data.name);
+        const data: { name: string; coordinatorId?: string | null } = await res.json();
+        if (!cancelled) {
+          setCourseName(data.name);
+          setCourseCoordinatorId(data.coordinatorId ?? null);
+        }
       } catch {
-        if (!cancelled) setCourseName(null);
+        if (!cancelled) {
+          setCourseName(null);
+          setCourseCoordinatorId(null);
+        }
+      } finally {
+        if (!cancelled) setCourseInfoLoading(false);
       }
     }
     if (currentCourseId) {
@@ -115,7 +138,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                 <div className="flex items-center gap-3">
                   {isAdmin && (
                     <Button asChild variant="outline">
-                      <Link href="/admin/users" className="text-black">
+                      <Link href="/admin/users" className="text-black hidden">
                         Admin
                       </Link>
                     </Button>
@@ -150,8 +173,10 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   </div>
                 )}
                 <div className="ml-auto flex items-center gap-4">
-                  {currentCourseId && <PendingAlerts />}
-                  {isAdmin && (
+                  {currentCourseId && canViewPendingAlerts({ role, userId: userId ?? null, courseCoordinatorId }) && (
+                    <PendingAlerts />
+                  )}
+                  {(isAdmin && !isMobile) && (
                     <Button asChild variant="outline">
                       <Link href="/admin/users" className="text-black">
                         Admin
@@ -175,9 +200,21 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           </header>
         )}
 
-        <div className="flex min-h-[calc(100svh-4rem)] flex-1 flex-col gap-4">
-          {children}
-        </div>
+        <AppContext.Provider
+          value={{
+            userId,
+            role,
+            isAdmin,
+            currentCourseId,
+            courseCoordinatorId,
+            courseInfoLoading,
+            sessionPending: isPending
+          }}
+        >
+          <div className={`flex flex-1 flex-col gap-4 ${hideFooter ? 'min-h-full' : 'min-h-[calc(100dvh-4rem)]'}`}>
+            {children}
+          </div>
+        </AppContext.Provider>
         <Footer />
       </SidebarInset>
     </SidebarProvider>

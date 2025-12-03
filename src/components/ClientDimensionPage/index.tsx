@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { isVisitor as isVisitorRole, canToggleNsaIndicator } from '@/lib/permissions';
+import {
+  isVisitor as isVisitorRole,
+  canToggleNsaIndicator
+} from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,13 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import CycleYearSelect from '@/components/CycleYearSelect';
 import { Filter, Loader2 } from 'lucide-react';
 import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
 import { DimensionApiResponse } from '@/types/dimension-types';
@@ -59,7 +56,11 @@ const ClientDimensionPage = ({
   const { role } = useAppContext();
   const visitorView = isVisitorRole(role);
   const { userId, courseCoordinatorId } = useAppContext();
-  const userCanToggleNsa = canToggleNsaIndicator({ role, userId: userId ?? null, courseCoordinatorId });
+  const userCanToggleNsa = canToggleNsaIndicator({
+    role,
+    userId: userId ?? null,
+    courseCoordinatorId
+  });
   const router = useRouter();
 
   const [apiData, setApiData] = useState<DimensionApiResponse | null>(null);
@@ -223,7 +224,7 @@ const ClientDimensionPage = ({
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
+    <div className="space-y-8 p-6 md:p-8">
       <h1 className="text-3xl font-bold">{apiData?.dimension.title}</h1>
 
       <Card>
@@ -241,21 +242,14 @@ const ClientDimensionPage = ({
           </CardTitle>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Select
-              value={String(selectedYear)}
-              onValueChange={(v) => setSelectedYear(Number(v))}
-            >
-              <SelectTrigger className="w-28 md:w-32">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableYears.map((y) => (
-                  <SelectItem key={y} value={String(y)}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CycleYearSelect
+              years={availableYears}
+              value={selectedYear}
+              widthClassName="w-28 md:w-32"
+              onChange={(y) => setSelectedYear(y)}
+              // Atualiza a barra de endereço para refletir ano selecionado
+              updateQueryParam={true}
+            />
             {!visitorView && (
               <>
                 <DropdownMenu>

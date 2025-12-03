@@ -17,11 +17,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth-client';
-import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 import { updateProfileAction } from '@/actions/profile';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { uploadFileToMinio } from '@/services/uploadFile';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -76,7 +76,7 @@ export default function ProfilePage() {
   }, [isSubmitting, form.formState.isValid]);
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-8 p-6 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Meu perfil</h1>
       </div>
@@ -89,11 +89,11 @@ export default function ProfilePage() {
 
             try {
               if (avatarFile) {
-                const res = await uploadToCloudinary(
+                const res = await uploadFileToMinio(
                   avatarFile,
                   'ifma-avatars'
                 );
-                imageUrl = res.secure_url;
+                imageUrl = res.url;
               }
 
               const result = await updateProfileAction({

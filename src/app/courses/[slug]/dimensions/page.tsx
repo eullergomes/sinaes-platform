@@ -1,6 +1,9 @@
 import DimensionList from '@/components/dimension-list';
 import { gradeToNumber } from '@/utils/gradeToNumber';
 import prisma from '@/utils/prisma';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
+import { UserRole } from '@prisma/client';
 
 type Params = { slug: string };
 type SearchParams = { year?: string };
@@ -15,7 +18,10 @@ const DimensionPage = async ({
   const { slug } = await params;
   const { year } = await searchParams;
 
-  const course = await prisma.course.findUnique({ where: { slug } });
+  const course = await prisma.course.findUnique({
+    where: { slug },
+    select: { id: true, coordinatorId: true, slug: true }
+  });
   const dimensions = await prisma.dimensionDefinition.findMany({
     orderBy: {
       number: 'asc'
@@ -94,12 +100,24 @@ const DimensionPage = async ({
     });
   }
 
+  // Server-side: compute initial canCreateCycle for better UX
+  const cookieHeader = (await headers()).get('cookie') ?? '';
+  const session = await auth.api.getSession({ headers: { cookie: cookieHeader } });
+  const role = (session?.user?.role ?? undefined) as UserRole | string | undefined;
+  const isAdmin = role === 'ADMIN' || role === UserRole.ADMIN;
+  const isCoordinator = role === 'COORDINATOR' || role === UserRole.COORDINATOR;
+  const canCreateCycleServer = Boolean(
+    (isAdmin && true) ||
+      (isCoordinator && course.coordinatorId && session?.user?.id === course.coordinatorId)
+  );
+
   return (
     <DimensionList
       slug={slug}
       dimensionsWithGrades={dimensionsWithGrades}
       hasCycles={hasCycles}
       currentYear={selectedYear}
+      canCreateCycleInitial={canCreateCycleServer}
     />
   );
 };

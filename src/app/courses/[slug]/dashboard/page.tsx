@@ -1,7 +1,9 @@
 import prisma from '@/utils/prisma';
 import CourseDashboardClient from '@/components/CourseDashboardClient';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { mapGrade } from '@/utils/mapGrade';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
 
 type DimId = '1' | '2' | '3';
 type Status = 'Concluído' | 'Em edição' | 'Não atingido';
@@ -15,6 +17,16 @@ export default async function CourseDashboardPage({
 }) {
   const { slug } = await params;
   const { year } = await searchParams;
+
+  // Permission: block anonymous users and VISITORs
+  const cookieHeader = (await headers()).get('cookie') ?? '';
+  const session = await auth.api.getSession({
+    headers: { cookie: cookieHeader }
+  });
+  const role = session?.user?.role as string | undefined;
+  if (!session?.user || role === 'VISITOR') {
+    redirect(`/courses/${slug}/dimensions`);
+  }
 
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) return notFound();

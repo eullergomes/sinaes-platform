@@ -72,10 +72,12 @@ export default function IndicatorsTable({
   courseSlug,
   dimensionId,
   year,
-  onDiffChange
+  onDiffChange,
+  isVisitor = false,
+  showNsaControls = false
 }: {
   data: IndicatorRow[];
-  nsaStatus: Record<string, boolean>; // true => aplicável, false => NSA
+  nsaStatus: Record<string, boolean>;
   onToggleNsa: (code: string, applicable: boolean) => void;
   onEdit: (code: string) => void;
   courseSlug: string;
@@ -84,6 +86,8 @@ export default function IndicatorsTable({
   onDiffChange?: (
     diff: { indicatorCode: string; nsaApplicable: boolean }[]
   ) => void;
+  isVisitor?: boolean;
+  showNsaControls?: boolean;
 }) {
   const [statusOverrides, setStatusOverrides] = useState<
     Record<string, IndicatorStatus>
@@ -105,29 +109,32 @@ export default function IndicatorsTable({
   useEffect(() => {
     onDiffChange?.(nsaDiff);
   }, [nsaDiff, onDiffChange]);
-  const columns = useMemo<ColumnDef<IndicatorRow>[]>(
-    () => [
-      {
+  const columns = useMemo<ColumnDef<IndicatorRow>[]>(() => {
+    const base: ColumnDef<IndicatorRow>[] = [];
+    base.push({
+      accessorKey: 'code',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Código" />
+      ),
+      cell: ({ row }) => <div className="w-[80px]">{row.original.code}</div>,
+      enableSorting: false
+    });
+    base.push({
+      accessorKey: 'name',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Indicador" />
+      ),
+      cell: ({ row }) => (
+        <div className="max-w-[520px] truncate" title={row.original.name}>
+          {row.original.name}
+        </div>
+      ),
+      enableSorting: false
+    });
+    if (showNsaControls) {
+      base.unshift({
         id: 'nsa',
-        header: () => {
-          const editableRows = data.filter((r) => !r.nsaLocked);
-          const allChecked = editableRows.every(
-            (r) => (nsaStatus[r.code] ?? true) === true
-          );
-          const masterChecked = allChecked;
-          return (
-            <div className="flex items-center justify-center">
-              <Checkbox
-                checked={masterChecked}
-                onCheckedChange={(val) => {
-                  const nextVal = Boolean(val);
-                  editableRows.forEach((r) => onToggleNsa(r.code, nextVal));
-                }}
-                aria-label="Alternar todos aplicáveis"
-              />
-            </div>
-          );
-        },
+        header: () => <div className="text-center font-medium">NSA</div>,
         cell: ({ row }) => {
           const isApplicable = nsaStatus[row.original.code] ?? true;
           return (
@@ -145,28 +152,8 @@ export default function IndicatorsTable({
             </div>
           );
         }
-      },
-      {
-        accessorKey: 'code',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Código" />
-        ),
-        cell: ({ row }) => <div className="w-[80px]">{row.original.code}</div>,
-        enableSorting: false
-      },
-      {
-        accessorKey: 'name',
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Indicador" />
-        ),
-        cell: ({ row }) => (
-          <div className="max-w-[520px] truncate" title={row.original.name}>
-            {row.original.name}
-          </div>
-        ),
-        enableSorting: false
-      },
-      {
+      });
+      base.push({
         accessorKey: 'grade',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Nota" />
@@ -180,8 +167,8 @@ export default function IndicatorsTable({
           );
         },
         enableSorting: false
-      },
-      {
+      });
+      base.push({
         accessorKey: 'status',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Status" />
@@ -192,7 +179,7 @@ export default function IndicatorsTable({
           const effectiveStatus = statusOverrides[code] ?? row.original.status;
           const disabled = !isVisible || !row.original.hasEvaluation;
           return (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center" id='Teste123'>
               {isVisible ? (
                 <Select
                   value={effectiveStatus}
@@ -236,7 +223,7 @@ export default function IndicatorsTable({
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="min-w-[160px]">
+                  <SelectContent className="min-w-[140px]">
                     {Object.values(IndicatorStatus).map((s) => (
                       <SelectItem key={s} value={s} className="cursor-pointer">
                         <div className="flex items-center">
@@ -253,8 +240,8 @@ export default function IndicatorsTable({
           );
         },
         enableSorting: false
-      },
-      {
+      });
+      base.push({
         accessorKey: 'lastUpdate',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Última Atualização" />
@@ -268,51 +255,53 @@ export default function IndicatorsTable({
           );
         },
         enableSorting: false
-      },
-      {
-        id: 'actions',
-        header: () => <div className="text-center">Ações</div>,
-        cell: ({ row }) => {
-          const isVisible = nsaStatus[row.original.code] ?? true;
-          const { code, hasEvaluation } = row.original;
-          return (
-            <div className="text-center">
-              {hasEvaluation ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(code)}
-                  disabled={!isVisible}
-                  className="hover:cursor-pointer"
-                >
-                  Editar
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => onEdit(code)}
-                  disabled={!isVisible}
-                  className="hover:cursor-pointer"
-                >
-                  Registrar
-                </Button>
-              )}
-            </div>
-          );
-        }
+      });
+    }
+    base.push({
+      id: 'actions',
+      header: () => <div className="text-center">Ações</div>,
+      cell: ({ row }) => {
+        const isVisible = nsaStatus[row.original.code] ?? true;
+        const { code, hasEvaluation } = row.original;
+        return (
+          <div className="text-center">
+            {hasEvaluation ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(code)}
+                disabled={!isVisible}
+                className="hover:cursor-pointer"
+              >
+                {isVisitor ? 'Ver' : 'Editar'}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => onEdit(code)}
+                disabled={!isVisible}
+                className="hover:cursor-pointer"
+              >
+                {isVisitor ? 'Ver' : 'Registrar'}
+              </Button>
+            )}
+          </div>
+        );
       }
-    ],
-    [
-      onEdit,
-      onToggleNsa,
-      nsaStatus,
-      courseSlug,
-      dimensionId,
-      year,
-      statusOverrides,
-      data
-    ]
-  );
+    });
+    return base;
+  }, [
+    data,
+    nsaStatus,
+    onToggleNsa,
+    onEdit,
+    courseSlug,
+    dimensionId,
+    year,
+    statusOverrides,
+    isVisitor,
+    showNsaControls
+  ]);
 
   const table = useReactTable({
     data,
@@ -348,11 +337,11 @@ export default function IndicatorsTable({
                 return (
                   <TableRow
                     key={row.id}
-                    className={
+                    className={`hover:bg-muted ${
                       isApplicable
                         ? undefined
                         : 'bg-muted/50 text-muted-foreground'
-                    }
+                    }`}
                     aria-disabled={isApplicable ? undefined : true}
                   >
                     {row.getVisibleCells().map((cell) => (
