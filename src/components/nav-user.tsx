@@ -17,12 +17,20 @@ import type { User } from 'better-auth';
 import { Button } from './ui/button';
 import { signOut } from '@/lib/auth-client';
 import Link from 'next/link';
+import AdminIcon from '@/icons/AdminIcon';
 
-type NavUserProps = { user: User; hideInfo?: boolean };
+type NavUserProps = { user: User; hideInfo?: boolean; isInSidebar?: boolean };
 
-const NavUser = ({ user, hideInfo }: NavUserProps) => {
-  // const { isMobile } = useSidebar();
+function formatDisplayName(fullName?: string): string {
+  const name = (fullName || '').trim();
+  if (!name) return '';
+  const parts = name.split(/\s+/);
+  return parts.slice(0, 3).join(' ');
+}
 
+type UserWithRole = User & { role?: string };
+const NavUser = ({ user, hideInfo, isInSidebar }: NavUserProps) => {
+  const isAdmin = (user as UserWithRole)?.role === 'ADMIN';
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,7 +57,7 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
                 <span
                   className={`truncate font-medium ${hideInfo ? 'text-black' : 'text-white'}`}
                 >
-                  {user?.name}
+                  {formatDisplayName(user?.name)}
                 </span>
                 <span
                   className={`truncate text-xs ${hideInfo ? 'text-black' : 'text-white'}`}
@@ -66,8 +74,8 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg p-0"
-        side={hideInfo ? 'bottom' : 'right'}
-        align="end"
+        side={isInSidebar || hideInfo ? 'bottom' : 'right'}
+        align="center"
         sideOffset={4}
       >
         <DropdownMenuLabel className="bg-green-600 p-0 font-normal">
@@ -87,7 +95,7 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium text-white">
-                {user.name}
+                {formatDisplayName(user.name)}
               </span>
               <span className="truncate text-xs text-white">{user.email}</span>
             </div>
@@ -95,13 +103,29 @@ const NavUser = ({ user, hideInfo }: NavUserProps) => {
         </DropdownMenuLabel>
         <DropdownMenuGroup>
           <DropdownMenuItem asChild className="hover:cursor-pointer">
-            <Link href="/profile" className="flex gap-4">
+            <Link
+              href="/profile"
+              className="hover:bg-accent flex gap-4 px-3 py-2"
+            >
               <UserCircle />
               Perfil
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        {isAdmin && (
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild className="hover:cursor-pointer">
+              <Link
+                href="/admin/users"
+                className="hover:bg-accent flex gap-4 px-3 py-2"
+              >
+                <AdminIcon fill="#737373" />
+                Admin
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        )}
+        <DropdownMenuSeparator className="m-0" />
         <DropdownMenuItem asChild>
           <Button
             variant="ghost"
