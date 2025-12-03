@@ -54,11 +54,13 @@ interface FileUploadProps {
   evaluationYear?: number | null;
   onLinkSaved?: () => void;
   isLoading: boolean;
+  newlySavedFiles?: ExistingFile[];
+  readOnly?: boolean;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   evidenceSlug,
-  initialLinks = [''],
+  initialLinks = [],
   initialLinkItems,
   initialFiles = [],
   onStateChange,
@@ -68,7 +70,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
   indicatorCode,
   evaluationYear,
   onLinkSaved,
-  isLoading
+  isLoading,
+  newlySavedFiles,
+  readOnly = false
 }) => {
   const reactId = useId();
   const idBase = `file-upload-${reactId}-${evidenceSlug}`;
@@ -89,19 +93,65 @@ const FileUpload: React.FC<FileUploadProps> = ({
   useEffect(() => {
     let base: LinkItem[] = [];
     if (initialLinkItems && initialLinkItems.length > 0) {
-      base = initialLinkItems.map((li) => ({
-        id: li.id,
-        text: li.text ?? '',
-        url: li.url ?? ''
-      }));
+      base = initialLinkItems
+        .filter((li) => li.url && li.url.trim() !== '')
+        .map((li) => ({
+          id: li.id,
+          text: li.text ?? '',
+          url: li.url ?? ''
+        }));
     } else if (initialLinks && initialLinks.length > 0) {
-      base = initialLinks.map((u) => ({ text: '', url: u }));
+      base = initialLinks
+        .filter((u) => !!u && u.trim() !== '')
+        .map((u) => ({ text: '', url: u }));
     }
-    setLinkItems(base);
-    setLinkErrors(Array(base.length).fill(''));
+
+    // Atualiza linkItems com base nas props sem apagar adições otimistas
+    setLinkItems((prev) => {
+      const keepPrev = base.length === 0 && prev.length > 0; // evita apagar otimista
+      const sameLength = prev.length === base.length;
+      const sameValues =
+        sameLength &&
+        prev.every(
+          (p, i) =>
+            p.id === base[i]?.id &&
+            p.url === base[i]?.url &&
+            p.text === base[i]?.text
+        );
+      return keepPrev || sameValues ? prev : base;
+    });
+    if (base.length > 0) setLinkErrors(Array(base.length).fill(''));
+
     setCurrentFiles(initialFiles);
-    setFilesToUpload([]);
   }, [evidenceSlug, initialLinks, initialLinkItems, initialFiles]);
+
+  // Limpa arquivos selecionados apenas quando muda o evidenceSlug (troca de documento)
+  useEffect(() => {
+    setFilesToUpload([]);
+  }, [evidenceSlug]);
+
+  // Quando recebem arquivos recém-salvos do pai (após submit bem-sucedido),
+  // move da lista de novos para a lista de existentes imediatamente.
+  useEffect(() => {
+    if (newlySavedFiles && newlySavedFiles.length > 0) {
+      setCurrentFiles((prev) => {
+        const existingIds = new Set(
+          prev.map((f) =>
+            f.publicId ? f.publicId : `${f.fileName}-${f.sizeBytes || ''}`
+          )
+        );
+        const toAdd = newlySavedFiles.filter(
+          (f) =>
+            !existingIds.has(
+              f.publicId ? f.publicId : `${f.fileName}-${f.sizeBytes || ''}`
+            )
+        );
+        return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+      });
+      // Limpa localmente os arquivos que estavam aguardando upload
+      setFilesToUpload([]);
+    }
+  }, [newlySavedFiles]);
 
   const queryClient = useQueryClient();
 
@@ -323,77 +373,78 @@ const FileUpload: React.FC<FileUploadProps> = ({
         isLoading && 'pointer-events-none opacity-50'
       )}
     >
-      {initialLinkItems?.length ||
-      (initialLinks && initialLinks.filter(Boolean).length) ? (
+      {linkItems.some((li) => li.url && li.url.trim() !== '') ? (
         <div className="space-y-2">
-          <Label className="text-muted-foreground font-medium italic">
-            Links
-          </Label>
-          <p className="text-muted-foreground text-xs font-medium">
+          <p className="text-muted-foreground text-sm font-medium">
             Links salvos:
           </p>
           <ul className="list-inside list-disc space-y-1 text-sm">
-            {(linkItems.length > 0 ? linkItems : []).map((l, idx) => (
-              <li
-                key={`saved-link-${l.id || idx}`}
-                className="border-b-muted flex items-center gap-2 border-b-2 pb-1"
-              >
-                <a
-                  href={l.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 text-blue-700 hover:underline"
+            {linkItems
+              .filter((l) => l.url && l.url.trim() !== '')
+              .map((l, idx) => (
+                <li
+                  key={`saved-link-${l.id || idx}`}
+                  className="border-b-muted flex items-center gap-2 border-b-2 pb-1"
                 >
-                  {l.text || l.url}
-                </a>
-                {l.id && courseId && requirementId && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive h-6 w-6"
-                    disabled={
-                      deleteLinkMutation.isPending && deletingLinkId === l.id
-                    }
-                    onClick={() =>
-                      deleteLinkMutation.mutate({
-                        courseId,
-                        requirementId,
-                        linkId: l.id!
-                      })
-                    }
-                    aria-label="Remover link"
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 text-blue-700 hover:underline"
                   >
-                    {deleteLinkMutation.isPending && deletingLinkId === l.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                )}
-              </li>
-            ))}
+                    {l.text || l.url}
+                  </a>
+                  {!readOnly && l.id && courseId && requirementId && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive h-6 w-6"
+                      disabled={
+                        deleteLinkMutation.isPending && deletingLinkId === l.id
+                      }
+                      onClick={() =>
+                        deleteLinkMutation.mutate({
+                          courseId,
+                          requirementId,
+                          linkId: l.id!
+                        })
+                      }
+                      aria-label="Remover link"
+                    >
+                      {deleteLinkMutation.isPending &&
+                      deletingLinkId === l.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  )}
+                </li>
+              ))}
           </ul>
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setSaveError('');
-            setLinkErrors([]);
-            setEditingLink({ text: '', url: '' });
-            setIsAddDialogOpen(true);
-          }}
-          disabled={isLoading}
-          className="cursor-pointer"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" /> Adicionar link
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSaveError('');
+              setLinkErrors([]);
+              setEditingLink({ text: '', url: '' });
+              setIsAddDialogOpen(true);
+            }}
+            disabled={isLoading}
+            className="cursor-pointer"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar link
+          </Button>
+        </div>
+      )}
 
       <Dialog
         open={isAddDialogOpen}
@@ -483,7 +534,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 } catch {
                   setLinkErrors((prev) => {
                     const next = [...prev];
-                    next[0] = 'URL inválida';
+                    next[0] = 'Link inválido';
                     return next;
                   });
                   return;
@@ -509,16 +560,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
       </Dialog>
 
       <div className="space-y-2">
-        <Label
-          htmlFor={`${idBase}-file-upload`}
-          className="text-muted-foreground font-medium italic"
-        >
-          Arquivos PDF
-        </Label>
-
         {currentFiles.length > 0 && (
           <div className="space-y-2">
-            <p className="text-muted-foreground text-xs font-medium">
+            <p className="text-muted-foreground text-sm font-medium">
               Arquivos salvos:
             </p>
             {currentFiles.map((f, index) => (
@@ -554,76 +598,82 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     )}
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive h-7 w-7 flex-shrink-0"
-                  disabled={isLoading || deleteFileMutation.isPending}
-                  onClick={() => {
-                    if (!courseId || !requirementId || !f.publicId) return;
-                    deleteFileMutation.mutate({
-                      courseId,
-                      requirementId,
-                      publicId: f.publicId
-                    });
-                  }}
-                  aria-label="Remover arquivo"
-                >
-                  {deleteFileMutation.isPending &&
-                  deletingFileId === f.publicId ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-3.5 w-3.5" />
-                  )}
-                </Button>
+                {!readOnly && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive h-7 w-7 flex-shrink-0"
+                    disabled={isLoading || deleteFileMutation.isPending}
+                    onClick={() => {
+                      if (!courseId || !requirementId || !f.publicId) return;
+                      deleteFileMutation.mutate({
+                        courseId,
+                        requirementId,
+                        publicId: f.publicId
+                      });
+                    }}
+                    aria-label="Remover arquivo"
+                  >
+                    {deleteFileMutation.isPending &&
+                    deletingFileId === f.publicId ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                )}
               </div>
             ))}
           </div>
         )}
 
-        <div
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          className={cn(
-            'border-input relative flex h-24 items-center justify-center rounded-lg border-2 border-dashed p-4 text-center',
-            isDragging && 'border-primary bg-muted/30'
-          )}
-        >
-          <input
-            id={`${idBase}-file-upload`}
-            type="file"
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            accept="application/pdf,.pdf"
-            onChange={handleFileChangeFromInput}
-            multiple
-            disabled={isLoading}
-          />
-          <label
-            htmlFor={`${idBase}-file-upload`}
+        {!readOnly && (
+          <div
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
             className={cn(
-              'flex cursor-pointer flex-col items-center justify-center space-y-1',
-              isLoading && 'cursor-not-allowed'
+              'border-input relative flex h-24 items-center justify-center rounded-lg border-2 border-dashed p-4 text-center',
+              isDragging && 'border-primary bg-muted/30'
             )}
           >
-            <UploadCloud className="text-muted-foreground mx-auto h-6 w-6" />
-            <span className="text-muted-foreground text-xs">
-              Arraste ou{' '}
-              <span className="text-primary font-medium">
-                clique para enviar
-              </span>{' '}
-              PDFs
-            </span>
-            <span className="text-muted-foreground text-[10px]">
-              (Máx 10MB cada)
-            </span>
-          </label>
-        </div>
-        {fileError && <p className="pt-1 text-sm text-red-600">{fileError}</p>}
+            <input
+              id={`${idBase}-file-upload`}
+              type="file"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              accept="application/pdf,.pdf"
+              onChange={handleFileChangeFromInput}
+              multiple
+              disabled={isLoading}
+            />
+            <label
+              htmlFor={`${idBase}-file-upload`}
+              className={cn(
+                'flex cursor-pointer flex-col items-center justify-center space-y-1',
+                isLoading && 'cursor-not-allowed'
+              )}
+            >
+              <UploadCloud className="text-muted-foreground mx-auto h-6 w-6" />
+              <span className="text-muted-foreground text-xs">
+                Arraste ou{' '}
+                <span className="text-primary font-medium">
+                  clique para enviar
+                </span>{' '}
+                PDFs
+              </span>
+              <span className="text-muted-foreground text-[10px]">
+                (Máx 10MB cada)
+              </span>
+            </label>
+          </div>
+        )}
+        {!readOnly && fileError && (
+          <p className="pt-1 text-sm text-red-600">{fileError}</p>
+        )}
 
-        {filesToUpload.length > 0 && (
+        {!readOnly && filesToUpload.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-medium">Novos arquivos:</p>
             {filesToUpload.map((file, index) => (

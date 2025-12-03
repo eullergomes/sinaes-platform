@@ -32,10 +32,12 @@ import {
   saveIndicatorEvaluation,
   SaveIndicatorState
 } from '@/actions/indicator';
-import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 import { useSearchParams } from 'next/navigation';
 import { IndicatorGrade } from '@prisma/client';
+import { useAppContext } from '@/context/AppContext';
+import { isReadOnlyIndicator } from '@/lib/permissions';
 import { ExistingFile } from '@/types/indicator-types';
+import { uploadFileToMinio } from '@/services/uploadFile';
 
 type UploadedFileInfo = {
   storageKey: string;
@@ -106,6 +108,14 @@ const ClientIndicatorPage = ({
       { links: string[]; filesToUpload: File[]; linkItems?: LinkItem[] }
     >
   >({});
+
+  const [lastUploadedFiles, setLastUploadedFiles] = useState<
+    Record<string, ExistingFile[]>
+  >({});
+
+  const pendingUploadedFilesRef = useRef<Record<string, UploadedFileInfo[]>>(
+    {}
+  );
   const formRef = useRef<HTMLFormElement>(null);
 
   // Server Action state
@@ -115,6 +125,13 @@ const ClientIndicatorPage = ({
     initialState
   );
   const [isSubmittingManual, setIsSubmittingManual] = useState(false);
+  // Define read-only usando utilidade compartilhada (ADMIN/COORDINATOR do curso podem editar)
+  const { role, userId, courseCoordinatorId } = useAppContext();
+  const readOnly = isReadOnlyIndicator({
+    role,
+    userId: userId ?? null,
+    courseCoordinatorId
+  });
 
   const queryKey = ['indicator', courseSlug, indicatorCode, year];
   const queryFn = useCallback(async (): Promise<ApiIndicatorData> => {
@@ -182,6 +199,26 @@ const ClientIndicatorPage = ({
       toast.error(formState.errors._form.join(', '));
     if (formState?.success) {
       toast.success('Avaliação salva com sucesso!');
+
+      const uploadedMap: Record<string, ExistingFile[]> = {};
+      Object.entries(pendingUploadedFilesRef.current).forEach(([slug, arr]) => {
+        uploadedMap[slug] = arr.map((fi) => ({
+          fileName: fi.fileName,
+          sizeBytes: fi.sizeBytes,
+          url: fi.externalUrl,
+          publicId: fi.storageKey
+        }));
+      });
+      if (Object.keys(uploadedMap).length > 0) {
+        setLastUploadedFiles(uploadedMap);
+        setEvidenceStates((prev) => {
+          const next: typeof prev = {};
+          Object.entries(prev).forEach(([slug, st]) => {
+            next[slug] = { ...st, filesToUpload: [] };
+          });
+          return next;
+        });
+      }
     }
     setIsSubmittingManual(false);
   }, [formState]);
@@ -225,17 +262,31 @@ const ClientIndicatorPage = ({
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!data || !data.course || !data.indicator || !year || isSubmittingManual)
+
+    if (
+      !data ||
+      !data.course ||
+      !data.indicator ||
+      !year ||
+      isSubmittingManual
+    ) {
       return;
+    }
 
     setIsSubmittingManual(true);
+
     const formData = new FormData();
 
-    formData.append('courseId', data.course.id);
-    formData.append('indicatorDefId', data.indicator.id);
-    formData.append('courseSlug', data.course.slug);
+    const courseId = data.course.id;
+    const indicatorDefId = data.indicator.id;
+    const courseSlug = data.course.slug;
+
+    formData.append('courseId', courseId);
+    formData.append('indicatorDefId', indicatorDefId);
+    formData.append('courseSlug', courseSlug);
     formData.append('evaluationYear', year.toString());
     formData.append('grade', grade);
+
     if (['G1', 'G2', 'G3', 'G4'].includes(grade)) {
       formData.append('justification', justification);
       formData.append('correctiveAction', correctiveAction);
@@ -249,30 +300,30 @@ const ClientIndicatorPage = ({
     toast.dismiss();
 
     for (const [slug, state] of Object.entries(evidenceStates)) {
-      if (state.filesToUpload.length > 0) {
-        filesUploadedInfo[slug] = [];
-        state.filesToUpload.forEach((file) => {
-          uploadPromises.push(
-            uploadToCloudinary(
-              file,
-              `sinaes-evidence/${courseSlug}/${year}/${slug}`
-            )
-              .then((result) => {
-                filesUploadedInfo[slug].push({
-                  storageKey: result.public_id,
-                  externalUrl: result.secure_url,
-                  fileName: result.original_filename || file.name,
-                  sizeBytes: result.bytes,
-                  mimeType: file.type || 'application/pdf'
-                });
-              })
-              .catch((err) => {
-                console.error(`Erro upload ${file.name} (${slug}):`, err);
-                toast.error(`Falha ao enviar: ${file.name}`);
-                uploadFailed = true;
-              })
-          );
-        });
+      if (state.filesToUpload.length === 0) continue;
+
+      filesUploadedInfo[slug] = [];
+
+      for (const file of state.filesToUpload) {
+        const folder = `sinaes-evidence/${courseSlug}/${year}/${slug}`;
+
+        const promise = uploadFileToMinio(file, folder)
+          .then((result) => {
+            filesUploadedInfo[slug].push({
+              storageKey: result.storageKey,
+              externalUrl: result.url,
+              fileName: result.fileName,
+              sizeBytes: result.size,
+              mimeType: result.mimeType || 'application/pdf'
+            });
+          })
+          .catch((err) => {
+            console.error(`Erro upload ${file.name} (${slug}):`, err);
+            toast.error(`Falha ao enviar: ${file.name}`);
+            uploadFailed = true;
+          });
+
+        uploadPromises.push(promise);
       }
     }
 
@@ -291,17 +342,21 @@ const ClientIndicatorPage = ({
 
       Object.entries(evidenceStates).forEach(([slug, state]) => {
         const validLinks = state.links.filter((link) => link.trim());
+
         validLinks.forEach((link, index) => {
           formData.append(`evidence-${slug}-link[${index}]`, link);
         });
+
         const linkItems: LinkItem[] =
           state.linkItems && state.linkItems.length > 0
             ? state.linkItems.filter((li) => li && li.url && li.text)
             : validLinks.map((u) => ({ text: u, url: u }));
+
         formData.append(
           `evidence-${slug}-linkItems`,
           JSON.stringify(linkItems)
         );
+
         formData.append(
           `evidence-${slug}-fileInfo`,
           JSON.stringify(filesUploadedInfo[slug] || [])
@@ -309,6 +364,7 @@ const ClientIndicatorPage = ({
       });
 
       startTransition(() => {
+        pendingUploadedFilesRef.current = filesUploadedInfo;
         formAction(formData);
       });
     } catch (error) {
@@ -347,7 +403,7 @@ const ClientIndicatorPage = ({
     : [];
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-4 p-6 md:space-y-6 md:p-8">
       <h1 className="text-3xl font-bold">
         Indicador {data.indicator.code}
         <span className="text-muted-foreground font-normal">
@@ -395,50 +451,68 @@ const ClientIndicatorPage = ({
           <CardContent className="space-y-6">
             <div className="space-y-4 rounded-md border p-4">
               {data.requiredEvidences.length > 0 ? (
-                data.requiredEvidences.map((evidence) => (
-                  <div
-                    key={evidence.id}
-                    className="space-y-2 border-b pb-4 last:border-b-0"
-                  >
-                    <Label className="font-semibold">{evidence.title}</Label>
-                    <FileUpload
-                      evidenceSlug={evidence.slug}
-                      initialLinks={evidence.submission?.folderUrls || ['']}
-                      initialLinkItems={evidence.submission?.links}
-                      initialFiles={evidence.submission?.files || []}
-                      onStateChange={handleEvidenceStateChange}
-                      isLoading={isSubmittingManual}
-                      courseId={data.course.id}
-                      requirementId={evidence.id}
-                      onLinkSaved={() => refetch()}
-                      courseSlug={courseSlug}
-                      indicatorCode={indicatorCode}
-                      evaluationYear={year}
-                    />
-                    {formState?.errors?.[
-                      `evidences[${evidence.slug}].links`
-                    ] && (
-                      <p className="text-destructive text-sm">
-                        {
-                          formState.errors[
-                            `evidences[${evidence.slug}].links`
-                          ]?.[0]
-                        }
-                      </p>
-                    )}
-                    {formState?.errors?.[
-                      `evidences[${evidence.slug}].files`
-                    ] && (
-                      <p className="text-destructive text-sm">
-                        {
-                          formState.errors[
-                            `evidences[${evidence.slug}].files`
-                          ]?.[0]
-                        }
-                      </p>
-                    )}
-                  </div>
-                ))
+                data.requiredEvidences.every((ev) => ev.submission == null) ? (
+                  <p className="text-muted-foreground text-sm">
+                    Nenhum documento enviado.
+                  </p>
+                ) : (
+                data.requiredEvidences
+                  .filter((evidence) => {
+                    if (readOnly) {
+                      const hasFiles = Array.isArray(evidence.submission?.files) && evidence.submission!.files.length > 0;
+                      const hasFolderUrls = Array.isArray(evidence.submission?.folderUrls) && evidence.submission!.folderUrls!.length > 0;
+                      const hasLinks = Array.isArray(evidence.submission?.links) && evidence.submission!.links!.length > 0;
+                      return hasFiles || hasFolderUrls || hasLinks;
+                    }
+                    return true;
+                  })
+                  .map((evidence) => (
+                    <div
+                      key={evidence.id}
+                      className="space-y-2 border-b pb-4 last:border-b-0"
+                    >
+                      <Label className="font-semibold">{evidence.title}</Label>
+                      <FileUpload
+                        evidenceSlug={evidence.slug}
+                        initialLinks={evidence.submission?.folderUrls || ['']}
+                        initialLinkItems={evidence.submission?.links}
+                        initialFiles={evidence.submission?.files || []}
+                        onStateChange={handleEvidenceStateChange}
+                        isLoading={isSubmittingManual}
+                        courseId={data.course.id}
+                        requirementId={evidence.id}
+                        onLinkSaved={() => refetch()}
+                        courseSlug={courseSlug}
+                        indicatorCode={indicatorCode}
+                        evaluationYear={year}
+                        newlySavedFiles={lastUploadedFiles[evidence.slug]}
+                        readOnly={readOnly}
+                      />
+                      {formState?.errors?.[
+                        `evidences[${evidence.slug}].links`
+                      ] && (
+                        <p className="text-destructive text-sm">
+                          {
+                            formState.errors[
+                              `evidences[${evidence.slug}].links`
+                            ]?.[0]
+                          }
+                        </p>
+                      )}
+                      {formState?.errors?.[
+                        `evidences[${evidence.slug}].files`
+                      ] && (
+                        <p className="text-destructive text-sm">
+                          {
+                            formState.errors[
+                              `evidences[${evidence.slug}].files`
+                            ]?.[0]
+                          }
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )
               ) : (
                 <p className="text-muted-foreground text-sm">
                   Nenhum documento.
@@ -446,48 +520,49 @@ const ClientIndicatorPage = ({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <span>
-                  Nota atribuída <span className="text-destructive">*</span>
-                </span>
-                {nsaAuto && grade === 'NSA' && (
-                  <Badge
-                    variant="secondary"
-                    title="A nota foi ajustada automaticamente por estar marcada como Não Se Aplica na dimensão."
-                  >
-                    NSA automática
-                  </Badge>
+            {!readOnly && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <span>
+                    Nota atribuída <span className="text-destructive">*</span>
+                  </span>
+                  {nsaAuto && grade === 'NSA' && (
+                    <Badge
+                      variant="secondary"
+                      title="A nota foi ajustada automaticamente por estar marcada como Não Se Aplica na dimensão."
+                    >
+                      NSA automática
+                    </Badge>
+                  )}
+                </Label>
+                <Select
+                  name="grade"
+                  value={grade}
+                  onValueChange={(v) => setGrade(v as IndicatorGrade)}
+                  required
+                  disabled={isSubmittingManual || nsaAuto}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(IndicatorGrade)  
+                      .map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {g === 'NSA' ? 'NSA' : g.slice(1)}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {formState?.errors?.grade && (
+                  <p className="text-destructive text-sm">
+                    {formState.errors.grade[0]}
+                  </p>
                 )}
-              </Label>
-              <Select
-                name="grade"
-                value={grade}
-                onValueChange={(v) => setGrade(v as IndicatorGrade)}
-                required
-                disabled={isSubmittingManual || nsaAuto}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(IndicatorGrade)
-                    .filter((g) => g !== 'NSA')
-                    .map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {g.slice(1)}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              {formState?.errors?.grade && (
-                <p className="text-destructive text-sm">
-                  {formState.errors.grade[0]}
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
-            {['G1', 'G2', 'G3', 'G4'].includes(grade) && (
+            {!readOnly && ['G1', 'G2', 'G3', 'G4'].includes(grade) && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Label className="text-base font-semibold">
@@ -511,15 +586,15 @@ const ClientIndicatorPage = ({
                       <col className="w-1/3" />
                       <col className="w-1/3" />
                     </colgroup>
-                    <thead className="bg-green-600">
+                    <thead className="bg-green-600 text-white">
                       <tr>
-                        <th className="p-2 text-left text-white">
+                        <th className="border p-2 text-left font-semibold">
                           Justificativa
                         </th>
-                        <th className="p-2 text-left text-white">
-                          Ação Corretiva
+                        <th className="border p-2 text-left font-semibold">
+                          Ação corretiva
                         </th>
-                        <th className="p-2 text-left text-white">
+                        <th className="border p-2 text-left font-semibold">
                           Responsável
                         </th>
                       </tr>
@@ -577,16 +652,18 @@ const ClientIndicatorPage = ({
               </div>
             )}
 
-            <Button
-              type="submit"
-              disabled={isSubmittingManual}
-              className="w-full cursor-pointer bg-green-600 hover:bg-green-700 md:w-36"
-            >
-              {isSubmittingManual && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {isSubmittingManual ? 'Salvando...' : 'Salvar'}
-            </Button>
+            {!readOnly && (
+              <Button
+                type="submit"
+                disabled={isSubmittingManual}
+                className="w-full cursor-pointer bg-green-600 hover:bg-green-700 md:w-36"
+              >
+                {isSubmittingManual && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isSubmittingManual ? 'Salvando...' : 'Salvar'}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </form>
