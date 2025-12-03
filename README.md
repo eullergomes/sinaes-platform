@@ -81,7 +81,7 @@ A plataforma está sendo desenvolvida com múltiplos níveis de acesso, garantin
 | **Autenticação** | [Better Auth](https://www.better-auth.com/) | Integração com Prisma Adapter para autenticação e sessões. |
 | **UI & Estilização** | [Tailwind CSS](https://tailwindcss.com/) + [Shadcn/ui](https://ui.shadcn.com/) | Interface moderna, responsiva e acessível. |
 | **Validação** | [Zod](https://zod.dev/) | Validação de schemas compartilhada entre client e server. |
-| **Armazenamento de Arquivos** | [Cloudinary](https://cloudinary.com/) | Upload e entrega otimizada de mídias e PDFs. |
+| **Armazenamento de Arquivos** | [*MinIO (S3-compatible)](https://www.min.io/) | Upload seguro de PDFs e imagens usando URLs pré-assinadas. |
 | **Ambiente Local** | [Docker](https://www.docker.com/) | Containerização do MongoDB para desenvolvimento consistente. |
 
 ---
@@ -156,13 +156,13 @@ DATABASE_URL="mongodb://localhost:27017/sinaes_db_local?replicaSet=rs0"
 # Secret de autenticação
 BETTER_AUTH_SECRET="YOUR_AUTH_SECRET"
 
-# Credenciais Cloudinary
-CLOUDINARY_URL="cloudinary://<API_KEY>:<API_SECRET>@<CLOUD_NAME>"
-CLOUDINARY_CLOUD_NAME="YOUR_CLOUD_NAME"
-CLOUDINARY_API_KEY="YOUR_API_KEY"
-CLOUDINARY_API_SECRET="YOUR_API_SECRET"
+# MinIO
+MINIO_ROOT_USER="minioadmin"
+MINIO_ROOT_PASSWORD="minioadmin"
+MINIO_ENDPOINT="localhost:9000"
+MINIO_BUCKET="sinaes-bucket"
 ```
-### 🐳 4. Iniciar o Banco de Dados com Docker
+### 🐳 4. Subir MongoDB e MinIO com Docker
 ```bash
 # Sobe o container MongoDB em modo replica set (necessário para o Prisma)
 docker-compose up -d
@@ -177,6 +177,21 @@ Dentro do shell:
 ```bash
 rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "localhost:27017" }] })
 exit
+```
+
+#### 📁 4.2 Criar o Bucket do MinIO (opcionalmente via script)
+Você pode usar o script:
+```bash
+npm run minio:setup
+```
+
+Esse comando cria automaticamente:
+- bucket `sinaes-files`
+- política de leitura pública (para acesso aos PDFs)
+
+Ou criar manualmente acessando:
+```bash
+http://localhost:9001
 ```
 
 ### 🗄️ 5. Sincronizar e Popular o Banco
