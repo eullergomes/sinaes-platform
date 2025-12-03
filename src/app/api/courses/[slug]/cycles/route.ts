@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, IndicatorGrade, IndicatorStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  IndicatorGrade,
+  IndicatorStatus,
+  UserRole
+} from '@prisma/client';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -33,12 +40,36 @@ export async function POST(
   }
 
   try {
+    // AuthN/AuthZ: apenas ADMIN pode criar para qualquer curso; COORDINATOR somente para seu curso
+    const cookieHeader = (await headers()).get('cookie') ?? '';
+    const session = await auth.api.getSession({
+      headers: { cookie: cookieHeader }
+    });
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const requesterRole = session.user.role as UserRole | string | undefined;
+
     const course = await prisma.course.findUnique({ where: { slug } });
     if (!course) {
       return NextResponse.json(
         { error: 'Curso não encontrado' },
         { status: 404 }
       );
+    }
+
+    const isAdmin =
+      requesterRole === 'ADMIN' || requesterRole === UserRole.ADMIN;
+    const isCoordinator =
+      requesterRole === 'COORDINATOR' || requesterRole === UserRole.COORDINATOR;
+    if (!isAdmin) {
+      if (!isCoordinator) {
+        return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+      }
+      // Coordinator: somente se for o coordenador do curso
+      if (!course.coordinatorId || course.coordinatorId !== session.user.id) {
+        return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+      }
     }
 
     const existingForYear = await prisma.courseIndicator.findFirst({

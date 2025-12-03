@@ -17,7 +17,7 @@ export async function GET(
   try {
     const course = await prisma.course.findUnique({
       where: { slug },
-      select: { id: true, slug: true, name: true }
+      select: { id: true, slug: true, name: true, coordinatorId: true }
     });
     if (!course)
       return NextResponse.json(
