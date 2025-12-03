@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,57 +45,57 @@
   --color-gray-900: #303030;
   --color-gray-800: #454545;
   --color-gray-700: #585858;
-  --color-gray-600: #6E6E6E;
+  --color-gray-600: #6e6e6e;
   --color-gray-500: #828282;
-  --color-gray-400: #AAAAAA;
-  --color-gray-300: #BFBFBF;
-  --color-gray-200: #DEDEDE;
-  --color-gray-100: #E8E8E8;
-  --color-gray-50: #F3F3F3;
+  --color-gray-400: #aaaaaa;
+  --color-gray-300: #bfbfbf;
+  --color-gray-200: #dedede;
+  --color-gray-100: #e8e8e8;
+  --color-gray-50: #f3f3f3;
 
-  --color-green-900: #002E08;
-  --color-green-800: #0F511D;
+  --color-green-900: #002e08;
+  --color-green-800: #0f511d;
   --color-green-700: #327025;
-  --color-green-600: #3E8320;
-  --color-green-500: #5EAF3C;
-  --color-green-400: #7FBF65;
-  --color-green-300: #98D57F;
-  --color-green-200: #BBDFAC;
-  --color-green-100: #D6F1CA;
-  --color-green-50: #EAFCE2;
+  --color-green-600: #3e8320;
+  --color-green-500: #5eaf3c;
+  --color-green-400: #7fbf65;
+  --color-green-300: #98d57f;
+  --color-green-200: #bbdfac;
+  --color-green-100: #d6f1ca;
+  --color-green-50: #eafce2;
 
-  --color-red-900: #4E0101;
-  --color-red-800: #8B0202;
-  --color-red-700: #AD101F;
-  --color-red-600: #CD191E;
-  --color-red-500: #D63336;
-  --color-red-400: #D34C51;
-  --color-red-300: #DE797C;
-  --color-red-200: #EB8F93;
-  --color-red-100: #FAC8CD;
-  --color-red-50: #FFE5E6;
+  --color-red-900: #4e0101;
+  --color-red-800: #8b0202;
+  --color-red-700: #ad101f;
+  --color-red-600: #cd191e;
+  --color-red-500: #d63336;
+  --color-red-400: #d34c51;
+  --color-red-300: #de797c;
+  --color-red-200: #eb8f93;
+  --color-red-100: #fac8cd;
+  --color-red-50: #ffe5e6;
 
   --color-blue-900: #110658;
-  --color-blue-800: #2D2D87;
-  --color-blue-700: #3036A1;
-  --color-blue-600: #383EB5;
-  --color-blue-500: #3E4DB8;
-  --color-blue-400: #5759A7;
-  --color-blue-300: #8182BD;
-  --color-blue-200: #ACADD3;
-  --color-blue-100: #D2D1F0;
-  --color-blue-50: #E5E6FF;
+  --color-blue-800: #2d2d87;
+  --color-blue-700: #3036a1;
+  --color-blue-600: #383eb5;
+  --color-blue-500: #3e4db8;
+  --color-blue-400: #5759a7;
+  --color-blue-300: #8182bd;
+  --color-blue-200: #acadd3;
+  --color-blue-100: #d2d1f0;
+  --color-blue-50: #e5e6ff;
 
   --color-yellow-900: #181508;
-  --color-yellow-800: #61531F;
-  --color-yellow-700: #AA9136;
-  --color-yellow-600: #C2A63E;
-  --color-yellow-500: #E5C348;
-  --color-yellow-400: #F3CF4D;
-  --color-yellow-300: #F5D971;
-  --color-yellow-200: #F8E294;
-  --color-yellow-100: #FBF1CA;
-  --color-yellow-50: #FEFAED;
+  --color-yellow-800: #61531f;
+  --color-yellow-700: #aa9136;
+  --color-yellow-600: #c2a63e;
+  --color-yellow-500: #e5c348;
+  --color-yellow-400: #f3cf4d;
+  --color-yellow-300: #f5d971;
+  --color-yellow-200: #f8e294;
+  --color-yellow-100: #fbf1ca;
+  --color-yellow-50: #fefaed;
 }
 
 :root {
@@ -123,7 +123,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: #3E8320;
+  --sidebar: #3e8320;
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -173,5 +173,102 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+.print-footer {
+  display: none;
+}
+
+/* ----------------------------- PRINT STYLES ----------------------------- */
+@media print {
+  /* Margens de página ajustadas e margin boxes para numeração */
+  @page {
+    margin: 12mm 10mm 18mm 10mm;
+    /* Numeração (pode não ser suportada em todos os navegadores) */
+    @bottom-right {
+      content: 'Página ' counter(page) ' de ' counter(pages);
+      font-size: 10px;
+      color: #444;
+    }
+  }
+
+  /* Ocultar elementos estruturais que não devem sair no PDF */
+  header,
+  footer,
+  nav,
+  aside,
+  .print-hidden,
+  .no-print,
+  button,
+  [role='button'],
+  .sidebar,
+  .app-sidebar {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Garantir que o container principal ocupe toda a largura */
+  body,
+  main,
+  .container,
+  .content,
+  .page {
+    margin: 0 !important;
+    padding: 0 0 0 0 !important;
+    width: 100% !important;
+  }
+
+  /* Evitar quebra de indicadores/tabelas no meio */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Ajustar cores para impressão (mantém cores Tailwind) */
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remover sufixo de URLs em links (comportamento padrão de alguns navegadores) */
+  a[href]:after {
+    content: '' !important;
+  }
+
+  /* Footer customizado de data de geração */
+  .print-footer {
+    position: fixed;
+    bottom: 6mm;
+    left: 10mm;
+    right: 10mm;
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 4px 12px;
+    font-size: 10px;
+    color: #444;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    z-index: 1000;
+  }
+  .print-footer .generated-at {
+    font-weight: 600;
+  }
+  /* Reservar espaço para footer se necessário */
+  /* Remover padding extra que causava segunda página em alguns casos */
+  body {
+    padding-bottom: 0 !important;
+  }
+
+  /* Se o conteúdo couber em uma página, ocultar footer para maximizar área */
+  body.single-print-page .print-footer {
+    display: none !important;
   }
 }
