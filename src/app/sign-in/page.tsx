@@ -91,7 +91,7 @@ const SignInPage = () => {
                             id="email"
                             type="email"
                             autoComplete="email"
-                            placeholder="email@example.com"
+                            placeholder="email@ifma.edu.br"
                             {...field}
                           />
                         </FormControl>

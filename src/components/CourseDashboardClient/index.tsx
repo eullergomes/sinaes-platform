@@ -21,13 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMemo } from 'react';
 import { Course } from '@prisma/client';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import CycleYearSelect from '@/components/CycleYearSelect';
 import { PieChart, Pie, Cell, Tooltip as RPieTooltip } from 'recharts';
 
 type DimId = '1' | '2' | '3';
@@ -166,7 +160,7 @@ const CourseDashboardClient = ({
   }, [indicators]);
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-8 p-6 md:p-8">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <h1 className="text-3xl font-bold">
@@ -177,25 +171,16 @@ const CourseDashboardClient = ({
           </h1>
           {availableYears.length > 0 && (
             <div className="flex items-center gap-2">
-              <Select
-                value={selectedYear ? String(selectedYear) : undefined}
-                onValueChange={(v) => {
-                  const y = Number(v);
+              <CycleYearSelect
+                years={availableYears}
+                value={selectedYear ?? null}
+                widthClassName="w-28"
+                onChange={(y) => {
                   const url = `${pathname}?year=${y}`;
                   router.push(url);
                 }}
-              >
-                <SelectTrigger className="w-28">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableYears.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                updateQueryParam={false}
+              />
             </div>
           )}
         </div>

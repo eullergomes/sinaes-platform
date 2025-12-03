@@ -68,7 +68,7 @@ export default async function AdminUsersPage({
   ]);
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-8 p-6 md:p-8">
       <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
       <UsersClientPage
         currentUserId={session.user.id}

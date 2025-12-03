@@ -17,7 +17,6 @@ import NewCycle from '@/components/new-cycle-dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-// Removed direct Select imports; using reusable CycleYearSelect component
 import CycleYearSelect from '@/components/CycleYearSelect';
 import { Download, PlusCircle } from 'lucide-react';
 import ReportButton from './report-button';
@@ -139,16 +138,16 @@ const DimensionList = ({
   }
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">
             Dimensões{' '}
             <span className="text-foreground font-semibold">
               — {courseName}
             </span>
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base">
             Acompanhe o desempenho do curso nas 3 dimensões do SINAES.
           </p>
         </div>
@@ -211,7 +210,6 @@ const DimensionList = ({
                 Selecione o ciclo avaliativo
               </div>
               <div className="w-48">
-                {/* Select de Ano */}
                 <CycleYearSelect
                   years={availableYears}
                   value={currentYearState}

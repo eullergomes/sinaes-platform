@@ -403,7 +403,7 @@ const ClientIndicatorPage = ({
     : [];
 
   return (
-    <div className="space-y-4 p-6 md:space-y-6 md:p-8">
+    <div className="space-y-8 p-6 md:p-8">
       <h1 className="text-3xl font-bold">
         Indicador {data.indicator.code}
         <span className="text-muted-foreground font-normal">
@@ -456,62 +456,70 @@ const ClientIndicatorPage = ({
                     Nenhum documento enviado.
                   </p>
                 ) : (
-                data.requiredEvidences
-                  .filter((evidence) => {
-                    if (readOnly) {
-                      const hasFiles = Array.isArray(evidence.submission?.files) && evidence.submission!.files.length > 0;
-                      const hasFolderUrls = Array.isArray(evidence.submission?.folderUrls) && evidence.submission!.folderUrls!.length > 0;
-                      const hasLinks = Array.isArray(evidence.submission?.links) && evidence.submission!.links!.length > 0;
-                      return hasFiles || hasFolderUrls || hasLinks;
-                    }
-                    return true;
-                  })
-                  .map((evidence) => (
-                    <div
-                      key={evidence.id}
-                      className="space-y-2 border-b pb-4 last:border-b-0"
-                    >
-                      <Label className="font-semibold">{evidence.title}</Label>
-                      <FileUpload
-                        evidenceSlug={evidence.slug}
-                        initialLinks={evidence.submission?.folderUrls || ['']}
-                        initialLinkItems={evidence.submission?.links}
-                        initialFiles={evidence.submission?.files || []}
-                        onStateChange={handleEvidenceStateChange}
-                        isLoading={isSubmittingManual}
-                        courseId={data.course.id}
-                        requirementId={evidence.id}
-                        onLinkSaved={() => refetch()}
-                        courseSlug={courseSlug}
-                        indicatorCode={indicatorCode}
-                        evaluationYear={year}
-                        newlySavedFiles={lastUploadedFiles[evidence.slug]}
-                        readOnly={readOnly}
-                      />
-                      {formState?.errors?.[
-                        `evidences[${evidence.slug}].links`
-                      ] && (
-                        <p className="text-destructive text-sm">
-                          {
-                            formState.errors[
-                              `evidences[${evidence.slug}].links`
-                            ]?.[0]
-                          }
-                        </p>
-                      )}
-                      {formState?.errors?.[
-                        `evidences[${evidence.slug}].files`
-                      ] && (
-                        <p className="text-destructive text-sm">
-                          {
-                            formState.errors[
-                              `evidences[${evidence.slug}].files`
-                            ]?.[0]
-                          }
-                        </p>
-                      )}
-                    </div>
-                  ))
+                  data.requiredEvidences
+                    .filter((evidence) => {
+                      if (readOnly) {
+                        const hasFiles =
+                          Array.isArray(evidence.submission?.files) &&
+                          evidence.submission!.files.length > 0;
+                        const hasFolderUrls =
+                          Array.isArray(evidence.submission?.folderUrls) &&
+                          evidence.submission!.folderUrls!.length > 0;
+                        const hasLinks =
+                          Array.isArray(evidence.submission?.links) &&
+                          evidence.submission!.links!.length > 0;
+                        return hasFiles || hasFolderUrls || hasLinks;
+                      }
+                      return true;
+                    })
+                    .map((evidence) => (
+                      <div
+                        key={evidence.id}
+                        className="space-y-2 border-b pb-4 last:border-b-0"
+                      >
+                        <Label className="font-semibold">
+                          {evidence.title}
+                        </Label>
+                        <FileUpload
+                          evidenceSlug={evidence.slug}
+                          initialLinks={evidence.submission?.folderUrls || ['']}
+                          initialLinkItems={evidence.submission?.links}
+                          initialFiles={evidence.submission?.files || []}
+                          onStateChange={handleEvidenceStateChange}
+                          isLoading={isSubmittingManual}
+                          courseId={data.course.id}
+                          requirementId={evidence.id}
+                          onLinkSaved={() => refetch()}
+                          courseSlug={courseSlug}
+                          indicatorCode={indicatorCode}
+                          evaluationYear={year}
+                          newlySavedFiles={lastUploadedFiles[evidence.slug]}
+                          readOnly={readOnly}
+                        />
+                        {formState?.errors?.[
+                          `evidences[${evidence.slug}].links`
+                        ] && (
+                          <p className="text-destructive text-sm">
+                            {
+                              formState.errors[
+                                `evidences[${evidence.slug}].links`
+                              ]?.[0]
+                            }
+                          </p>
+                        )}
+                        {formState?.errors?.[
+                          `evidences[${evidence.slug}].files`
+                        ] && (
+                          <p className="text-destructive text-sm">
+                            {
+                              formState.errors[
+                                `evidences[${evidence.slug}].files`
+                              ]?.[0]
+                            }
+                          </p>
+                        )}
+                      </div>
+                    ))
                 )
               ) : (
                 <p className="text-muted-foreground text-sm">
@@ -546,12 +554,11 @@ const ClientIndicatorPage = ({
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(IndicatorGrade)  
-                      .map((g) => (
-                        <SelectItem key={g} value={g}>
-                          {g === 'NSA' ? 'NSA' : g.slice(1)}
-                        </SelectItem>
-                      ))}
+                    {Object.keys(IndicatorGrade).map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g === 'NSA' ? 'NSA' : g.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {formState?.errors?.grade && (

@@ -123,7 +123,7 @@ const PendingAlerts = () => {
           className="relative rounded-md p-2 hover:cursor-pointer hover:bg-gray-100"
         >
           <Bell className="h-5 w-5" />
-          <span className="pointer-events-none absolute -top-0 -right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[11px] font-semibold text-white">
+          <span className="pointer-events-none absolute p-[10px] -top-1 -right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">
             {count}
           </span>
         </button>

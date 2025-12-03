@@ -118,7 +118,7 @@ const UsersTable = ({
   return (
     <div className="rounded-md border">
       <Table>
-        <TableHeader className='bg-green-600'>
+        <TableHeader className="bg-green-600">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (

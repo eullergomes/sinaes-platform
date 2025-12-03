@@ -5,7 +5,7 @@ export const validateLink = (url: string, setLinkErrors: React.Dispatch<React.Se
 
   setLinkErrors((prev) => {
     const next = [...prev];
-    next[index] = isInvalid ? 'URL inválida.' : '';
+    next[index] = isInvalid ? 'Link inválido' : '';
     return next;
   });
 
