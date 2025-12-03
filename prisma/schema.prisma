@@ -191,7 +191,7 @@ model CourseIndicator {
   courseId         String              @db.ObjectId
   indicatorDefId   String              @db.ObjectId
   evaluationYear   Int
-  course           Course              @relation(fields: [courseId], references: [id])
+  course           Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
   indicatorDef     IndicatorDefinition @relation(fields: [indicatorDefId], references: [id])
   nsaApplicable    Boolean             @default(true)
   nsaLocked        Boolean             @default(false)
@@ -215,11 +215,11 @@ model EvidenceSubmission {
   id                  String               @id @default(auto()) @map("_id") @db.ObjectId
   courseId            String               @db.ObjectId
   requirementId       String               @db.ObjectId
-  course              Course               @relation(fields: [courseId], references: [id])
-  requirement         EvidenceRequirement  @relation(fields: [requirementId], references: [id])
+  course              Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  requirement         EvidenceRequirement  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
   folderUrls          String[]             @db.String
   firstIndicatorDefId String?              @db.ObjectId
-  firstIndicatorDef   IndicatorDefinition? @relation(fields: [firstIndicatorDefId], references: [id])
+  firstIndicatorDef   IndicatorDefinition? @relation(fields: [firstIndicatorDefId], references: [id], onDelete: SetNull)
   files               EvidenceFile[]
   links               EvidenceLink[]
 
@@ -237,7 +237,7 @@ model EvidenceSubmission {
 model EvidenceFile {
   id           String             @id @default(auto()) @map("_id") @db.ObjectId
   submissionId String             @db.ObjectId
-  submission   EvidenceSubmission @relation(fields: [submissionId], references: [id])
+  submission   EvidenceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   kind         StorageKind        @default(INTERNAL)
   storageKey   String?
   externalUrl  String?
@@ -253,7 +253,7 @@ model EvidenceFile {
 model EvidenceLink {
   id           String             @id @default(auto()) @map("_id") @db.ObjectId
   submissionId String             @db.ObjectId
-  submission   EvidenceSubmission @relation(fields: [submissionId], references: [id])
+  submission   EvidenceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   text         String
   url          String
   order        Int?
