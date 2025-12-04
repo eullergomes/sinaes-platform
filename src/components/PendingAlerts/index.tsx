@@ -11,36 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
-import { IndicatorStatus } from '@prisma/client';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-type ApiAlert = {
-  dimensionId: number;
-  dimensionLabel: string;
-  code: string;
-  name: string;
-  status: IndicatorStatus;
-  lastUpdate: string | null;
-  year: number;
-};
-
-type ApiResponseSingleYear = {
-  course: { id: string; slug: string; name: string };
-  availableYears: number[];
-  year: number;
-  alerts: ApiAlert[];
-};
-
-function isSingleYear(res: unknown): res is ApiResponseSingleYear {
-  return !!res && typeof res === 'object' && 'alerts' in res && 'year' in res;
-}
-
-function extractCourseId(pathname: string): string | null {
-  const parts = pathname.split('/').filter(Boolean);
-  const i = parts.indexOf('courses');
-  if (i >= 0 && parts[i + 1]) return decodeURIComponent(parts[i + 1]);
-  return null;
-}
+import { extractCourseId } from '@/utils/extractCourseId';
+import { ApiAlert } from '@/types/alert-types';
+import { isSingleYear } from '@/utils/isSingleYear';
 
 const PendingAlerts = () => {
   const router = useRouter();

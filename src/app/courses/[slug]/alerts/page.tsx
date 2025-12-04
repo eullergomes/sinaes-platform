@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,96 +19,25 @@ import {
   CollapsibleTrigger
 } from '@/components/ui/collapsible';
 import StatusBadge from '@/components/status-badge';
-import { IndicatorStatus } from '@prisma/client';
-
-type ApiAlert = {
-  dimensionId: number;
-  dimensionLabel: string;
-  code: string;
-  name: string;
-  status: IndicatorStatus;
-  lastUpdate: string | null;
-  year: number;
-};
-
-type ApiResponseSingleYear = {
-  course: { id: string; slug: string; name: string };
-  availableYears: number[];
-  year: number;
-  alerts: ApiAlert[];
-};
-
-function isSingleYear(res: unknown): res is ApiResponseSingleYear {
-  return !!res && typeof res === 'object' && 'alerts' in res && 'year' in res;
-}
-
-function extractCourseId(pathname: string): string | null {
-  const parts = pathname.split('/').filter(Boolean);
-  const i = parts.indexOf('courses');
-  if (i >= 0 && parts[i + 1]) return decodeURIComponent(parts[i + 1]);
-  return null;
-}
+import { useCourseAlerts } from '@/hooks/useCourseAlerts';
+import { ApiAlert } from '@/types/alert-types';
+import { extractCourseId } from '@/utils/extractCourseId';
 
 const AlertsPage = () => {
   const router = useRouter();
   const pathname = usePathname();
   const courseId = extractCourseId(pathname);
   const [openDims, setOpenDims] = useState<Set<string>>(new Set());
-  const [selectedYear, setSelectedYear] = useState<number | undefined>(
-    undefined
-  );
-  const [data, setData] = useState<ApiAlert[]>([]);
-  const [availableYears, setAvailableYears] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refetchIndex, setRefetchIndex] = useState(0);
-
-  const fetchAlerts = async (year?: number) => {
-    if (!courseId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const url = year
-        ? `/api/courses/${courseId}/alerts?year=${year}`
-        : `/api/courses/${courseId}/alerts`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) {
-        throw new Error(
-          (await res.json()).error || 'Falha ao carregar alertas'
-        );
-      }
-      const json = await res.json();
-      if (isSingleYear(json)) {
-        setAvailableYears(json.availableYears);
-        setData(json.alerts);
-        setSelectedYear(json.year);
-      } else {
-        const years = json.availableYears as number[];
-        setAvailableYears(years);
-        const y = year ?? years[0];
-        const all: ApiAlert[] = [];
-        if (json.alertsByYear) {
-          Object.keys(json.alertsByYear).forEach((k) => {
-            const arr = json.alertsByYear[k] as ApiAlert[];
-            all.push(...arr);
-          });
-        }
-        setData(all.filter((a) => a.year === y));
-        setSelectedYear(y);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro inesperado');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (courseId) {
-      fetchAlerts(selectedYear);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, refetchIndex]);
+  const {
+    data,
+    availableYears,
+    selectedYear,
+    setSelectedYear,
+    loading,
+    error,
+    fetchAlerts,
+    refetch
+  } = useCourseAlerts(courseId);
 
   const grouped = useMemo(() => {
     const groups = data.reduce(
@@ -185,7 +114,7 @@ const AlertsPage = () => {
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => setRefetchIndex((i) => i + 1)}
+              onClick={() => refetch()}
               disabled={loading}
               aria-label="Recarregar"
               className="cursor-pointer"
