@@ -1,6 +1,4 @@
 'use client';
-
-import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -21,20 +19,12 @@ import { UserRole } from '@prisma/client';
 import { AppContext } from '@/context/AppContext';
 import { canViewPendingAlerts } from '@/lib/permissions';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-function extractCourseId(pathname: string): string | null {
-  const parts = pathname.split('/').filter(Boolean);
-  const i = parts.indexOf('courses');
-  if (i >= 0 && parts[i + 1]) return decodeURIComponent(parts[i + 1]);
-  return null;
-}
+import { useCourseInfo } from '@/hooks/useCourseInfo';
+import { extractCourseId } from '@/utils/extractCourseId';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const [courseName, setCourseName] = useState<string | null>(null);
-  const [courseCoordinatorId, setCourseCoordinatorId] = useState<string | null>(null);
-  const [courseInfoLoading, setCourseInfoLoading] = useState<boolean>(false);
   const isAuthPage =
     pathname === '/sign-in' ||
     pathname === '/sign-up' ||
@@ -47,9 +37,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     pathname === '/courses/new' ||
     /\/courses\/.+\/edit$/.test(pathname) ||
     isAuthPage;
-  const hideFooter =
-    pathname === '/profile' ||
-    pathname === '/admin/users';
+  const hideFooter = pathname === '/profile' || pathname === '/admin/users';
   const currentCourseId = extractCourseId(pathname);
 
   const { data, isPending } = useSession();
@@ -61,42 +49,18 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     );
   };
   const isAdmin = hasRole(user) && user.role === UserRole.ADMIN;
-  const userId = user && typeof user === 'object' && 'id' in (user as Record<string, unknown>)
-    ? (user as { id?: string }).id
-    : undefined;
+  const userId =
+    user &&
+    typeof user === 'object' &&
+    'id' in (user as Record<string, unknown>)
+      ? (user as { id?: string }).id
+      : undefined;
   const role = hasRole(user) ? user.role : undefined;
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadCourseName(slug: string) {
-      try {
-        setCourseInfoLoading(true);
-        const res = await fetch(`/api/courses/${encodeURIComponent(slug)}`);
-        if (!res.ok) throw new Error('Falha ao carregar curso');
-        const data: { name: string; coordinatorId?: string | null } = await res.json();
-        if (!cancelled) {
-          setCourseName(data.name);
-          setCourseCoordinatorId(data.coordinatorId ?? null);
-        }
-      } catch {
-        if (!cancelled) {
-          setCourseName(null);
-          setCourseCoordinatorId(null);
-        }
-      } finally {
-        if (!cancelled) setCourseInfoLoading(false);
-      }
-    }
-    if (currentCourseId) {
-      setCourseName(null);
-      loadCourseName(currentCourseId);
-    } else {
-      setCourseName(null);
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [currentCourseId]);
+  const { info, loading } = useCourseInfo(currentCourseId);
+  const courseName = info.name;
+  const courseCoordinatorId = info.coordinatorId;
+  const courseInfoLoading = loading;
 
   const UserSkeleton = (
     <div className="flex items-center gap-3">
@@ -140,7 +104,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                 <div className="flex items-center gap-3">
                   {isAdmin && (
                     <Button asChild variant="outline">
-                      <Link href="/admin/users" className="text-black hidden">
+                      <Link href="/admin/users" className="hidden text-black">
                         Admin
                       </Link>
                     </Button>
@@ -175,10 +139,13 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                   </div>
                 )}
                 <div className="ml-auto flex items-center gap-4">
-                  {currentCourseId && canViewPendingAlerts({ role, userId: userId ?? null, courseCoordinatorId }) && (
-                    <PendingAlerts />
-                  )}
-                  {(isAdmin && !isMobile) && (
+                  {currentCourseId &&
+                    canViewPendingAlerts({
+                      role,
+                      userId: userId ?? null,
+                      courseCoordinatorId
+                    }) && <PendingAlerts />}
+                  {isAdmin && !isMobile && (
                     <Button asChild variant="outline">
                       <Link href="/admin/users" className="text-black">
                         Admin
@@ -213,7 +180,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
             sessionPending: isPending
           }}
         >
-          <div className={`flex flex-1 flex-col gap-4 ${hideFooter ? 'min-h-dvh' : 'min-h-[calc(100dvh-4rem)]'}`}>
+          <div
+            className={`flex flex-1 flex-col gap-4 ${hideFooter ? 'min-h-dvh' : 'min-h-[calc(100dvh-4rem)]'}`}
+          >
             {children}
           </div>
         </AppContext.Provider>
