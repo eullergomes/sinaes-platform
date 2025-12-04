@@ -24,7 +24,7 @@ const Footer = () => {
                 alt="Logo do IFMA Campus Caxias"
                 width={200}
                 height={57}
-                className="h-auto"
+                className="w-auto h-auto"
               />
             </a>
             <h3 className="font-semibold text-white">Plataforma de Monitoramento SINAES</h3>
