@@ -6,7 +6,6 @@ import React, {
   useId,
   useState
 } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { validateLink } from '@/utils/validateLink';
 import { Label } from './ui/label';
@@ -20,7 +19,6 @@ import {
   DialogHeader,
   DialogTitle
 } from './ui/dialog';
-import { toast } from 'sonner';
 import {
   FileIcon,
   LinkIcon,
@@ -31,6 +29,9 @@ import {
   Loader2
 } from 'lucide-react';
 import { ExistingFile } from '@/types/indicator-types';
+import { useDeleteFileMutation } from '@/hooks/useDeleteFileMutation';
+import { useSaveLinkMutation } from '@/hooks/useSaveLinkMutation';
+import { useDeleteLinkMutation } from '@/hooks/useDeleteLinkMutation';
 
 interface LinkItem {
   id?: string;
@@ -87,8 +88,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
 
   const [saveError, setSaveError] = useState('');
-  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
-  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
 
   useEffect(() => {
     let base: LinkItem[] = [];
@@ -106,9 +105,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
         .map((u) => ({ text: '', url: u }));
     }
 
-    // Atualiza linkItems com base nas props sem apagar adições otimistas
     setLinkItems((prev) => {
-      const keepPrev = base.length === 0 && prev.length > 0; // evita apagar otimista
+      const keepPrev = base.length === 0 && prev.length > 0;
       const sameLength = prev.length === base.length;
       const sameValues =
         sameLength &&
@@ -125,13 +123,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
     setCurrentFiles(initialFiles);
   }, [evidenceSlug, initialLinks, initialLinkItems, initialFiles]);
 
-  // Limpa arquivos selecionados apenas quando muda o evidenceSlug (troca de documento)
   useEffect(() => {
     setFilesToUpload([]);
   }, [evidenceSlug]);
 
-  // Quando recebem arquivos recém-salvos do pai (após submit bem-sucedido),
-  // move da lista de novos para a lista de existentes imediatamente.
   useEffect(() => {
     if (newlySavedFiles && newlySavedFiles.length > 0) {
       setCurrentFiles((prev) => {
@@ -148,148 +143,35 @@ const FileUpload: React.FC<FileUploadProps> = ({
         );
         return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
       });
-      // Limpa localmente os arquivos que estavam aguardando upload
       setFilesToUpload([]);
     }
   }, [newlySavedFiles]);
 
-  const queryClient = useQueryClient();
-
-  interface DeleteFileContext {
-    previous: ExistingFile[];
-  }
-  const deleteFileMutation = useMutation({
-    mutationFn: async (payload: {
-      courseId: string;
-      requirementId: string;
-      publicId: string;
-    }) => {
-      const res = await fetch('/api/evidences/delete-file', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok)
-        throw new Error((await res.json()).error || 'Erro ao deletar arquivo');
-      return res.json();
-    },
-    onMutate: async ({ publicId }) => {
-      const previous = currentFiles;
-      setDeletingFileId(publicId);
-      setCurrentFiles((prev) => prev.filter((f) => f.publicId !== publicId));
-      return { previous };
-    },
-    onError: (_err, _vars, ctx?: DeleteFileContext) => {
-      if (ctx?.previous) setCurrentFiles(ctx.previous);
-    },
-    onSettled: async () => {
-      setDeletingFileId(null);
-      if (courseSlug && indicatorCode && evaluationYear != null) {
-        await queryClient.invalidateQueries({
-          queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
-        });
-      } else {
-        await queryClient.invalidateQueries({ queryKey: ['indicator'] });
-      }
-      onLinkSaved?.();
-    }
+  const { mutation: deleteFileMutation, deletingFileId } = useDeleteFileMutation({
+    currentFiles,
+    setCurrentFiles,
+    courseSlug,
+    indicatorCode,
+    evaluationYear,
+    onLinkSaved
   });
 
-  const saveLinkMutation = useMutation({
-    mutationFn: async (payload: {
-      courseId: string;
-      requirementId: string;
-      text: string;
-      url: string;
-    }) => {
-      const res = await fetch('/api/evidences/save-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok)
-        throw new Error((await res.json()).error || 'Erro ao salvar link');
-      return res.json();
-    },
-    onMutate: async (newLink) => {
-      setSaveError('');
-      const previous = linkItems;
-      setLinkItems((prev) => [
-        ...prev,
-        { text: newLink.text, url: newLink.url }
-      ]);
-      return { previous };
-    },
-    onSuccess: (data) => {
-      if (data?.linkId) {
-        setLinkItems((prev) => {
-          const next = [...prev];
-          for (let i = next.length - 1; i >= 0; i--) {
-            if (!next[i].id) {
-              next[i] = { ...next[i], id: data.linkId };
-              break;
-            }
-          }
-          return next;
-        });
-      }
-    },
-    onError: (err: unknown, _vars, ctx?: { previous: LinkItem[] }) => {
-      if (ctx?.previous) setLinkItems(ctx.previous);
-      const message =
-        err instanceof Error ? err.message : 'Erro ao salvar link';
-      toast.error(message);
-    },
-    onSettled: async () => {
-      if (courseSlug && indicatorCode && evaluationYear != null) {
-        await queryClient.invalidateQueries({
-          queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
-        });
-      } else {
-        await queryClient.invalidateQueries({ queryKey: ['indicator'] });
-      }
-      onLinkSaved?.();
-    }
+  const { mutation: saveLinkMutation } = useSaveLinkMutation({
+    linkItems,
+    setLinkItems,
+    courseSlug,
+    indicatorCode,
+    evaluationYear,
+    onLinkSaved
   });
 
-  interface DeleteLinkContext {
-    previous: LinkItem[];
-  }
-  const deleteLinkMutation = useMutation({
-    mutationFn: async (payload: {
-      courseId: string;
-      requirementId: string;
-      linkId: string;
-    }) => {
-      const res = await fetch('/api/evidences/delete-link', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok)
-        throw new Error((await res.json()).error || 'Erro ao deletar link');
-      return res.json();
-    },
-    onMutate: async ({ linkId }) => {
-      const previous = linkItems;
-      setDeletingLinkId(linkId);
-      setLinkItems((prev) => prev.filter((l) => l.id !== linkId));
-      return { previous };
-    },
-    onError: (_err, _vars, ctx?: DeleteLinkContext) => {
-      if (ctx?.previous) setLinkItems(ctx.previous);
-    },
-    onSettled: async () => {
-      setDeletingLinkId(null);
-      if (courseSlug && indicatorCode && evaluationYear != null) {
-        await queryClient.invalidateQueries({
-          queryKey: ['indicator', courseSlug, indicatorCode, evaluationYear]
-        });
-      } else {
-        await queryClient.invalidateQueries({ queryKey: ['indicator'] });
-      }
-      onLinkSaved?.();
-    }
+  const { mutation: deleteLinkMutation, deletingLinkId } = useDeleteLinkMutation({
+    linkItems,
+    setLinkItems,
+    courseSlug,
+    indicatorCode,
+    evaluationYear,
+    onLinkSaved
   });
 
   // propagate state upward
