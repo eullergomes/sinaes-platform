@@ -7,7 +7,7 @@ import React, {
   startTransition
 } from 'react';
 import { useActionState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -125,6 +125,7 @@ const ClientIndicatorPage = ({
     initialState
   );
   const [isSubmittingManual, setIsSubmittingManual] = useState(false);
+  const queryClient = useQueryClient();
   // Define read-only usando utilidade compartilhada (ADMIN/COORDINATOR do curso podem editar)
   const { role, userId, courseCoordinatorId } = useAppContext();
   const readOnly = isReadOnlyIndicator({
@@ -226,8 +227,12 @@ const ClientIndicatorPage = ({
   useEffect(() => {
     if (formState?.success) {
       refetch();
+      // Garante sincronização ao voltar para a dimensão
+      queryClient.invalidateQueries({
+        queryKey: ['dimension', courseSlug, dimensionId]
+      });
     }
-  }, [formState?.success, refetch]);
+  }, [formState?.success, refetch, queryClient, courseSlug, dimensionId]);
 
   const handleEvidenceStateChange = useCallback(
     (

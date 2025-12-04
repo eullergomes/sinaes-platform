@@ -29,6 +29,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useUpdateIndicatorStatus } from '@/hooks/useUpdateIndicatorStatus';
 
 export type IndicatorRow = {
   code: string;
@@ -64,7 +65,7 @@ function GradeBadge({ grade }: { grade: IndicatorGrade }) {
   }
 }
 
-export default function IndicatorsTable({
+const IndicatorsTable = ({
   data,
   nsaStatus,
   onToggleNsa,
@@ -88,10 +89,19 @@ export default function IndicatorsTable({
   ) => void;
   isVisitor?: boolean;
   showNsaControls?: boolean;
-}) {
+}) => {
   const [statusOverrides, setStatusOverrides] = useState<
     Record<string, IndicatorStatus>
   >({});
+
+  const { updateStatus, updating, error } = useUpdateIndicatorStatus({
+    courseSlug,
+    dimensionId,
+    year
+  });
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   const nsaDiff = useMemo(() => {
     return data
@@ -179,42 +189,27 @@ export default function IndicatorsTable({
           const effectiveStatus = statusOverrides[code] ?? row.original.status;
           const disabled = !isVisible || !row.original.hasEvaluation;
           return (
-            <div className="flex items-center justify-center" id='Teste123'>
+            <div className="flex items-center justify-center" id="Teste123">
               {isVisible ? (
                 <Select
                   value={effectiveStatus}
                   onValueChange={(val) => {
                     const next = val as IndicatorStatus;
                     setStatusOverrides((prev) => ({ ...prev, [code]: next }));
-                    fetch(
-                      `/api/courses/${courseSlug}/dimensions/${dimensionId}/indicators/${code}/status`,
-                      {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: next, year })
-                      }
-                    )
-                      .then(async (res) => {
-                        if (!res.ok)
-                          throw new Error(
-                            (await res.json()).error ||
-                              'Falha ao atualizar status'
-                          );
-                      })
-                      .catch((err) => {
-                        setStatusOverrides((prev) => {
-                          const copy = { ...prev };
-                          copy[code] = row.original.status;
-                          return copy;
-                        });
-                        toast.error(
-                          err instanceof Error
-                            ? err.message
-                            : 'Erro ao atualizar status'
-                        );
+                    updateStatus(code, next).catch((err) => {
+                      setStatusOverrides((prev) => {
+                        const copy = { ...prev };
+                        copy[code] = row.original.status;
+                        return copy;
                       });
+                      toast.error(
+                        err instanceof Error
+                          ? err.message
+                          : 'Erro ao atualizar status'
+                      );
+                    });
                   }}
-                  disabled={disabled}
+                  disabled={disabled || !!updating[code]}
                 >
                   <SelectTrigger className="w-[140px]">
                     <SelectValue>
@@ -291,16 +286,14 @@ export default function IndicatorsTable({
     });
     return base;
   }, [
-    data,
     nsaStatus,
     onToggleNsa,
     onEdit,
-    courseSlug,
-    dimensionId,
-    year,
     statusOverrides,
     isVisitor,
-    showNsaControls
+    showNsaControls,
+    updateStatus,
+    updating
   ]);
 
   const table = useReactTable({
@@ -370,4 +363,6 @@ export default function IndicatorsTable({
       </div>
     </div>
   );
-}
+};
+
+export default IndicatorsTable;
