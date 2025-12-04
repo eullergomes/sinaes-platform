@@ -18,11 +18,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import CycleYearSelect from '@/components/CycleYearSelect';
-import { Download, PlusCircle } from 'lucide-react';
+import { Download, PlusCircle, Loader2 } from 'lucide-react';
 import ReportButton from './report-button';
 import { UserRole } from '@prisma/client';
 import { useAppContext } from '@/context/AppContext';
 import { isVisitor as isVisitorRole } from '@/lib/permissions';
+import { useCourseYears } from '@/hooks/useCourseYears';
+import { useCreateCycle } from '@/hooks/useCreateCycle';
 
 type DimensionWithGrade = DimensionDefinition & {
   averageGrade: number;
@@ -90,49 +92,39 @@ const DimensionList = ({
   // Prefer client calculation when it turns true; otherwise fall back to SSR initial
   const canCreateCycle = clientCanCreate || !!canCreateCycleInitial;
 
+  const {
+    availableYears: fetchedYears,
+    latestYear,
+    loading: yearsLoading,
+    error: yearsError
+  } = useCourseYears(slug);
   useEffect(() => {
-    let aborted = false;
-    async function loadYears() {
-      try {
-        const res = await fetch(
-          `/api/courses/${encodeURIComponent(slug)}/years`
-        );
-        if (!res.ok) return;
-        const data = (await res.json()) as { years: number[]; latest?: number };
-        if (!aborted) {
-          setAvailableYears(data.years || []);
-          setCurrentYearState(data.latest ?? null);
-        }
-      } catch {}
-    }
-    loadYears();
-    return () => {
-      aborted = true;
-    };
-  }, [slug]);
+    setAvailableYears(fetchedYears);
+    if (latestYear !== null) setCurrentYearState(latestYear);
+  }, [fetchedYears, latestYear]);
 
-  // Avoid duplicate fetch: course coordinatorId comes from AppShell's context
-
-  async function handleCreateCycle(y: number, copyFromPrevious: boolean) {
-    const res = await fetch(`/api/courses/${encodeURIComponent(slug)}/cycles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ year: y, copyFromPrevious })
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data?.error || 'Falha ao criar ciclo');
+  const {
+    createCycle,
+    loading: createLoading,
+    error: createError
+  } = useCreateCycle(slug);
+  useEffect(() => {
+    if (createError) {
+      toast.error(createError);
     }
-    toast.success('Primeiro ciclo criado com sucesso.');
-    setCurrentYearState(y);
+  }, [createError]);
+  async function handleCreateCycle(year: number, copyFromPrevious: boolean) {
+    await createCycle(year, copyFromPrevious);
+    toast.success('Ciclo criado com sucesso!');
+    setCurrentYearState(year);
     setAvailableYears((prev) => {
-      if (prev.includes(y)) return prev;
-      const next = [...prev, y];
+      if (prev.includes(year)) return prev;
+      const next = [...prev, year];
       next.sort((a, b) => a - b);
       return next;
     });
     const url = new URL(window.location.href);
-    url.searchParams.set('year', String(y));
+    url.searchParams.set('year', String(year));
     window.history.replaceState({}, '', url.toString());
     router.refresh();
   }
@@ -172,7 +164,10 @@ const DimensionList = ({
               onOpenChange={setDialogIsOpen}
               onCreate={handleCreateCycle}
               trigger={
-                <Button className="cursor-pointer bg-green-600 hover:bg-green-700">
+                <Button
+                  className="cursor-pointer bg-green-600 hover:bg-green-700"
+                  disabled={createLoading}
+                >
                   Criar ciclo
                 </Button>
               }
@@ -206,8 +201,9 @@ const DimensionList = ({
         <>
           <div className="flex justify-between">
             <div className="flex flex-col gap-2">
-              <div className="text-muted-foreground text-sm font-bold">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm font-bold">
                 Selecione o ciclo avaliativo
+                {yearsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               </div>
               <div className="w-48">
                 <CycleYearSelect
@@ -215,6 +211,7 @@ const DimensionList = ({
                   value={currentYearState}
                   placeholder="Ano do ciclo"
                   updateQueryParam={false}
+                  disabled={yearsLoading || availableYears.length === 0}
                   onChange={(yr) => {
                     setCurrentYearState(yr);
                     const url = new URL(window.location.href);
@@ -223,6 +220,11 @@ const DimensionList = ({
                     router.refresh();
                   }}
                 />
+                {yearsError && (
+                  <div className="text-destructive mt-1 text-xs">
+                    {yearsError}
+                  </div>
+                )}
               </div>
             </div>
           </div>
