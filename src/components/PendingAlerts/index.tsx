@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import { IndicatorStatus } from '@prisma/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type ApiAlert = {
   dimensionId: number;
@@ -43,6 +44,7 @@ function extractCourseId(pathname: string): string | null {
 
 const PendingAlerts = () => {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const pathname = usePathname();
   const search = useSearchParams();
   const courseId = extractCourseId(pathname);
@@ -129,7 +131,7 @@ const PendingAlerts = () => {
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent side="bottom" align="end" className="w-80">
+      <DropdownMenuContent side="bottom" align={isMobile ? 'center' : 'end'} className="w-80">
         <DropdownMenuLabel>Pendências e Alertas</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
