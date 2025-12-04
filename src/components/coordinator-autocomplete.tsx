@@ -3,6 +3,7 @@
 import { ChevronsUpDown, Loader2, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from './ui/input';
+import { useVisitorsSearch } from '@/hooks/useVisitorsSearch';
 
 type Coordinator = {
   id: string;
@@ -38,9 +39,6 @@ const CoordinatorAutocomplete = ({
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounced(query, 300);
   const [items, setItems] = useState<Coordinator[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -57,39 +55,14 @@ const CoordinatorAutocomplete = ({
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
+  const {
+    items: fetchedItems,
+    loading,
+    error
+  } = useVisitorsSearch(open, debouncedQuery);
   useEffect(() => {
-    if (!open) return;
-    setLoading(true);
-    setError(null);
-
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    const run = async () => {
-      try {
-        const url =
-          '/api/visitors' +
-          (debouncedQuery
-            ? `?query=${encodeURIComponent(debouncedQuery)}`
-            : '');
-        const res = await fetch(url, { signal: controller.signal });
-
-        const data = (await res.json()) as Coordinator[];
-        setItems(Array.isArray(data) ? data : []);
-      } catch (e: unknown) {
-        const err = e as { name?: string } | undefined;
-        if (err?.name === 'AbortError') return;
-        setError('Não foi possível carregar os usuários.');
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    run();
-    return () => controller.abort();
-  }, [open, debouncedQuery]);
+    setItems(fetchedItems);
+  }, [fetchedItems]);
 
   return (
     <div ref={rootRef} className={`w-full ${className ?? ''}`}>
