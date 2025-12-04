@@ -31,10 +31,7 @@ const SignUpForm = () => {
       name: z.string().trim().min(1, 'Nome é obrigatório'),
       email: z
         .string()
-        .email({ message: 'Email inválido' })
-        .refine((v) => v.toLowerCase().includes('@ifma'), {
-          message: 'Use seu email institucional @ifma'
-        }),
+        .email({ message: 'Email inválido' }),
       password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
       confirmPassword: z
         .string()
@@ -74,13 +71,6 @@ const SignUpForm = () => {
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      if (!values.email.toLowerCase().includes('@ifma')) {
-        const msg = 'Use seu email institucional @ifma';
-        form.setError('email', { message: msg });
-        toast.error(msg);
-        return;
-      }
-
       let imageUrl: string | undefined;
 
       const file = values.avatar instanceof File ? values.avatar : undefined;
