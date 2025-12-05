@@ -7,7 +7,7 @@ import React, {
   startTransition
 } from 'react';
 import { useActionState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -37,6 +37,7 @@ import { IndicatorGrade } from '@prisma/client';
 import { useAppContext } from '@/context/AppContext';
 import { isReadOnlyIndicator } from '@/lib/permissions';
 import { ExistingFile } from '@/types/indicator-types';
+import { useIndicatorData } from '@/hooks/useIndicatorData';
 import { uploadFileToMinio } from '@/services/uploadFile';
 
 type UploadedFileInfo = {
@@ -134,32 +135,12 @@ const ClientIndicatorPage = ({
     courseCoordinatorId
   });
 
-  const queryKey = ['indicator', courseSlug, indicatorCode, year];
-  const queryFn = useCallback(async (): Promise<ApiIndicatorData> => {
-    if (!courseSlug || !indicatorCode || !year) {
-      throw new Error('Parâmetros inválidos na URL.');
-    }
-    const response = await fetch(
-      `/api/courses/${courseSlug}/indicators/${indicatorCode}?year=${year}`
-    );
-    if (!response.ok)
-      throw new Error((await response.json()).error || 'Erro ao carregar');
-    const result: ApiIndicatorData = await response.json();
-    return result;
-  }, [courseSlug, indicatorCode, year]);
-
   const {
     data: apiData,
     isLoading: queryLoading,
     refetch,
     error: queryError
-  } = useQuery({
-    queryKey,
-    queryFn,
-    enabled: !!courseSlug && !!indicatorCode && !!year,
-    initialData: initialIndicator,
-    initialDataUpdatedAt: initialIndicator ? Date.now() : undefined
-  });
+  } = useIndicatorData(courseSlug, indicatorCode, year, initialIndicator);
 
   const initKeyRef = useRef<string | null>(null);
   useEffect(() => {
