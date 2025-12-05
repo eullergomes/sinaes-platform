@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { extractCourseId } from '@/utils/extractCourseId';
 import { usePendingAlerts } from '@/hooks/usePendingAlerts';
 

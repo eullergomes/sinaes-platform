@@ -18,7 +18,7 @@ import Footer from '@/components/footer';
 import { UserRole } from '@prisma/client';
 import { AppContext } from '@/context/AppContext';
 import { canViewPendingAlerts } from '@/lib/permissions';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useCourseInfo } from '@/hooks/useCourseInfo';
 import { extractCourseId } from '@/utils/extractCourseId';
 
