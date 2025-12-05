@@ -27,6 +27,13 @@ export function useUpdateIndicatorStatus(params: {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.error || 'Falha ao atualizar status');
         }
+        try {
+          window.dispatchEvent(
+            new CustomEvent('alerts:refresh', {
+              detail: { courseId: courseSlug, year }
+            })
+          );
+        } catch {}
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Erro ao atualizar status';
         setError(msg);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Bell } from 'lucide-react';
 import {
@@ -13,8 +13,7 @@ import {
 } from '../ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { extractCourseId } from '@/utils/extractCourseId';
-import { ApiAlert } from '@/types/alert-types';
-import { isSingleYear } from '@/utils/isSingleYear';
+import { usePendingAlerts } from '@/hooks/usePendingAlerts';
 
 const PendingAlerts = () => {
   const router = useRouter();
@@ -24,60 +23,9 @@ const PendingAlerts = () => {
   const courseId = extractCourseId(pathname);
   const yearParam = search?.get('year');
 
-  const [alerts, setAlerts] = useState<ApiAlert[]>([]);
-  const [selectedYear, setSelectedYear] = useState<number | undefined>(
-    undefined
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!courseId) return;
-    let cancelled = false;
-    async function fetchAlerts() {
-      setLoading(true);
-      setError(null);
-      try {
-        const y = yearParam ? parseInt(yearParam, 10) : undefined;
-        const url = y
-          ? `/api/courses/${courseId}/alerts?year=${y}`
-          : `/api/courses/${courseId}/alerts`;
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Falha ao carregar alertas');
-        const json = await res.json();
-        if (cancelled) return;
-        if (isSingleYear(json)) {
-          setAlerts(json.alerts);
-          setSelectedYear(json.year);
-        } else {
-          const years = (json.availableYears as number[]) ?? [];
-          const ysel = y ?? years[0];
-          const all: ApiAlert[] = [];
-          if (json.alertsByYear) {
-            Object.keys(json.alertsByYear).forEach((k) => {
-              const arr = json.alertsByYear[k] as ApiAlert[];
-              all.push(...arr);
-            });
-          }
-          setAlerts(all.filter((a) => a.year === ysel));
-          setSelectedYear(ysel);
-        }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Erro inesperado');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchAlerts();
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId, yearParam]);
-
+  const { alerts, items, remaining, selectedYear, loading, error } =
+    usePendingAlerts(courseId, yearParam);
   const count = alerts.length;
-
-  const items = useMemo(() => alerts.slice(0, 5), [alerts]);
-  const remaining = Math.max(0, count - items.length);
 
   const buildIndicatorUrl = (dimensionId: number, code: string) => {
     if (!courseId) return '/courses';
@@ -105,13 +53,20 @@ const PendingAlerts = () => {
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent side="bottom" align={isMobile ? 'center' : 'end'} className="w-80">
+      <DropdownMenuContent
+        side="bottom"
+        align={isMobile ? 'center' : 'end'}
+        className="w-80"
+      >
         <DropdownMenuLabel>Pendências e Alertas</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
         {loading && (
-          <div className="text-muted-foreground px-2 py-1 text-xs">
-            Carregando…
+          <div
+            className="text-muted-foreground px-2 py-1 text-xs"
+            aria-live="polite"
+          >
+            Atualizando…
           </div>
         )}
         {!loading && error && (

@@ -82,7 +82,12 @@ const AlertsPage = () => {
           <CardTitle className="flex items-center gap-3">
             Lista de Pendências
             {loading && (
-              <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+              <div className="flex items-center gap-2" aria-live="polite">
+                <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                <span className="text-muted-foreground text-sm">
+                  Atualizando…
+                </span>
+              </div>
             )}
           </CardTitle>
           <div className="flex flex-wrap items-center gap-2">

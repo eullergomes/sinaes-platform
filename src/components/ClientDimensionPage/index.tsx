@@ -25,7 +25,7 @@ import { Filter, Loader2 } from 'lucide-react';
 import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
 import { DimensionApiResponse } from '@/types/dimension-types';
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '../status-badge';
 import IndicatorsTable, { IndicatorRow } from './IndicatorsTable';
 import {
@@ -62,6 +62,7 @@ const ClientDimensionPage = ({
     courseCoordinatorId
   });
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [apiData, setApiData] = useState<DimensionApiResponse | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -234,10 +235,15 @@ const ClientDimensionPage = ({
               Indicadores da Dimensão {dimId} — Ciclo {selectedYear || 'N/A'}
             </span>
             {isFetching && (
-              <Loader2
-                className="text-muted-foreground h-4 w-4 animate-spin"
-                aria-label="Atualizando"
-              />
+              <div className="flex items-center gap-2" aria-live="polite">
+                <Loader2
+                  className="text-muted-foreground h-4 w-4 animate-spin"
+                  aria-label="Atualizando"
+                />
+                <span className="text-muted-foreground text-sm">
+                  Atualizando…
+                </span>
+              </div>
             )}
           </CardTitle>
 
@@ -403,6 +409,18 @@ const ClientDimensionPage = ({
                   }
                   toast.success('Alterações NSA salvas.');
                   setShowConfirm(false);
+                  try {
+                    await queryClient.invalidateQueries({
+                      queryKey: ['dimension', slug, dimId]
+                    });
+                  } catch {}
+                  try {
+                    window.dispatchEvent(
+                      new CustomEvent('alerts:refresh', {
+                        detail: { courseId: slug, year: selectedYear }
+                      })
+                    );
+                  } catch {}
                 } catch (e) {
                   toast.error(
                     e instanceof Error

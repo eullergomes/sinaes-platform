@@ -227,12 +227,18 @@ const ClientIndicatorPage = ({
   useEffect(() => {
     if (formState?.success) {
       refetch();
-      // Garante sincronização ao voltar para a dimensão
       queryClient.invalidateQueries({
         queryKey: ['dimension', courseSlug, dimensionId]
       });
+      try {
+        window.dispatchEvent(
+          new CustomEvent('alerts:refresh', {
+            detail: { courseId: courseSlug, year }
+          })
+        );
+      } catch {}
     }
-  }, [formState?.success, refetch, queryClient, courseSlug, dimensionId]);
+  }, [formState?.success, refetch, queryClient, courseSlug, dimensionId, year]);
 
   const handleEvidenceStateChange = useCallback(
     (
