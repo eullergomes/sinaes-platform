@@ -25,7 +25,7 @@ import { Filter, Loader2 } from 'lucide-react';
 import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
 import { DimensionApiResponse } from '@/types/dimension-types';
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '../status-badge';
 import IndicatorsTable, { IndicatorRow } from './IndicatorsTable';
 import {
@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { updateNsaStatusBatch } from '@/actions/indicator';
+import { useDimensionData } from '@/hooks/useDimensionData';
 
 const ClientDimensionPage = ({
   slug,
@@ -83,25 +84,8 @@ const ClientDimensionPage = ({
     isError,
     error,
     isFetching
-  } = useQuery<DimensionApiResponse, Error>({
-    queryKey: ['dimension', slug, dimId],
-    queryFn: async () => {
-      const res = await fetch(`/api/courses/${slug}/dimensions/${dimId}`);
-      if (!res.ok) {
-        throw new Error(
-          (await res.json()).error || 'Falha ao carregar os dados'
-        );
-      }
-      return res.json();
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos sem refetch
-    gcTime: 30 * 60 * 1000, // coleta após 30 minutos
-    refetchOnWindowFocus: false,
-    initialData: initialDimension,
-    initialDataUpdatedAt: initialDimension ? Date.now() : undefined
-  });
+  } = useDimensionData(slug, dimId, initialDimension);
 
-  // Sincroniza estado local quando dados chegam (mantém lógica existente de anos e seleção)
   useEffect(() => {
     if (!dimensionData) return;
     setApiData(dimensionData);
