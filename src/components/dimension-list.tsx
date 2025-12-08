@@ -67,6 +67,7 @@ const DimensionList = ({
   const router = useRouter();
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [hasCyclesState, setHasCyclesState] = useState<boolean>(hasCycles);
   const [currentYearState, setCurrentYearState] = useState<number | null>(
     currentYear
   );
@@ -98,9 +99,15 @@ const DimensionList = ({
     loading: yearsLoading,
     error: yearsError
   } = useCourseYears(slug);
+
   useEffect(() => {
     setAvailableYears(fetchedYears);
-    if (latestYear !== null) setCurrentYearState(latestYear);
+    if (latestYear !== null) {
+      setCurrentYearState(latestYear);
+      setHasCyclesState(true);
+    } else if (fetchedYears.length === 0) {
+      setHasCyclesState(false);
+    }
   }, [fetchedYears, latestYear]);
 
   const {
@@ -113,6 +120,7 @@ const DimensionList = ({
       toast.error(createError);
     }
   }, [createError]);
+
   async function handleCreateCycle(year: number, copyFromPrevious: boolean) {
     await createCycle(year, copyFromPrevious);
     toast.success('Ciclo criado com sucesso!');
@@ -123,11 +131,13 @@ const DimensionList = ({
       next.sort((a, b) => a - b);
       return next;
     });
+    setHasCyclesState(true);
     const url = new URL(window.location.href);
     url.searchParams.set('year', String(year));
     window.history.replaceState({}, '', url.toString());
-    router.refresh();
   }
+
+  const showNoCycles = !hasCyclesState && !yearsLoading;
 
   return (
     <div className="space-y-6 p-6 md:p-8">
@@ -158,7 +168,7 @@ const DimensionList = ({
               Manual de instruções
             </a>
           </Button>
-          {canCreateCycle && (
+          {canCreateCycle && hasCyclesState && (
             <NewCycle
               open={dialogIsOpen}
               onOpenChange={setDialogIsOpen}
@@ -176,7 +186,7 @@ const DimensionList = ({
         </div>
       </div>
 
-      {!hasCycles ? (
+      {showNoCycles ? (
         <Card>
           <CardContent className="space-y-4 py-12 text-center">
             <p className="text-lg">
@@ -202,24 +212,34 @@ const DimensionList = ({
           <div className="flex justify-between">
             <div className="flex flex-col gap-2">
               <div className="text-muted-foreground flex items-center gap-2 text-sm font-bold">
-                Selecione o ciclo avaliativo
-                {yearsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {yearsLoading ? (
+                  <>
+                    <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </>
+                ) : (
+                  <>Selecione o ciclo avaliativo</>
+                )}
               </div>
               <div className="w-48">
-                <CycleYearSelect
-                  years={availableYears}
-                  value={currentYearState}
-                  placeholder="Ano do ciclo"
-                  updateQueryParam={false}
-                  disabled={yearsLoading || availableYears.length === 0}
-                  onChange={(yr) => {
-                    setCurrentYearState(yr);
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('year', String(yr));
-                    window.history.replaceState({}, '', url.toString());
-                    router.refresh();
-                  }}
-                />
+                {yearsLoading ? (
+                  <div className="h-10 w-full animate-pulse rounded bg-gray-200" />
+                ) : (
+                  <CycleYearSelect
+                    years={availableYears}
+                    value={currentYearState}
+                    placeholder="Ano do ciclo"
+                    updateQueryParam={false}
+                    disabled={availableYears.length === 0}
+                    onChange={(yr) => {
+                      setCurrentYearState(yr);
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('year', String(yr));
+                      window.history.replaceState({}, '', url.toString());
+                      router.refresh();
+                    }}
+                  />
+                )}
                 {yearsError && (
                   <div className="text-destructive mt-1 text-xs">
                     {yearsError}
@@ -229,14 +249,29 @@ const DimensionList = ({
             </div>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {dimensionsWithGrades.map((dim) => (
-              <DimensionItem
-                key={dim.id}
-                slug={slug}
-                dimensionWithGrade={dim}
-                currentYear={currentYearState ?? undefined}
-              />
-            ))}
+            {yearsLoading
+              ? Array.from({ length: 3 }).map((_, idx) => (
+                  <div
+                    key={`dim-skel-${idx}`}
+                    className="hover:border-primary flex flex-col rounded-md border bg-white p-4 transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
+                      <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
+                    </div>
+                    <div className="mt-2 h-4 w-full animate-pulse rounded bg-gray-200" />
+                    <div className="mt-1 h-4 w-3/4 animate-pulse rounded bg-gray-200" />
+                    <div className="mt-6 h-9 w-full animate-pulse rounded bg-gray-200" />
+                  </div>
+                ))
+              : dimensionsWithGrades.map((d) => (
+                  <DimensionItem
+                    key={d.id}
+                    slug={slug}
+                    dimensionWithGrade={d}
+                    currentYear={currentYearState ?? undefined}
+                  />
+                ))}
           </div>
 
           <Card>
