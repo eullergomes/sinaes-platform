@@ -144,13 +144,40 @@ export async function deleteCourse(formData: FormData) {
   }
 
   try {
-    await prisma.course.delete({ where: { id: courseId } });
+    await prisma.$transaction(async (tx) => {
+      const course = await tx.course.findUnique({
+        where: { id: courseId },
+        select: { coordinatorId: true }
+      });
+      if (!course) {
+        throw new Error('Curso não encontrado.');
+      }
+
+      const coordinatorId = course.coordinatorId ?? null;
+      if (coordinatorId) {
+        const coord = await tx.user.findUnique({
+          where: { id: coordinatorId },
+          select: { role: true }
+        });
+        if (coord?.role === UserRole.COORDINATOR) {
+          await tx.user.update({
+            where: { id: coordinatorId },
+            data: { role: UserRole.VISITOR }
+          });
+        }
+      }
+
+      await tx.course.delete({ where: { id: courseId } });
+    });
   } catch (error) {
     console.error('Falha ao apagar o curso:', error);
     throw new Error('Não foi possível apagar o curso.');
   }
 
   revalidateTag('courses');
+
+  const e = newEvent();
+  redirect(`/courses?deleted=1&e=${e}`);
 }
 
 export async function updateCourse(

@@ -89,22 +89,32 @@ const CourseList = ({
   useEffect(() => {
     const created = searchParams.get('created');
     const updated = searchParams.get('updated');
+    const deleted = searchParams.get('deleted');
     const e = searchParams.get('e');
     const show =
-      created === '1' ? 'created' : updated === '1' ? 'updated' : undefined;
+      created === '1'
+        ? 'created'
+        : updated === '1'
+          ? 'updated'
+          : deleted === '1'
+            ? 'deleted'
+            : undefined;
     if (show) {
       const key = e ? `toast_shown_${e}` : undefined;
       if (!key || !sessionStorage.getItem(key)) {
         toast.success(
           show === 'created'
             ? 'Curso criado com sucesso!'
-            : 'Curso atualizado com sucesso!'
+            : show === 'updated'
+              ? 'Curso atualizado com sucesso!'
+              : 'Curso apagado com sucesso!'
         );
         if (key) sessionStorage.setItem(key, '1');
       }
       const sp = new URLSearchParams(Array.from(searchParams.entries()));
       if (created) sp.delete('created');
       if (updated) sp.delete('updated');
+      if (deleted) sp.delete('deleted');
       if (e) sp.delete('e');
       router.replace(`/courses${sp.toString() ? `?${sp.toString()}` : ''}`);
     }
