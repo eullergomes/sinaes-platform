@@ -162,7 +162,6 @@ model IndicatorRequirement {
   indicator     IndicatorDefinition @relation(fields: [indicatorId], references: [id])
   requirement   EvidenceRequirement @relation(fields: [requirementId], references: [id])
   order         Int?
-  notes         String?
 
   @@unique([indicatorId, requirementId])
 }
@@ -170,17 +169,17 @@ model IndicatorRequirement {
 model Course {
   id                String          @id @default(auto()) @map("_id") @db.ObjectId
   slug              String          @unique
-  emecCode          Int?            @unique
+  emecCode          Int             @unique
   name              String
-  level             CourseLevel?
-  modality          CourseModality?
+  level             CourseLevel
+  modality          CourseModality
   ppcDocumentUrl    String?
   otherDocumentsUrl String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
-  coordinatorId String? @db.ObjectId
-  coordinator   User?   @relation("CourseCoordinator", fields: [coordinatorId], references: [id])
+  coordinatorId String @db.ObjectId
+  coordinator   User   @relation("CourseCoordinator", fields: [coordinatorId], references: [id])
 
   indicators CourseIndicator[]
   evidences  EvidenceSubmission[]
