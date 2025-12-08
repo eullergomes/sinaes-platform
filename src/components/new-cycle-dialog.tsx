@@ -35,7 +35,7 @@ const NewCycle: React.FC<NewCycleProps> = ({
   description = 'Informe o ano para o novo ciclo de avaliação.'
 }) => {
   const [newYear, setNewYear] = useState('');
-  const [copyFromPrevious, setCopyFromPrevious] = useState(true);
+  const [copyFromPrevious, setCopyFromPrevious] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const yearNum = useMemo(() => parseInt(newYear, 10), [newYear]);
@@ -95,16 +95,13 @@ const NewCycle: React.FC<NewCycleProps> = ({
             Mínimo {MIN_YEAR}, máximo {MAX_YEAR}.
           </div>
           <div className="flex items-center gap-2 pt-2">
-            <Checkbox
-              id="copyPrev"
-              checked={copyFromPrevious}
-              onCheckedChange={(val) => setCopyFromPrevious(!!val)}
-              className="hover:cursor-pointer"
-            />
-            <Label
-              htmlFor="copyPrev"
-              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
+            <Label className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <Checkbox
+                id="copyPrev"
+                checked={copyFromPrevious}
+                onCheckedChange={(val) => setCopyFromPrevious(!!val)}
+                className="hover:cursor-pointer"
+              />
               Copiar dados do ciclo anterior (se existir)
             </Label>
           </div>

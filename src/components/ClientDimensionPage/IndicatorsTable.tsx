@@ -189,12 +189,20 @@ const IndicatorsTable = ({
           const effectiveStatus = statusOverrides[code] ?? row.original.status;
           const disabled = !isVisible || !row.original.hasEvaluation;
           return (
-            <div className="flex items-center justify-center" id="Teste123">
+            <div className="flex items-center justify-center">
               {isVisible ? (
                 <Select
                   value={effectiveStatus}
                   onValueChange={(val) => {
                     const next = val as IndicatorStatus;
+                    if (next === effectiveStatus) return;
+                    const confirmed =
+                      typeof window === 'undefined'
+                        ? true
+                        : window.confirm(
+                            `Confirmar alteração do status do indicador ${code} para "${next}"?`
+                          );
+                    if (!confirmed) return;
                     setStatusOverrides((prev) => ({ ...prev, [code]: next }));
                     updateStatus(code, next).catch((err) => {
                       setStatusOverrides((prev) => {

@@ -109,7 +109,7 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
                 <form action={deleteCourse}>
                   <input type="hidden" name="courseId" value={course.id} />
                   <AlertDialogHeader>
-                    <AlertDialogTitle className='font-bold'>
+                    <AlertDialogTitle className="font-bold">
                       Você tem certeza absoluta?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
@@ -171,7 +171,7 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
         <div className="flex items-center">
           <Button asChild className="w-full bg-green-600 hover:bg-green-700">
             <Link href={`/courses/${course.slug}/dimensions`}>
-              Abrir para dimensões
+              Abrir dimensões
             </Link>
           </Button>
         </div>
