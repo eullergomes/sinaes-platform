@@ -56,7 +56,7 @@ model User {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   email         String   @unique
   name          String
-  role          UserRole @default(VISITOR)
+  role          UserRole @default(ADMIN)
   emailVerified Boolean  @default(false)
   image         String?  @map("avatar")
   createdAt     DateTime @default(now())
@@ -167,16 +167,16 @@ model IndicatorRequirement {
 }
 
 model Course {
-  id                String          @id @default(auto()) @map("_id") @db.ObjectId
-  slug              String          @unique
-  emecCode          Int             @unique
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  slug              String         @unique
+  emecCode          Int            @unique
   name              String
   level             CourseLevel
   modality          CourseModality
   ppcDocumentUrl    String?
   otherDocumentsUrl String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   coordinatorId String @db.ObjectId
   coordinator   User   @relation("CourseCoordinator", fields: [coordinatorId], references: [id])
