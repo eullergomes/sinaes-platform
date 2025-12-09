@@ -38,7 +38,8 @@ import { useAppContext } from '@/context/AppContext';
 import { isReadOnlyIndicator } from '@/lib/permissions';
 import { ExistingFile } from '@/types/indicator-types';
 import { useIndicatorData } from '@/hooks/useIndicatorData';
-import { uploadFileToMinio } from '@/services/uploadFile';
+// import { uploadFileToMinio } from '@/services/uploadFile';
+import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 
 type UploadedFileInfo = {
   storageKey: string;
@@ -296,14 +297,14 @@ const ClientIndicatorPage = ({
       for (const file of state.filesToUpload) {
         const folder = `sinaes-evidence/${courseSlug}/${year}/${slug}`;
 
-        const promise = uploadFileToMinio(file, folder)
+        const promise = uploadToCloudinary(file, folder)
           .then((result) => {
             filesUploadedInfo[slug].push({
-              storageKey: result.storageKey,
-              externalUrl: result.url,
-              fileName: result.fileName,
-              sizeBytes: result.size,
-              mimeType: result.mimeType || 'application/pdf'
+              storageKey: result.public_id,
+              externalUrl: result.secure_url,
+              fileName: result.original_filename || file.name,
+              sizeBytes: result.bytes,
+              mimeType: file.type || 'application/pdf'
             });
           })
           .catch((err) => {

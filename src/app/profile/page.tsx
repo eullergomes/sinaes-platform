@@ -21,7 +21,8 @@ import { updateProfileAction } from '@/actions/profile';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { uploadFileToMinio } from '@/services/uploadFile';
+// import { uploadFileToMinio } from '@/services/uploadFile';
+import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -89,11 +90,11 @@ export default function ProfilePage() {
 
             try {
               if (avatarFile) {
-                const res = await uploadFileToMinio(
+                const res = await uploadToCloudinary(
                   avatarFile,
                   'ifma-avatars'
                 );
-                imageUrl = res.url;
+                imageUrl = res.secure_url;
               }
 
               const result = await updateProfileAction({
