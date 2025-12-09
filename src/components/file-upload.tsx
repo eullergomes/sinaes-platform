@@ -147,14 +147,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
     }
   }, [newlySavedFiles]);
 
-  const { mutation: deleteFileMutation, deletingFileId } = useDeleteFileMutation({
-    currentFiles,
-    setCurrentFiles,
-    courseSlug,
-    indicatorCode,
-    evaluationYear,
-    onLinkSaved
-  });
+  const { mutation: deleteFileMutation, deletingFileId } =
+    useDeleteFileMutation({
+      currentFiles,
+      setCurrentFiles,
+      courseSlug,
+      indicatorCode,
+      evaluationYear,
+      onLinkSaved
+    });
 
   const { mutation: saveLinkMutation } = useSaveLinkMutation({
     linkItems,
@@ -165,14 +166,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
     onLinkSaved
   });
 
-  const { mutation: deleteLinkMutation, deletingLinkId } = useDeleteLinkMutation({
-    linkItems,
-    setLinkItems,
-    courseSlug,
-    indicatorCode,
-    evaluationYear,
-    onLinkSaved
-  });
+  const { mutation: deleteLinkMutation, deletingLinkId } =
+    useDeleteLinkMutation({
+      linkItems,
+      setLinkItems,
+      courseSlug,
+      indicatorCode,
+      evaluationYear,
+      onLinkSaved
+    });
 
   // propagate state upward
   useEffect(() => {
@@ -285,13 +287,17 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       disabled={
                         deleteLinkMutation.isPending && deletingLinkId === l.id
                       }
-                      onClick={() =>
+                      onClick={() => {
+                        const ok = window.confirm(
+                          'Tem certeza que deseja excluir este link?'
+                        );
+                        if (!ok) return;
                         deleteLinkMutation.mutate({
                           courseId,
                           requirementId,
                           linkId: l.id!
-                        })
-                      }
+                        });
+                      }}
                       aria-label="Remover link"
                     >
                       {deleteLinkMutation.isPending &&
@@ -340,7 +346,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           }
         }}
       >
-        <DialogContent className="md:max-w-lg max-w-xs rounded-lg">
+        <DialogContent className="max-w-xs rounded-lg md:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-bold">Adicionar link</DialogTitle>
             <DialogDescription>
@@ -391,7 +397,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             </div>
             {saveError && <p className="text-sm text-red-600">{saveError}</p>}
           </div>
-          <DialogFooter className='gap-2'>
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="secondary"
@@ -489,6 +495,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     disabled={isLoading || deleteFileMutation.isPending}
                     onClick={() => {
                       if (!courseId || !requirementId || !f.publicId) return;
+                      const ok = window.confirm(
+                        'Tem certeza que deseja excluir este arquivo PDF?'
+                      );
+                      if (!ok) return;
                       deleteFileMutation.mutate({
                         courseId,
                         requirementId,

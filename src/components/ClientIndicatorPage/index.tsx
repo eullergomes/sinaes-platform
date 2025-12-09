@@ -48,7 +48,7 @@ type UploadedFileInfo = {
   mimeType: string;
 };
 
-type LinkItem = { text: string; url: string };
+type LinkItem = { id?: string; text: string; url: string };
 
 type CriterionRow = { concept: string; criterion: string };
 type ApiIndicatorData = {
@@ -95,8 +95,6 @@ const ClientIndicatorPage = ({
     yearStr && !Number.isNaN(Number(yearStr)) ? parseInt(yearStr, 10) : null;
 
   const { slug: courseSlug, indicatorCode } = params;
-
-  const [data, setData] = useState<ApiIndicatorData | null>(null);
 
   const [grade, setGrade] = useState<IndicatorGrade>(IndicatorGrade.NSA);
   const [nsaAuto, setNsaAuto] = useState<boolean>(false);
@@ -149,7 +147,6 @@ const ClientIndicatorPage = ({
     if (initKeyRef.current === key) return;
     initKeyRef.current = key;
 
-    setData(apiData);
     setGrade(apiData.evaluation?.grade || IndicatorGrade.NSA);
     setNsaAuto(apiData.evaluation?.nsaApplicable === false);
     setJustification(apiData.evaluation?.justification || '');
@@ -256,9 +253,9 @@ const ClientIndicatorPage = ({
     event.preventDefault();
 
     if (
-      !data ||
-      !data.course ||
-      !data.indicator ||
+      !apiData ||
+      !apiData.course ||
+      !apiData.indicator ||
       !year ||
       isSubmittingManual
     ) {
@@ -269,9 +266,9 @@ const ClientIndicatorPage = ({
 
     const formData = new FormData();
 
-    const courseId = data.course.id;
-    const indicatorDefId = data.indicator.id;
-    const courseSlug = data.course.slug;
+    const courseId = apiData.course.id;
+    const indicatorDefId = apiData.indicator.id;
+    const courseSlug = apiData.course.slug;
 
     formData.append('courseId', courseId);
     formData.append('indicatorDefId', indicatorDefId);
@@ -382,7 +379,7 @@ const ClientIndicatorPage = ({
       </div>
     );
   }
-  if (!data) {
+  if (!apiData) {
     return (
       <div className="p-8 text-center">
         Erro ao carregar dados essenciais do curso ou indicador.
@@ -390,17 +387,19 @@ const ClientIndicatorPage = ({
     );
   }
 
-  const criterions: CriterionRow[] = Array.isArray(data.indicator.criteriaTable)
-    ? (data.indicator.criteriaTable as CriterionRow[])
+  const criterions: CriterionRow[] = Array.isArray(
+    apiData.indicator.criteriaTable
+  )
+    ? (apiData.indicator.criteriaTable as CriterionRow[])
     : [];
 
   return (
     <div className="space-y-8 p-6 md:p-8">
       <h1 className="text-3xl font-bold">
-        Indicador {data.indicator.code}
+        Indicador {apiData.indicator.code}
         <span className="text-muted-foreground font-normal">
           {' '}
-          — {data.indicator.name}
+          — {apiData.indicator.name}
         </span>
       </h1>
 
@@ -431,9 +430,13 @@ const ClientIndicatorPage = ({
       </Card>
 
       <form ref={formRef} onSubmit={handleFormSubmit}>
-        <input type="hidden" name="courseId" value={data.course.id} />
-        <input type="hidden" name="courseSlug" value={data.course.slug} />
-        <input type="hidden" name="indicatorDefId" value={data.indicator.id} />
+        <input type="hidden" name="courseId" value={apiData.course.id} />
+        <input type="hidden" name="courseSlug" value={apiData.course.slug} />
+        <input
+          type="hidden"
+          name="indicatorDefId"
+          value={apiData.indicator.id}
+        />
         <input type="hidden" name="evaluationYear" value={year ?? ''} />
 
         <Card>
@@ -442,13 +445,15 @@ const ClientIndicatorPage = ({
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4 rounded-md border p-4">
-              {data.requiredEvidences.length > 0 ? (
-                data.requiredEvidences.every((ev) => ev.submission == null) ? (
+              {apiData.requiredEvidences.length > 0 ? (
+                apiData.requiredEvidences.every(
+                  (ev) => ev.submission == null
+                ) && readOnly ? (
                   <p className="text-muted-foreground text-sm">
                     Nenhum documento enviado.
                   </p>
                 ) : (
-                  data.requiredEvidences
+                  apiData.requiredEvidences
                     .filter((evidence) => {
                       if (readOnly) {
                         const hasFiles =
@@ -475,11 +480,15 @@ const ClientIndicatorPage = ({
                         <FileUpload
                           evidenceSlug={evidence.slug}
                           initialLinks={evidence.submission?.folderUrls || ['']}
-                          initialLinkItems={evidence.submission?.links}
+                          initialLinkItems={
+                            apiData?.requiredEvidences.find(
+                              (ev) => ev.id === evidence.id
+                            )?.submission?.links
+                          }
                           initialFiles={evidence.submission?.files || []}
                           onStateChange={handleEvidenceStateChange}
                           isLoading={isSubmittingManual}
-                          courseId={data.course.id}
+                          courseId={apiData.course.id}
                           requirementId={evidence.id}
                           onLinkSaved={() => refetch()}
                           courseSlug={courseSlug}
