@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ResponsiveContainer,
@@ -65,6 +66,7 @@ const DimensionList = ({
   );
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [hasCyclesState, setHasCyclesState] = useState<boolean>(hasCycles);
@@ -102,13 +104,34 @@ const DimensionList = ({
 
   useEffect(() => {
     setAvailableYears(fetchedYears);
+    const yearParamStr = searchParams.get('year');
+    const yearParam = yearParamStr ? Number(yearParamStr) : null;
+    const hasYearParam = yearParamStr !== null;
+
+    if (fetchedYears.length === 0) {
+      setHasCyclesState(false);
+      setCurrentYearState(null);
+      return;
+    }
+
+    if (
+      hasYearParam &&
+      yearParam !== null &&
+      !Number.isNaN(yearParam) &&
+      fetchedYears.includes(yearParam)
+    ) {
+      // Respect explicit year from query params
+      setCurrentYearState(yearParam);
+      setHasCyclesState(true);
+      return;
+    }
+
+    // No valid year param: default to latest available year
     if (latestYear !== null) {
       setCurrentYearState(latestYear);
       setHasCyclesState(true);
-    } else if (fetchedYears.length === 0) {
-      setHasCyclesState(false);
     }
-  }, [fetchedYears, latestYear]);
+  }, [fetchedYears, latestYear, searchParams]);
 
   const {
     createCycle,
@@ -229,13 +252,11 @@ const DimensionList = ({
                     years={availableYears}
                     value={currentYearState}
                     placeholder="Ano do ciclo"
-                    updateQueryParam={false}
+                    updateQueryParam={true}
                     disabled={availableYears.length === 0}
                     onChange={(yr) => {
                       setCurrentYearState(yr);
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('year', String(yr));
-                      window.history.replaceState({}, '', url.toString());
+                      // URL is updated inside CycleYearSelect via router.replace
                       router.refresh();
                     }}
                   />
