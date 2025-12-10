@@ -139,7 +139,7 @@ const ClientIndicatorPage = ({
     isLoading: queryLoading,
     refetch,
     error: queryError
-  } = useIndicatorData(courseSlug, indicatorCode, year, initialIndicator);
+  } = useIndicatorData(courseSlug, indicatorCode, year);
 
   const initKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -480,12 +480,17 @@ const ClientIndicatorPage = ({
                         </Label>
                         <FileUpload
                           evidenceSlug={evidence.slug}
-                          initialLinks={evidence.submission?.folderUrls || ['']}
-                          initialLinkItems={
-                            apiData?.requiredEvidences.find(
-                              (ev) => ev.id === evidence.id
-                            )?.submission?.links
+                          initialLinks={
+                            Array.isArray(evidence.submission?.folderUrls)
+                              ? evidence.submission!.folderUrls!
+                              : []
                           }
+                          initialLinkItems={(() => {
+                            const links = apiData?.requiredEvidences.find(
+                              (ev) => ev.id === evidence.id
+                            )?.submission?.links;
+                            return links;
+                          })()}
                           initialFiles={evidence.submission?.files || []}
                           onStateChange={handleEvidenceStateChange}
                           isLoading={isSubmittingManual}
