@@ -50,6 +50,7 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
 
   const sections: Array<{
     title: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items: Array<{ title: string; url: string; icon: any }>;
   }> = [];
 

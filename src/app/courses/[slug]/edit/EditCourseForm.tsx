@@ -128,6 +128,34 @@ export default function EditCourseForm({
     !!nameError ||
     !!emecCodeError;
 
+  const normalize = (s: string) =>
+    s
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+  const COURSE_LEVEL_LABELS_NORMALIZED = new Set(
+    Object.values(CourseLevel).map((lv) => normalize(labelForCourseLevel(lv)))
+  );
+
+  const stripLeadingCourseLevelLabel = (value: string) => {
+    const trimmedStart = value.trimStart();
+    if (!trimmedStart) return '';
+
+    const m = trimmedStart.match(/^(\S+)\s*/);
+    if (!m) return trimmedStart.trim();
+
+    const firstToken = m[1];
+    const firstTokenLettersOnly = firstToken.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, '');
+    const isCourseLevelLabel = COURSE_LEVEL_LABELS_NORMALIZED.has(
+      normalize(firstTokenLettersOnly)
+    );
+
+    if (!isCourseLevelLabel) return trimmedStart.trim();
+
+    return trimmedStart.slice(m[0].length).trimStart();
+  };
+
   return (
     <div className="space-y-8 p-6 md:p-8">
       <div className="flex items-center justify-between">
@@ -159,19 +187,15 @@ export default function EditCourseForm({
                 <Select
                   value={level}
                   onValueChange={(v) => {
-                    const prevLevel = level;
                     setLevel(v);
-                    const trimmed = name.trim();
-                    let rest = trimmed;
-                    if (
-                      prevLevel &&
-                      trimmed
-                        .toLowerCase()
-                        .startsWith(prevLevel.toLowerCase() + ' ')
-                    ) {
-                      rest = trimmed.slice(prevLevel.length).trimStart();
-                    }
-                    const nextName = rest ? `${v} ${rest}` : v;
+
+                    const levelLabel = labelForCourseLevel(v as CourseLevel);
+                    const rest = stripLeadingCourseLevelLabel(name);
+
+                    const nextName = rest
+                      ? `${levelLabel} ${rest}`
+                      : levelLabel;
+
                     setName(nextName);
                     validateName(nextName);
                   }}
