@@ -8,8 +8,14 @@ export async function GET(
   const { slug, indicatorCode } = await params;
   const { searchParams } = new URL(request.url);
   const year = searchParams.get('year');
+  const evaluationYear = year ? Number(year) : null;
 
-  if (!slug || !indicatorCode || !year) {
+  if (
+    !slug ||
+    !indicatorCode ||
+    !evaluationYear ||
+    Number.isNaN(evaluationYear)
+  ) {
     return NextResponse.json(
       {
         error: 'Parâmetros inválidos (curso, indicador e ano são obrigatórios).'
@@ -54,13 +60,15 @@ export async function GET(
     const evaluationData = await prisma.courseIndicator.findFirst({
       where: {
         courseId: course.id,
-        indicatorDefId: indicatorDef.id
+        indicatorDefId: indicatorDef.id,
+        evaluationYear
       },
       select: {
         grade: true,
         justification: true,
         correctiveAction: true,
-        responsible: true
+        responsible: true,
+        nsaApplicable: true
       }
     });
 
