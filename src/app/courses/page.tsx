@@ -1,25 +1,34 @@
-import CourseList from '@/components/course-list';
-import prisma from '@/utils/prisma';
-import { unstable_cache } from 'next/cache';
+import { Suspense } from 'react'
+import CourseList from '@/components/course-list'
+import prisma from '@/utils/prisma'
+import { unstable_cache } from 'next/cache'
 
 const getCachedCourses = unstable_cache(
-  async () => {
-    return prisma.course.findMany({
-      include: { coordinator: { select: { id: true, name: true } } },
-      orderBy: { name: 'asc' }
-    });
-  },
-  ['all-courses'],
-  {
-    revalidate: 60,
-    tags: ['courses'],
-  }
-);
+	async () => {
+		return prisma.course.findMany({
+			include: { coordinator: { select: { id: true, name: true } } },
+			orderBy: { name: 'asc' }
+		})
+	},
+	['all-courses'],
+	{
+		revalidate: 60,
+		tags: ['courses']
+	}
+)
 
-const CoursePage = async () => {
-  const courses = await getCachedCourses();
+export default async function CoursePage() {
+	const courses = await getCachedCourses()
 
-  return <CourseList initialCourses={courses} />;
-};
-
-export default CoursePage;
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-svh items-center justify-center p-8">
+					<p>Carregando...</p>
+				</div>
+			}
+		>
+			<CourseList initialCourses={courses} />
+		</Suspense>
+	)
+}

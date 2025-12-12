@@ -56,7 +56,6 @@ const ForgotPasswordPage = () => {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
-      // Boas práticas: mensagem sempre genérica
       // (mesmo se o email não existir no sistema) :contentReference[oaicite:2]{index=2}
       if (error) {
         console.error(error);
@@ -73,8 +72,6 @@ const ForgotPasswordPage = () => {
       setSubmitting(false);
     }
   }
-
-  // resend handled inline where button is rendered
 
   return (
     <div className="flex min-h-screen items-center justify-center">
