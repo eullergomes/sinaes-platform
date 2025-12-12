@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { IndicatorGrade } from '@prisma/client';
 import type { ExistingFile as ExistingFileType } from '@/types/indicator-types';
 
-export type LinkItem = { text: string; url: string };
+export type LinkItem = { id?: string; text: string; url: string };
 export type ExistingFile = ExistingFileType;
 export type ApiIndicatorData = {
   course: { id: string; slug: string };
@@ -29,8 +29,7 @@ export type ApiIndicatorData = {
 export function useIndicatorData(
   courseSlug: string | null,
   indicatorCode: string | null,
-  year: number | null,
-  initialIndicator?: ApiIndicatorData
+  year: number | null
 ) {
   const queryKey = ['indicator', courseSlug, indicatorCode, year];
   const queryFn = async (): Promise<ApiIndicatorData> => {
@@ -43,15 +42,15 @@ export function useIndicatorData(
     if (!response.ok)
       throw new Error((await response.json()).error || 'Erro ao carregar');
     const result: ApiIndicatorData = await response.json();
+
     return result;
   };
 
   const query = useQuery<ApiIndicatorData>({
     queryKey,
     queryFn,
-    enabled: !!courseSlug && !!indicatorCode && !!year,
-    initialData: initialIndicator,
-    initialDataUpdatedAt: initialIndicator ? Date.now() : undefined
+    enabled: !!courseSlug && !!indicatorCode && !!year
+    // Do not hydrate from initialIndicator to avoid stale data without link ids
   });
 
   return query;

@@ -39,6 +39,7 @@ import { isReadOnlyIndicator } from '@/lib/permissions';
 import { ExistingFile } from '@/types/indicator-types';
 import { useIndicatorData } from '@/hooks/useIndicatorData';
 import { uploadFileToMinio } from '@/services/uploadFile';
+// import { uploadToCloudinary } from '@/services/uploadToCloudinary';
 
 type UploadedFileInfo = {
   storageKey: string;
@@ -138,7 +139,7 @@ const ClientIndicatorPage = ({
     isLoading: queryLoading,
     refetch,
     error: queryError
-  } = useIndicatorData(courseSlug, indicatorCode, year, initialIndicator);
+  } = useIndicatorData(courseSlug, indicatorCode, year);
 
   const initKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -479,12 +480,17 @@ const ClientIndicatorPage = ({
                         </Label>
                         <FileUpload
                           evidenceSlug={evidence.slug}
-                          initialLinks={evidence.submission?.folderUrls || ['']}
-                          initialLinkItems={
-                            apiData?.requiredEvidences.find(
-                              (ev) => ev.id === evidence.id
-                            )?.submission?.links
+                          initialLinks={
+                            Array.isArray(evidence.submission?.folderUrls)
+                              ? evidence.submission!.folderUrls!
+                              : []
                           }
+                          initialLinkItems={(() => {
+                            const links = apiData?.requiredEvidences.find(
+                              (ev) => ev.id === evidence.id
+                            )?.submission?.links;
+                            return links;
+                          })()}
                           initialFiles={evidence.submission?.files || []}
                           onStateChange={handleEvidenceStateChange}
                           isLoading={isSubmittingManual}
@@ -545,6 +551,7 @@ const ClientIndicatorPage = ({
                   )}
                 </Label>
                 <Select
+                  key={`${grade}-${apiData?.evaluation?.grade || 'loading'}`}
                   name="grade"
                   value={grade}
                   onValueChange={(v) => setGrade(v as IndicatorGrade)}
