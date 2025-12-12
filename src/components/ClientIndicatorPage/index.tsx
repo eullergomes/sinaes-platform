@@ -551,6 +551,7 @@ const ClientIndicatorPage = ({
                   )}
                 </Label>
                 <Select
+                  key={`${grade}-${apiData?.evaluation?.grade || 'loading'}`}
                   name="grade"
                   value={grade}
                   onValueChange={(v) => setGrade(v as IndicatorGrade)}
