@@ -77,9 +77,7 @@ type ApiIndicatorData = {
 const ClientIndicatorPage = ({
   slug,
   indicadorCode,
-  dimensionId,
-  initialIndicator
-}: {
+  dimensionId}: {
   slug: string;
   indicadorCode: string;
   dimensionId: string;
