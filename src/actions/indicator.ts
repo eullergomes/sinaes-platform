@@ -337,8 +337,19 @@ export async function saveIndicatorEvaluation(
     return { success: true };
   } catch (error) {
     console.error('Falha ao salvar avaliação do indicador:', error);
+    const errMsg =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+          ? error
+          : JSON.stringify(error);
     return {
-      errors: { _form: ['Erro inesperado ao salvar no banco de dados.'] },
+      errors: {
+        _form: [
+          'Erro inesperado ao salvar no banco de dados.',
+          `Detalhes: ${errMsg}`
+        ]
+      },
       success: false
     };
   }
