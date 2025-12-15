@@ -33,7 +33,8 @@ import {
   X,
   ChartNoAxesCombinedIcon,
   ArrowLeftCircle,
-  FileText
+  FileText,
+  NotebookPenIcon
 } from 'lucide-react';
 import Image from 'next/image';
 import NavUser from './nav-user';
@@ -51,7 +52,13 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
   const sections: Array<{
     title: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: Array<{ title: string; url: string; icon: any }>;
+    items: Array<{
+      title: string;
+      url: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      icon: any;
+      openInNewTab?: boolean;
+    }>;
   }> = [];
 
   if (showDashboard) {
@@ -91,6 +98,18 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
         title: 'Outros Documentos',
         url: `${prefix}/other-documents`,
         icon: FileText
+      }
+    ]
+  });
+
+  sections.push({
+    title: 'Feedback',
+    items: [
+      {
+        title: 'Avalie a Plataforma',
+        url: 'https://forms.gle/xtWj19USpXt9Pqow6',
+        icon: NotebookPenIcon,
+        openInNewTab: true
       }
     ]
   });
@@ -228,12 +247,15 @@ const AppSidebar = ({
                   const isActive =
                     pathname === item.url ||
                     pathname.startsWith(item.url.split('?')[0]);
+                  const openInNewTab = !!item.openInNewTab;
                   const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={isActive}>
                         <Link
                           href={item.url}
+                          target={openInNewTab ? '_blank' : undefined}
+                          rel={openInNewTab ? 'noopener noreferrer' : undefined}
                           className="flex items-center gap-2"
                         >
                           <Icon size={20} color="white" />
