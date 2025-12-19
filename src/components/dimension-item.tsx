@@ -44,7 +44,7 @@ const DimensionItem = ({ slug, dimensionWithGrade, currentYear }: Props) => {
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-between">
         <CardDescription>{dimensionWithGrade?.description}</CardDescription>
-        <Button asChild variant="outline" className="mt-4 w-full">
+        <Button asChild className="w-full mt-4 bg-green-600 hover:bg-green-700">
           <Link
             href={`/courses/${slug}/dimensions/${dimensionWithGrade.number}${currentYear ? `?year=${currentYear}` : ''}`}
           >
