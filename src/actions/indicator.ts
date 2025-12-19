@@ -87,6 +87,7 @@ export async function saveIndicatorEvaluation(
   const evidenceLinks: Record<string, string[]> = {};
   const evidenceLinkItems: Record<string, { text: string; url: string }[]> = {};
 
+  // 1. PARSING DOS DADOS
   for (const [key, value] of formData.entries()) {
     const linkMatch = key.match(/^evidence-(.+?)-link(?:\[\d+\])?$/);
     const fileInfoMatch = key.match(/^evidence-(.+?)-fileInfo(?:\[\d+\])?$/);
@@ -162,12 +163,12 @@ export async function saveIndicatorEvaluation(
           rawData.responsible = value as string;
           break;
         default:
-          // Ignora campos desconhecidos
           break;
       }
     }
   }
 
+  // 2. ORGANIZAÇÃO
   Object.keys(evidenceLinks).forEach((slug) => {
     if (!rawData.evidences[slug]) rawData.evidences[slug] = {};
     rawData.evidences[slug].links = evidenceLinks[slug];
@@ -181,6 +182,7 @@ export async function saveIndicatorEvaluation(
     rawData.evidences[slug].files = evidenceFiles[slug];
   });
 
+  // 3. VALIDAÇÃO ZOD
   const validatedFields = EvaluationFormSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
@@ -206,127 +208,163 @@ export async function saveIndicatorEvaluation(
   } = validatedFields.data;
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.courseIndicator.upsert({
+    // 4. OTIMIZAÇÃO: PRE-FETCHING (ANTES DA TRANSAÇÃO)
+    // Busca todos os requisitos de uma vez só para evitar N queries dentro do loop.
+    // Isso reduz drasticamente o tempo da transação.
+    const evidenceSlugs = Object.keys(evidences);
+    
+    let requirementsMap = new Map(); // Map vazio por padrão caso não haja evidências
+    
+    if (evidenceSlugs.length > 0) {
+      const allRequirements = await prisma.evidenceRequirement.findMany({
         where: {
-          courseId_indicatorDefId_evaluationYear: {
-            courseId,
-            indicatorDefId,
-            evaluationYear
-          }
+          slug: { in: evidenceSlugs }
         },
-        update: {
-          grade,
-          status: IndicatorStatus.EM_EDICAO,
-          justification:
-            grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
-              ? null
-              : justification, // Limpa plano se nota for 5 ou NSA
-          correctiveAction:
-            grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
-              ? null
-              : correctiveAction,
-          responsible:
-            grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
-              ? null
-              : responsible,
-          lastUpdate: new Date()
-        },
-        create: {
-          courseId,
-          indicatorDefId,
-          evaluationYear,
-          grade,
-          status: IndicatorStatus.EM_EDICAO,
-          justification,
-          correctiveAction,
-          responsible
-          // nsaApplicable/nsaLocked devem ser definidos ao criar o ciclo
-        }
+        select: { id: true, slug: true } // Selecionamos apenas o necessário
       });
+      
+      requirementsMap = new Map(allRequirements.map((req) => [req.slug, req]));
+    }
 
-      for (const [evidenceSlug, data] of Object.entries(evidences)) {
-        const requirement = await tx.evidenceRequirement.findUnique({
-          where: { slug: evidenceSlug }
-        });
-        if (!requirement) {
-          console.warn(
-            `Evidence requirement com slug ${evidenceSlug} não encontrado.`
-          );
-          continue;
-        }
-
-        const submission = await tx.evidenceSubmission.upsert({
+    // 5. TRANSAÇÃO OTIMIZADA
+    await prisma.$transaction(
+      async (tx) => {
+        // Upsert do Indicador
+        await tx.courseIndicator.upsert({
           where: {
-            courseId_requirementId: { courseId, requirementId: requirement.id }
+            courseId_indicatorDefId_evaluationYear: {
+              courseId,
+              indicatorDefId,
+              evaluationYear
+            }
           },
           update: {
-            folderUrls: data.links
-              ? data.links
-              : data.linksRich
-                ? data.linksRich.map((l) => l.url)
-                : undefined
+            grade,
+            status: IndicatorStatus.EM_EDICAO,
+            justification:
+              grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
+                ? null
+                : justification,
+            correctiveAction:
+              grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
+                ? null
+                : correctiveAction,
+            responsible:
+              grade === IndicatorGrade.G5 || grade === IndicatorGrade.NSA
+                ? null
+                : responsible,
+            lastUpdate: new Date()
           },
           create: {
             courseId,
-            requirementId: requirement.id,
-            folderUrls: data.links
-              ? data.links
-              : data.linksRich
-                ? data.linksRich.map((l) => l.url)
-                : []
+            indicatorDefId,
+            evaluationYear,
+            grade,
+            status: IndicatorStatus.EM_EDICAO,
+            justification,
+            correctiveAction,
+            responsible
           }
         });
 
-        if (data.linksRich && Array.isArray(data.linksRich)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const evidenceLink = (tx as any).evidenceLink;
-          await evidenceLink.deleteMany({
-            where: { submissionId: submission.id }
-          });
-          if (data.linksRich.length > 0) {
-            await evidenceLink.createMany({
-              data: data.linksRich.map((it, idx) => ({
-                submissionId: submission.id,
-                text: it.text,
-                url: it.url,
-                order: idx
-              }))
-            });
+        // Loop das Evidências
+        for (const [evidenceSlug, data] of Object.entries(evidences)) {
+          
+          // Leitura O(1) da memória ao invés do banco
+          const requirement = requirementsMap.get(evidenceSlug);
+          
+          if (!requirement) {
+            console.warn(
+              `Evidence requirement com slug ${evidenceSlug} não encontrado.`
+            );
+            continue;
           }
-        } else if (data.links && Array.isArray(data.links)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const evidenceLink = (tx as any).evidenceLink;
-          await evidenceLink.deleteMany({
-            where: { submissionId: submission.id }
-          });
-          if (data.links.length > 0) {
-            await evidenceLink.createMany({
-              data: data.links.map((u, idx) => ({
-                submissionId: submission.id,
-                text: u,
-                url: u,
-                order: idx
-              }))
-            });
-          }
-        }
 
-        if (data.files && data.files.length > 0) {
-          await tx.evidenceFile.createMany({
-            data: data.files.map((file) => ({
-              submissionId: submission.id,
-              kind: StorageKind.EXTERNAL,
-              storageKey: file.storageKey,
-              externalUrl: file.externalUrl,
-              fileName: file.fileName,
-              mimeType: file.mimeType,
-              sizeBytes: file.sizeBytes
-            }))
+          const submission = await tx.evidenceSubmission.upsert({
+            where: {
+              courseId_requirementId: { courseId, requirementId: requirement.id }
+            },
+            update: {
+              folderUrls: data.links
+                ? data.links
+                : data.linksRich
+                ? data.linksRich.map((l) => l.url)
+                : undefined
+            },
+            create: {
+              courseId,
+              requirementId: requirement.id,
+              folderUrls: data.links
+                ? data.links
+                : data.linksRich
+                ? data.linksRich.map((l) => l.url)
+                : []
+            }
           });
+
+          // Processamento de Links Ricos
+          if (data.linksRich && Array.isArray(data.linksRich)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const evidenceLink = (tx as any).evidenceLink;
+            
+            await evidenceLink.deleteMany({
+              where: { submissionId: submission.id }
+            });
+            
+            if (data.linksRich.length > 0) {
+              await evidenceLink.createMany({
+                data: data.linksRich.map((it, idx) => ({
+                  submissionId: submission.id,
+                  text: it.text,
+                  url: it.url,
+                  order: idx
+                }))
+              });
+            }
+          } 
+          // Processamento de Links Simples
+          else if (data.links && Array.isArray(data.links)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const evidenceLink = (tx as any).evidenceLink;
+            
+            await evidenceLink.deleteMany({
+              where: { submissionId: submission.id }
+            });
+            
+            if (data.links.length > 0) {
+              await evidenceLink.createMany({
+                data: data.links.map((u, idx) => ({
+                  submissionId: submission.id,
+                  text: u,
+                  url: u,
+                  order: idx
+                }))
+              });
+            }
+          }
+
+          // Processamento de Arquivos
+          if (data.files && data.files.length > 0) {
+            await tx.evidenceFile.createMany({
+              data: data.files.map((file) => ({
+                submissionId: submission.id,
+                kind: StorageKind.EXTERNAL,
+                storageKey: file.storageKey,
+                externalUrl: file.externalUrl,
+                fileName: file.fileName,
+                mimeType: file.mimeType,
+                sizeBytes: file.sizeBytes
+              }))
+            });
+          }
         }
+      },
+      // 6. CONFIGURAÇÃO DE SEGURANÇA
+      {
+        maxWait: 5000,
+        timeout: 20000 // Aumentado para 20s para suportar latência da Vercel
       }
-    });
+    );
 
     const courseSlug = rawData.courseSlug;
     if (courseSlug) {
@@ -335,10 +373,22 @@ export async function saveIndicatorEvaluation(
       revalidatePath(`/courses/${courseId}/dimensions`);
     }
     return { success: true };
+
   } catch (error) {
     console.error('Falha ao salvar avaliação do indicador:', error);
+    const errMsg =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+        ? error
+        : JSON.stringify(error);
     return {
-      errors: { _form: ['Erro inesperado ao salvar no banco de dados.'] },
+      errors: {
+        _form: [
+          'Erro inesperado ao salvar no banco de dados.',
+          `Detalhes: ${errMsg}`
+        ]
+      },
       success: false
     };
   }
