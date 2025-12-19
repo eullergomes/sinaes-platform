@@ -1,4 +1,5 @@
 'use client';
+
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -9,6 +10,7 @@ import {
 import AppSidebar from '@/components/app-sidebar';
 import PendingAlerts from '@/components/PendingAlerts';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 
 import { useSession } from '@/lib/auth-client';
@@ -64,7 +66,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   const UserSkeleton = (
     <div className="flex items-center gap-3">
-      <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300" />
+      <Skeleton className="h-8 w-8 rounded-full" />
     </div>
   );
 

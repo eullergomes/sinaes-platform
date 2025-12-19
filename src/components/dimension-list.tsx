@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from './ui/skeleton';
 import {
   ResponsiveContainer,
   RadarChart,
@@ -19,13 +20,14 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import CycleYearSelect from '@/components/CycleYearSelect';
-import { Download, PlusCircle, Loader2 } from 'lucide-react';
+import { Download, PlusCircle } from 'lucide-react';
 import ReportButton from './report-button';
 import { UserRole } from '@prisma/client';
 import { useAppContext } from '@/context/AppContext';
 import { isVisitor as isVisitorRole } from '@/lib/permissions';
 import { useCourseYears } from '@/hooks/useCourseYears';
 import { useCreateCycle } from '@/hooks/useCreateCycle';
+import DimensionItemSkeleton from './dimension-item-skeleton';
 
 type DimensionWithGrade = DimensionDefinition & {
   averageGrade: number;
@@ -234,19 +236,12 @@ const DimensionList = ({
         <>
           <div className="flex justify-between">
             <div className="flex flex-col gap-2">
-              <div className="text-muted-foreground flex items-center gap-2 text-sm font-bold">
-                {yearsLoading ? (
-                  <>
-                    <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </>
-                ) : (
-                  <>Selecione o ciclo avaliativo</>
-                )}
+              <div className="text-muted-foreground flex flex-col gap-2 text-sm font-bold">
+                Selecione o ciclo avaliativo:
               </div>
               <div className="w-48">
                 {yearsLoading ? (
-                  <div className="h-10 w-full animate-pulse rounded bg-gray-200" />
+                  <Skeleton className="h-8 w-28" />
                 ) : (
                   <CycleYearSelect
                     years={availableYears}
@@ -272,18 +267,7 @@ const DimensionList = ({
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {yearsLoading
               ? Array.from({ length: 3 }).map((_, idx) => (
-                  <div
-                    key={`dim-skel-${idx}`}
-                    className="hover:border-primary flex flex-col rounded-md border bg-white p-4 transition-all"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
-                      <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
-                    </div>
-                    <div className="mt-2 h-4 w-full animate-pulse rounded bg-gray-200" />
-                    <div className="mt-1 h-4 w-3/4 animate-pulse rounded bg-gray-200" />
-                    <div className="mt-6 h-9 w-full animate-pulse rounded bg-gray-200" />
-                  </div>
+                  <DimensionItemSkeleton key={`dim-skel-${idx}`} />
                 ))
               : dimensionsWithGrades.map((d) => (
                   <DimensionItem
