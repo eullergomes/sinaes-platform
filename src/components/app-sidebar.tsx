@@ -34,7 +34,8 @@ import {
   ChartNoAxesCombinedIcon,
   ArrowLeftCircle,
   FileText,
-  NotebookPenIcon
+  Link2,
+  ThumbsUp
 } from 'lucide-react';
 import Image from 'next/image';
 import NavUser from './nav-user';
@@ -103,12 +104,24 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
   });
 
   sections.push({
+    title: 'Guia de Uso',
+    items: [
+      {
+        title: 'Guia de Uso',
+        url: `https://drive.google.com/file/d/1DMEPOsndcWtGgCq5xJL9HJxaQ9eaXol7/view?usp=sharing`,
+        icon: Link2,
+        openInNewTab: true
+      }
+    ]
+  });
+
+  sections.push({
     title: 'Feedback',
     items: [
       {
         title: 'Avalie a Plataforma',
         url: 'https://forms.gle/xtWj19USpXt9Pqow6',
-        icon: NotebookPenIcon,
+        icon: ThumbsUp,
         openInNewTab: true
       }
     ]
