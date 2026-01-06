@@ -33,7 +33,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     pathname === '/profile' ||
     pathname === '/admin/users' ||
     pathname === '/forgot-password' ||
-    pathname === '/reset-password';
+    pathname === '/reset-password' ||
+    pathname === '/about';
   const hideSidebar =
     pathname === '/courses' ||
     pathname === '/courses/new' ||

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
-import { BookMarked, Building, Link2, ThumbsUp } from 'lucide-react';
+import { BookMarked, Building, Info, Link2, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -81,6 +81,15 @@ const Footer = () => {
                   >
                     <ThumbsUp className="h-4 w-4" />
                     Avalie a Plataforma
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/about"
+                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
+                  >
+                    <Info className="h-4 w-4" />
+                    Sobre
                   </a>
                 </li>
               </ul>

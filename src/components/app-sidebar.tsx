@@ -35,7 +35,8 @@ import {
   ArrowLeftCircle,
   FileText,
   Link2,
-  ThumbsUp
+  ThumbsUp,
+  Info
 } from 'lucide-react';
 import Image from 'next/image';
 import NavUser from './nav-user';
@@ -104,25 +105,24 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
   });
 
   sections.push({
-    title: 'Guia de Uso',
+    title: 'Acessos Úteis',
     items: [
       {
         title: 'Guia de Uso',
         url: `https://drive.google.com/file/d/1DMEPOsndcWtGgCq5xJL9HJxaQ9eaXol7/view?usp=sharing`,
         icon: Link2,
         openInNewTab: true
-      }
-    ]
-  });
-
-  sections.push({
-    title: 'Feedback',
-    items: [
+      },
       {
         title: 'Avalie a Plataforma',
         url: 'https://forms.gle/xtWj19USpXt9Pqow6',
         icon: ThumbsUp,
         openInNewTab: true
+      },
+      {
+        title: 'Sobre',
+        url: `/about`,
+        icon: Info
       }
     ]
   });
