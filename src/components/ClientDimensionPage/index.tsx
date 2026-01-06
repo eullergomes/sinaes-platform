@@ -2,10 +2,7 @@
 
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import {
-  isVisitor as isVisitorRole,
-  canToggleNsaIndicator
-} from '@/lib/permissions';
+import { isReadOnlyIndicator, canToggleNsaIndicator } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,10 +50,12 @@ const ClientDimensionPage = ({
   year?: string;
   initialDimension?: DimensionApiResponse;
 }) => {
-  // Visitor view detection using shared permissions
-  const { role } = useAppContext();
-  const visitorView = isVisitorRole(role);
-  const { userId, courseCoordinatorId } = useAppContext();
+  const { role, userId, courseCoordinatorId } = useAppContext();
+  const readOnlyView = isReadOnlyIndicator({
+    role,
+    userId: userId ?? null,
+    courseCoordinatorId
+  });
   const userCanToggleNsa = canToggleNsaIndicator({
     role,
     userId: userId ?? null,
@@ -240,7 +239,7 @@ const ClientDimensionPage = ({
               // Atualiza a barra de endereço para refletir ano selecionado
               updateQueryParam={true}
             />
-            {!visitorView && (
+            {!readOnlyView && (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -357,7 +356,7 @@ const ClientDimensionPage = ({
             courseSlug={slug}
             dimensionId={dimId}
             year={selectedYear}
-            isVisitor={visitorView}
+            isVisitor={readOnlyView}
             showNsaControls={userCanToggleNsa}
           />
         </CardContent>
