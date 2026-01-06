@@ -1,6 +1,6 @@
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
-import { BookMarked, Building, NotebookPenIcon } from 'lucide-react';
+import { BookMarked, Building, Link2, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -63,12 +63,23 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
+                    href="https://drive.google.com/file/d/1DMEPOsndcWtGgCq5xJL9HJxaQ9eaXol7/view?usp=sharing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
+                  >
+                    <Link2 className="h-4 w-4" />
+                    Guia de Uso
+                  </a>
+                </li>
+                <li>
+                  <a
                     href="https://forms.gle/xtWj19USpXt9Pqow6"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
                   >
-                    <NotebookPenIcon className="h-4 w-4" />
+                    <ThumbsUp className="h-4 w-4" />
                     Avalie a Plataforma
                   </a>
                 </li>

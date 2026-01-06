@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown, LogOut, UserCircle } from 'lucide-react';
+import { ChevronsUpDown, Link2, LogOut, ThumbsUp, UserCircle } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -125,6 +125,32 @@ const NavUser = ({ user, hideInfo, isInSidebar }: NavUserProps) => {
             </DropdownMenuItem>
           </DropdownMenuGroup>
         )}
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild className="hover:cursor-pointer">
+            <Link
+              href="https://drive.google.com/file/d/1DMEPOsndcWtGgCq5xJL9HJxaQ9eaXol7/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:bg-accent flex gap-4 px-3 py-2"
+            >
+              <Link2 />
+              Guia de Uso
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild className="hover:cursor-pointer">
+            <Link
+              href="https://forms.gle/xtWj19USpXt9Pqow6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:bg-accent flex gap-4 px-3 py-2"
+            >
+              <ThumbsUp />
+              Avalie a Plataforma
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator className="m-0" />
         <DropdownMenuItem asChild>
           <Button
