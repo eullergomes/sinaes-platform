@@ -117,6 +117,7 @@ const CourseList = ({
       if (deleted) sp.delete('deleted');
       if (e) sp.delete('e');
       router.replace(`/courses${sp.toString() ? `?${sp.toString()}` : ''}`);
+      router.refresh();
     }
   }, [searchParams, router]);
 

@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import prisma from '@/utils/prisma';
 import { CourseLevel, CourseModality, UserRole } from '@prisma/client';
@@ -129,6 +129,7 @@ export async function createCourse(
   }
 
   revalidateTag('courses');
+  revalidatePath('/courses');
 
   const e = newEvent();
   redirect(`/courses?created=1&e=${e}`);
@@ -175,6 +176,7 @@ export async function deleteCourse(formData: FormData) {
   }
 
   revalidateTag('courses');
+  revalidatePath('/courses');
 
   const e = newEvent();
   redirect(`/courses?deleted=1&e=${e}`);
@@ -313,6 +315,7 @@ export async function updateCourse(
   }
 
   revalidateTag('courses');
+  revalidatePath('/courses');
 
   const e = newEvent();
   redirect(`/courses?updated=1&e=${e}`);
