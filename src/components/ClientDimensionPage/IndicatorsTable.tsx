@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
   flexRender,
@@ -90,6 +91,10 @@ const IndicatorsTable = ({
   isVisitor?: boolean;
   showNsaControls?: boolean;
 }) => {
+  const router = useRouter();
+  const [isNavigating, startTransition] = useTransition();
+  const [navigatingCode, setNavigatingCode] = useState<string | null>(null);
+
   const [statusOverrides, setStatusOverrides] = useState<
     Record<string, IndicatorStatus>
   >({});
@@ -266,14 +271,24 @@ const IndicatorsTable = ({
       cell: ({ row }) => {
         const isVisible = nsaStatus[row.original.code] ?? true;
         const { code, hasEvaluation } = row.original;
+        const href = `/courses/${courseSlug}/dimensions/${dimensionId}/indicators/${code}?year=${year}`;
+        const isThisNavigating = isNavigating && navigatingCode === code;
+
         return (
           <div className="text-center">
             {hasEvaluation ? (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onEdit(code)}
-                disabled={!isVisible}
+                onMouseEnter={() => router.prefetch(href)}
+                onFocus={() => router.prefetch(href)}
+                onClick={() => {
+                  setNavigatingCode(code);
+                  startTransition(() => {
+                    onEdit(code);
+                  });
+                }}
+                disabled={!isVisible || isThisNavigating}
                 className="hover:cursor-pointer"
               >
                 {isVisitor ? 'Ver' : 'Editar'}
@@ -281,8 +296,15 @@ const IndicatorsTable = ({
             ) : (
               <Button
                 size="sm"
-                onClick={() => onEdit(code)}
-                disabled={!isVisible}
+                onMouseEnter={() => router.prefetch(href)}
+                onFocus={() => router.prefetch(href)}
+                onClick={() => {
+                  setNavigatingCode(code);
+                  startTransition(() => {
+                    onEdit(code);
+                  });
+                }}
+                disabled={!isVisible || isThisNavigating}
                 className="hover:cursor-pointer"
               >
                 {isVisitor ? 'Ver' : 'Registrar'}
@@ -301,7 +323,14 @@ const IndicatorsTable = ({
     isVisitor,
     showNsaControls,
     updateStatus,
-    updating
+    updating,
+    courseSlug,
+    dimensionId,
+    year,
+    router,
+    isNavigating,
+    navigatingCode,
+    startTransition
   ]);
 
   const table = useReactTable({

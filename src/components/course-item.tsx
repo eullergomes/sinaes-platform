@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -18,7 +19,7 @@ import {
 import { deleteCourse } from '@/actions/course';
 import { Loader2, Trash2, Edit } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useTransition } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { canUpdateCourse, canDeleteCourse } from '@/lib/permissions';
 
@@ -59,9 +60,14 @@ function DeleteButton({
 const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const router = useRouter();
+  const [isNavigating, startTransition] = useTransition();
   const { role } = useAppContext();
   const canUpdate = canUpdateCourse(role);
   const canDelete = canDeleteCourse(role);
+
+  const dimensionsHref = `/courses/${course.slug}/dimensions`;
+
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -169,10 +175,20 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
         </div>
 
         <div className="flex items-center">
-          <Button asChild className="w-full bg-green-600 hover:bg-green-700">
-            <Link href={`/courses/${course.slug}/dimensions`}>
-              Abrir dimensões
-            </Link>
+          <Button
+            type="button"
+            className="w-full bg-green-600 hover:bg-green-700"
+            disabled={isNavigating}
+            aria-busy={isNavigating || undefined}
+            onMouseEnter={() => router.prefetch(dimensionsHref)}
+            onFocus={() => router.prefetch(dimensionsHref)}
+            onClick={() => {
+              startTransition(() => {
+                router.push(dimensionsHref);
+              });
+            }}
+          >
+            Abrir dimensões
           </Button>
         </div>
       </CardContent>

@@ -8,107 +8,159 @@ import { UserRole } from '@prisma/client';
 type Params = { slug: string };
 type SearchParams = { year?: string };
 
-const DimensionPage = async ({
-  params,
-  searchParams
-}: {
+type DimensionWithGrade = {
+  id: string;
+  number: number;
+  title: string;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  averageGrade: number;
+};
+
+function parseYear(value: string | undefined): number | null {
+  if (!value) return null;
+  const parsed: number = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return null;
+  if (!Number.isInteger(parsed)) return null;
+  return parsed;
+}
+
+export default async function DimensionPage(props: {
   params: Promise<Params>;
   searchParams: Promise<SearchParams>;
-}) => {
-  const { slug } = await params;
-  const { year } = await searchParams;
+}): Promise<React.JSX.Element> {
+  const { slug } = await props.params;
+  const { year } = await props.searchParams;
 
+  // 1) Course primeiro (resto depende do course.id)
   const course = await prisma.course.findUnique({
     where: { slug },
     select: { id: true, coordinatorId: true, slug: true }
   });
-  const dimensions = await prisma.dimensionDefinition.findMany({
-    orderBy: {
-      number: 'asc'
-    }
-  });
 
   if (!course) {
-    // not found page
     return <div>Curso não encontrado.</div>;
   }
 
-  const latestEvaluation = await prisma.courseIndicator.aggregate({
-    _max: { evaluationYear: true },
-    where: { courseId: course.id }
-  });
-  const latestYear = latestEvaluation._max.evaluationYear;
-  const hasCycles = Boolean(latestYear);
+  // 2) Rodar em paralelo tudo que depende do course.id (e o que não depende também)
+  const [dimensions, yearsRows] = await Promise.all([
+    prisma.dimensionDefinition.findMany({
+      orderBy: { number: 'asc' },
+      select: {
+        id: true,
+        number: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    }),
+    // Em vez de aggregate + findFirst, buscamos os anos existentes uma vez.
+    prisma.courseIndicator.findMany({
+      where: { courseId: course.id },
+      select: { evaluationYear: true },
+      distinct: ['evaluationYear'],
+      orderBy: { evaluationYear: 'desc' }
+    })
+  ]);
 
+  const years: number[] = yearsRows
+    .map(
+      (r: { evaluationYear: number | null }): number | null => r.evaluationYear
+    )
+    .filter((v: number | null): v is number => typeof v === 'number');
+
+  const latestYear: number | null = years.length > 0 ? years[0] : null;
+  const hasCycles: boolean = Boolean(latestYear);
+
+  // 3) Seleciona ano sem query extra
+  const requestedYear: number | null = parseYear(year);
   let selectedYear: number | null = null;
-  if (year) {
-    const parsed = parseInt(year, 10);
-    if (Number.isInteger(parsed)) {
-      const exists = await prisma.courseIndicator.findFirst({
-        where: { courseId: course.id, evaluationYear: parsed },
-        select: { id: true }
-      });
-      if (exists) selectedYear = parsed;
-    }
-  }
-  if (!selectedYear) selectedYear = latestYear ?? null;
 
-  let dimensionsWithGrades = dimensions.map((dim) => ({
-    ...dim,
+  if (requestedYear !== null && years.includes(requestedYear)) {
+    selectedYear = requestedYear;
+  } else {
+    selectedYear = latestYear;
+  }
+
+  // 4) Base: dimensões com nota 0
+  let dimensionsWithGrades: DimensionWithGrade[] = dimensions.map((dim) => ({
+    id: dim.id,
+    number: dim.number,
+    title: dim.title,
+    description: dim.description,
+    createdAt: dim.createdAt,
+    updatedAt: dim.updatedAt,
     averageGrade: 0
   }));
 
-  if (selectedYear) {
+  // 5) Se houver ano, buscamos indicadores com SELECT enxuto (sem include pesado)
+  if (selectedYear !== null) {
     const indicators = await prisma.courseIndicator.findMany({
       where: {
         courseId: course.id,
         evaluationYear: selectedYear
       },
-      include: {
+      select: {
+        grade: true,
         indicatorDef: {
           select: { dimensionId: true }
         }
       }
     });
 
-    const gradesByDimension = new Map<
-      string,
-      { total: number; count: number }
-    >();
+    const gradesByDimension: Map<string, { total: number; count: number }> =
+      new Map();
 
     for (const indicator of indicators) {
-      const dimId = indicator.indicatorDef.dimensionId;
-      const gradeValue = gradeToNumber(indicator.grade);
+      const dimId: string = indicator.indicatorDef.dimensionId;
+      const gradeValue: number = gradeToNumber(indicator.grade);
 
       if (gradeValue > 0) {
-        if (!gradesByDimension.has(dimId)) {
-          gradesByDimension.set(dimId, { total: 0, count: 0 });
-        }
-        const current = gradesByDimension.get(dimId)!;
+        const current = gradesByDimension.get(dimId) ?? { total: 0, count: 0 };
         current.total += gradeValue;
-        current.count++;
+        current.count += 1;
+        gradesByDimension.set(dimId, current);
       }
     }
 
     dimensionsWithGrades = dimensions.map((dim) => {
       const gradeData = gradesByDimension.get(dim.id);
-      const averageGrade =
+      const averageGrade: number =
         gradeData && gradeData.count > 0
-          ? parseFloat((gradeData.total / gradeData.count).toFixed(2))
+          ? Number.parseFloat((gradeData.total / gradeData.count).toFixed(2))
           : 0;
-      return { ...dim, averageGrade };
+
+      return {
+        id: dim.id,
+        number: dim.number,
+        title: dim.title,
+        description: dim.description,
+        createdAt: dim.createdAt,
+        updatedAt: dim.updatedAt,
+        averageGrade
+      };
     });
   }
 
-  // Server-side: compute initial canCreateCycle for better UX
-  const cookieHeader = (await headers()).get('cookie') ?? '';
-  const session = await auth.api.getSession({ headers: { cookie: cookieHeader } });
-  const role = (session?.user?.role ?? undefined) as UserRole | string | undefined;
-  const isAdmin = role === 'ADMIN' || role === UserRole.ADMIN;
-  const isCoordinator = role === 'COORDINATOR' || role === UserRole.COORDINATOR;
-  const canCreateCycleServer = Boolean(
-    (isAdmin && true) ||
-      (isCoordinator && course.coordinatorId && session?.user?.id === course.coordinatorId)
+  // 6) Session server-side (mantendo sua lógica)
+  const cookieHeader: string = (await headers()).get('cookie') ?? '';
+  const session = await auth.api.getSession({
+    headers: { cookie: cookieHeader }
+  });
+
+  const role: UserRole | string | undefined = (session?.user?.role ??
+    undefined) as UserRole | string | undefined;
+  const isAdmin: boolean = role === 'ADMIN' || role === UserRole.ADMIN;
+  const isCoordinator: boolean =
+    role === 'COORDINATOR' || role === UserRole.COORDINATOR;
+
+  const canCreateCycleServer: boolean = Boolean(
+    isAdmin ||
+      (isCoordinator &&
+        Boolean(course.coordinatorId) &&
+        session?.user?.id === course.coordinatorId)
   );
 
   return (
@@ -120,6 +172,4 @@ const DimensionPage = async ({
       canCreateCycleInitial={canCreateCycleServer}
     />
   );
-};
-
-export default DimensionPage;
+}
