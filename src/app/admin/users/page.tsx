@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import prisma from '@/utils/prisma';
 import UsersClientPage from '@/components/UsersClientPage';
 import { UserRole } from '@prisma/client';
+import BackButton from '@/components/back-button';
 
 type SearchParams = {
   q?: string;
@@ -70,6 +71,7 @@ export default async function AdminUsersPage({
   return (
     <div className="space-y-8 p-6 md:p-8">
       <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
+      <BackButton url="/courses" label="Voltar para Início" />
       <UsersClientPage
         currentUserId={session.user.id}
         users={users.map((u) => ({

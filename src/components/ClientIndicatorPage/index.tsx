@@ -40,6 +40,7 @@ import { ExistingFile } from '@/types/indicator-types';
 import { useIndicatorData } from '@/hooks/useIndicatorData';
 // import { uploadFileToMinio } from '@/services/uploadFile';
 import { uploadToCloudinary } from '@/services/uploadToCloudinary';
+import BackButton from '../back-button';
 
 type UploadedFileInfo = {
   storageKey: string;
@@ -94,6 +95,10 @@ const ClientIndicatorPage = ({
     yearStr && !Number.isNaN(Number(yearStr)) ? parseInt(yearStr, 10) : null;
 
   const { slug: courseSlug, indicatorCode } = params;
+
+  const fallbackHref = `/courses/${courseSlug}/dimensions/${dimensionId}${
+      year ? `?year=${year}` : ''
+    }`;
 
   const [grade, setGrade] = useState<IndicatorGrade>(IndicatorGrade.NSA);
   const [nsaAuto, setNsaAuto] = useState<boolean>(false);
@@ -401,6 +406,8 @@ const ClientIndicatorPage = ({
           — {apiData.indicator.name}
         </span>
       </h1>
+
+      <BackButton url={fallbackHref} label="Voltar para Dimensão" />
 
       <Card>
         <CardHeader>

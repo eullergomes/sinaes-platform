@@ -1,20 +1,12 @@
 import React from 'react';
-import { FileText, BarChart3, ShieldCheck, Database, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { FileText, BarChart3, ShieldCheck, Database } from 'lucide-react';
+import BackButton from '@/components/back-button';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="">
-        <div className="mb-6">
-          <Link
-            href="/courses"
-            className="inline-flex items-center text-sm text-black hover:text-blue-600 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para o Início
-          </Link>
-        </div>
+        <BackButton url="/courses" label="Voltar para Início" />
         {/* Cabeçalho Principal */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
           <div className="bg-green-700 px-8 py-10 text-white">
