@@ -21,10 +21,16 @@ import { Loader2, Trash2, Edit } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
 import React, { useEffect, useRef, useTransition } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { canUpdateCourse, canDeleteCourse } from '@/lib/permissions';
+import {
+  canUpdateCourse,
+  canDeleteCourse,
+  canViewGradeBadge
+} from '@/lib/permissions';
+import GradeBadge from './grade-badge';
 
 type CourseWithCoordinator = Course & {
   coordinator?: { id: string; name: string } | null;
+  averageGrade?: number;
 };
 
 function DeleteButton({
@@ -65,6 +71,7 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
   const { role } = useAppContext();
   const canUpdate = canUpdateCourse(role);
   const canDelete = canDeleteCourse(role);
+  const canViewGrade = canViewGradeBadge(role);
 
   const dimensionsHref = `/courses/${course.slug}/dimensions`;
 
@@ -72,9 +79,12 @@ const CourseItem = ({ course }: { course: CourseWithCoordinator }) => {
     <Card className="flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between">
-          <Badge className="bg-gray-700 text-white hover:bg-gray-800">
-            e-MEC: {course.emecCode ?? '—'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-gray-700 text-white hover:bg-gray-800">
+              e-MEC: {course.emecCode ?? '—'}
+            </Badge>
+            {canViewGrade && <GradeBadge grade={course.averageGrade} label="Nota" />}
+          </div>
 
           <div className="flex items-center gap-1">
             {canUpdate && (

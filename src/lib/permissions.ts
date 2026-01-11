@@ -33,6 +33,16 @@ export function canDeleteCourse(role?: UserRole | string | null): boolean {
 }
 
 /**
+ * Returns true if user can see grade badges (Dimension/Course average).
+ * Rules:
+ * - VISITOR (or not logged in): false
+ * - ADMIN/DIRECTOR/COORDINATOR: true
+ */
+export function canViewGradeBadge(role?: UserRole | string | null): boolean {
+  return !isVisitor(role);
+}
+
+/**
  * Returns true if the user can edit Other Documents URL for the course.
  * Rules: ADMIN always; COORDINATOR only for their own course.
  */
