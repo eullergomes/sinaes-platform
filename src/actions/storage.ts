@@ -2,6 +2,10 @@
 
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+	requireAuthenticated,
+	requireCourseIndicatorAccessBySlug
+} from '@/lib/server-auth';
 
 const s3Client = new S3Client({
 	region: 'us-east-1',
@@ -36,6 +40,14 @@ export async function getPresignedUploadUrl(
 	folder?: string
 ) {
 	const safeFolder = sanitizeFolder(folder);
+	const courseSlug = safeFolder.match(/^sinaes-evidence\/([^/]+)/)?.[1];
+	const authResult = courseSlug
+		? await requireCourseIndicatorAccessBySlug(courseSlug)
+		: await requireAuthenticated();
+
+	if (!authResult.ok) {
+		throw new Error(authResult.error);
+	}
 
 	const normalizedFileName = fileName.replace(/\s+/g, '_');
 	const uniqueFileName = `${Date.now()}-${normalizedFileName}`;

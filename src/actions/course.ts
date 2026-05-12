@@ -5,6 +5,10 @@ import { redirect } from 'next/navigation';
 import prisma from '@/utils/prisma';
 import { CourseLevel, CourseModality, UserRole } from '@prisma/client';
 import { courseSchema, CourseInput } from '@/lib/validators/course';
+import {
+  requireCourseDeletion,
+  requireCourseManager
+} from '@/lib/server-auth';
 
 export type CreateCourseState = {
   error?: string;
@@ -29,6 +33,11 @@ export async function createCourse(
   prevState: CreateCourseState,
   formData: FormData
 ): Promise<CreateCourseState> {
+  const authResult = await requireCourseManager();
+  if (!authResult.ok) {
+    return { error: authResult.error, eventId: newEvent() };
+  }
+
   const raw = {
     name: (formData.get('name') as string) ?? '',
     level: formData.get('level') as unknown as CourseLevel,
@@ -138,6 +147,11 @@ export async function createCourse(
 }
 
 export async function deleteCourse(formData: FormData) {
+  const authResult = await requireCourseDeletion();
+  if (!authResult.ok) {
+    throw new Error(authResult.error);
+  }
+
   const courseId = formData.get('courseId') as string;
 
   if (!courseId) {
@@ -186,6 +200,11 @@ export async function updateCourse(
   prevState: CreateCourseState,
   formData: FormData
 ): Promise<CreateCourseState> {
+  const authResult = await requireCourseManager();
+  if (!authResult.ok) {
+    return { error: authResult.error, eventId: newEvent() };
+  }
+
   const courseId = (formData.get('courseId') as string) ?? '';
   if (!courseId) {
     return { error: 'ID do curso é obrigatório.', eventId: newEvent() };

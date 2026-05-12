@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { UserRole } from '@prisma/client';
+import { requireVisitorSearchAccess } from '@/lib/server-auth';
 
 export async function GET(request: Request) {
+  const authResult = await requireVisitorSearchAccess();
+  if (!authResult.ok) {
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('query') ?? '';
 

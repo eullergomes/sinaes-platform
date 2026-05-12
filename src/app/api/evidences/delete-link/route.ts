@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
+import { requireCourseIndicatorAccessById } from '@/lib/server-auth';
 
 export async function DELETE(request: Request) {
   try {
@@ -14,6 +15,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         { error: 'Parâmetros ausentes: courseId, requirementId, linkId' },
         { status: 400 }
+      );
+    }
+
+    const authResult = await requireCourseIndicatorAccessById(courseId);
+    if (!authResult.ok) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
       );
     }
 

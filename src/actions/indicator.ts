@@ -4,6 +4,7 @@ import prisma from '@/utils/prisma';
 import { IndicatorGrade, IndicatorStatus, StorageKind } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { requireCourseIndicatorAccessById } from '@/lib/server-auth';
 
 type EvidenceFileInfo = {
   storageKey: string;
@@ -206,6 +207,14 @@ export async function saveIndicatorEvaluation(
     responsible,
     evidences
   } = validatedFields.data;
+
+  const authResult = await requireCourseIndicatorAccessById(courseId);
+  if (!authResult.ok) {
+    return {
+      errors: { _form: [authResult.error] },
+      success: false
+    };
+  }
 
   try {
     // 4. OTIMIZAÇÃO: PRE-FETCHING (ANTES DA TRANSAÇÃO)
@@ -413,6 +422,11 @@ export async function updateNsaStatusBatch(input: {
       courseId = course.id;
     }
     if (!courseId) return { success: false, error: 'courseId é obrigatório.' };
+
+    const authResult = await requireCourseIndicatorAccessById(courseId);
+    if (!authResult.ok) {
+      return { success: false, error: authResult.error };
+    }
 
     const year = input.evaluationYear;
     const updates = input.updates || [];

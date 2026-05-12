@@ -1,9 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { PrismaClient } from '@prisma/client';
 import { sendResetPasswordEmail } from './email';
-
-const prisma = new PrismaClient();
+import prisma from '@/utils/prisma';
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {

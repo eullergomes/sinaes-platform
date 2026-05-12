@@ -1,17 +1,26 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
+import { requireCourseIndicatorAccessById } from '@/lib/server-auth';
 
 export async function DELETE(req: Request) {
   try {
     const { courseId, requirementId, publicId } = await req.json();
 
-    if (!publicId || (!courseId && !requirementId)) {
+    if (!publicId || !courseId || !requirementId) {
       return NextResponse.json(
         {
           error:
             'Parâmetros inválidos. Informe publicId e (courseId + requirementId).'
         },
         { status: 400 }
+      );
+    }
+
+    const authResult = await requireCourseIndicatorAccessById(courseId);
+    if (!authResult.ok) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
       );
     }
 

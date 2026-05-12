@@ -1,14 +1,7 @@
 import { NextResponse } from 'next/server';
-import {
-  PrismaClient,
-  IndicatorGrade,
-  IndicatorStatus,
-  UserRole
-} from '@prisma/client';
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { IndicatorGrade, IndicatorStatus } from '@prisma/client';
+import prisma from '@/utils/prisma';
+import { requireCourseIndicatorAccessBySlug } from '@/lib/server-auth';
 
 export async function POST(
   request: Request,
@@ -20,7 +13,7 @@ export async function POST(
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+    return NextResponse.json({ error: 'JSON invÃ¡lido' }, { status: 400 });
   }
 
   const body = (payload ?? {}) as Record<string, unknown>;
@@ -34,43 +27,20 @@ export async function POST(
 
   if (!slug || !Number.isInteger(year) || year < 1900) {
     return NextResponse.json(
-      { error: 'Parâmetros inválidos' },
+      { error: 'ParÃ¢metros invÃ¡lidos' },
       { status: 400 }
     );
   }
 
   try {
-    // AuthN/AuthZ: apenas ADMIN pode criar para qualquer curso; COORDINATOR somente para seu curso
-    const cookieHeader = (await headers()).get('cookie') ?? '';
-    const session = await auth.api.getSession({
-      headers: { cookie: cookieHeader }
-    });
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-    const requesterRole = session.user.role as UserRole | string | undefined;
-
-    const course = await prisma.course.findUnique({ where: { slug } });
-    if (!course) {
+    const authResult = await requireCourseIndicatorAccessBySlug(slug);
+    if (!authResult.ok) {
       return NextResponse.json(
-        { error: 'Curso não encontrado' },
-        { status: 404 }
+        { error: authResult.error },
+        { status: authResult.status }
       );
     }
-
-    const isAdmin =
-      requesterRole === 'ADMIN' || requesterRole === UserRole.ADMIN;
-    const isCoordinator =
-      requesterRole === 'COORDINATOR' || requesterRole === UserRole.COORDINATOR;
-    if (!isAdmin) {
-      if (!isCoordinator) {
-        return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-      }
-      // Coordinator: somente se for o coordenador do curso
-      if (!course.coordinatorId || course.coordinatorId !== session.user.id) {
-        return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-      }
-    }
+    const { course } = authResult;
 
     const existingForYear = await prisma.courseIndicator.findFirst({
       where: { courseId: course.id, evaluationYear: year },
@@ -78,7 +48,7 @@ export async function POST(
     });
     if (existingForYear) {
       return NextResponse.json(
-        { error: `Já existe um ciclo para o ano ${year}.` },
+        { error: `JÃ¡ existe um ciclo para o ano ${year}.` },
         { status: 409 }
       );
     }
@@ -88,7 +58,7 @@ export async function POST(
     });
     if (indicatorDefs.length === 0) {
       return NextResponse.json(
-        { error: 'Não há indicadores definidos no sistema.' },
+        { error: 'NÃ£o hÃ¡ indicadores definidos no sistema.' },
         { status: 422 }
       );
     }

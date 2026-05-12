@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import {
+  requireAuthenticated,
+  requireCourseIndicatorAccessBySlug
+} from '@/lib/server-auth';
 
 type RequestBody = {
   folder?: string;
@@ -13,6 +17,18 @@ export async function POST(request: Request) {
 
     if (!/^[a-zA-Z0-9_\-\/]+$/.test(folder)) {
         return NextResponse.json({ error: 'Nome de pasta inválido.' }, { status: 400 });
+    }
+
+    const courseSlug = folder.match(/^sinaes-evidence\/([^/]+)/)?.[1];
+    const authResult = courseSlug
+      ? await requireCourseIndicatorAccessBySlug(courseSlug)
+      : await requireAuthenticated();
+
+    if (!authResult.ok) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
     }
 
     const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
