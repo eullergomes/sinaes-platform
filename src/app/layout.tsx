@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
 import './globals.css';
-import AppShell from './sell';
+import AppShell from './shell';
 import { Toaster } from '@/components/ui/sonner';
 import ReactQueryProvider from '@/components/ReactQueryProvider';
 

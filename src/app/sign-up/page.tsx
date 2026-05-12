@@ -23,7 +23,7 @@ import { authClient } from '@/lib/auth-client';
 import { mapAuthErrorCode } from '@/lib/errors/auth';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { uploadFileToMinio } from '@/services/uploadFile';
+import { uploadFileService } from '@/services/uploadService';
 
 const SignUpForm = () => {
   const formSchema = z
@@ -81,8 +81,8 @@ const SignUpForm = () => {
         if (file.size > 2 * 1024 * 1024) {
           throw new Error('Máx 2MB');
         }
-        const uploadResponse = await uploadFileToMinio(file, 'ifma-avatars');
-        imageUrl = uploadResponse.url;
+        const uploadResponse = await uploadFileService(file, 'ifma-avatars');
+        imageUrl = uploadResponse.externalUrl;
       }
 
       await authClient.signUp.email({

@@ -38,8 +38,8 @@ import { useAppContext } from '@/context/AppContext';
 import { isReadOnlyIndicator } from '@/lib/permissions';
 import { ExistingFile } from '@/types/indicator-types';
 import { useIndicatorData } from '@/hooks/useIndicatorData';
-import { uploadFileToMinio } from '@/services/uploadFile';
-// import { uploadToCloudinary } from '@/services/uploadToCloudinary';
+import { uploadFileService } from '@/services/uploadService';
+import BackButton from '../back-button';
 
 type UploadedFileInfo = {
   storageKey: string;
@@ -77,9 +77,7 @@ type ApiIndicatorData = {
 const ClientIndicatorPage = ({
   slug,
   indicadorCode,
-  dimensionId,
-  initialIndicator
-}: {
+  dimensionId}: {
   slug: string;
   indicadorCode: string;
   dimensionId: string;
@@ -96,6 +94,10 @@ const ClientIndicatorPage = ({
     yearStr && !Number.isNaN(Number(yearStr)) ? parseInt(yearStr, 10) : null;
 
   const { slug: courseSlug, indicatorCode } = params;
+
+  const fallbackHref = `/courses/${courseSlug}/dimensions/${dimensionId}${
+      year ? `?year=${year}` : ''
+    }`;
 
   const [grade, setGrade] = useState<IndicatorGrade>(IndicatorGrade.NSA);
   const [nsaAuto, setNsaAuto] = useState<boolean>(false);
@@ -297,14 +299,14 @@ const ClientIndicatorPage = ({
       for (const file of state.filesToUpload) {
         const folder = `sinaes-evidence/${courseSlug}/${year}/${slug}`;
 
-        const promise = uploadFileToMinio(file, folder)
+        const promise = uploadFileService(file, folder)
           .then((result) => {
             filesUploadedInfo[slug].push({
               storageKey: result.storageKey,
-              externalUrl: result.url,
-              fileName: result.fileName,
-              sizeBytes: result.size,
-              mimeType: result.mimeType || 'application/pdf'
+              externalUrl: result.externalUrl,
+              fileName: result.fileName || file.name,
+              sizeBytes: result.sizeBytes,
+              mimeType: file.type || 'application/pdf'
             });
           })
           .catch((err) => {
@@ -365,7 +367,7 @@ const ClientIndicatorPage = ({
     }
   };
 
-  if (queryLoading && !initialIndicator) {
+  if (queryLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -403,6 +405,8 @@ const ClientIndicatorPage = ({
           — {apiData.indicator.name}
         </span>
       </h1>
+
+      <BackButton url={fallbackHref} label="Voltar para Dimensão" />
 
       <Card>
         <CardHeader>
