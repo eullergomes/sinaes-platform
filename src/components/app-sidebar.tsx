@@ -33,11 +33,15 @@ import {
   X,
   ChartNoAxesCombinedIcon,
   ArrowLeftCircle,
-  FileText
+  FileText,
+  Link2,
+  ThumbsUp,
+  Info
 } from 'lucide-react';
 import Image from 'next/image';
 import NavUser from './nav-user';
 import { User } from 'better-auth';
+import CourseLink from './course-link';
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   currentCourseId?: string | null;
@@ -51,7 +55,13 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
   const sections: Array<{
     title: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: Array<{ title: string; url: string; icon: any }>;
+    items: Array<{
+      title: string;
+      url: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      icon: any;
+      openInNewTab?: boolean;
+    }>;
   }> = [];
 
   if (showDashboard) {
@@ -91,6 +101,29 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
         title: 'Outros Documentos',
         url: `${prefix}/other-documents`,
         icon: FileText
+      }
+    ]
+  });
+
+  sections.push({
+    title: 'Acessos Úteis',
+    items: [
+      {
+        title: 'Guia de Uso',
+        url: `https://drive.google.com/file/d/1DMEPOsndcWtGgCq5xJL9HJxaQ9eaXol7/view?usp=sharing`,
+        icon: Link2,
+        openInNewTab: true
+      },
+      {
+        title: 'Avalie a Plataforma',
+        url: 'https://forms.gle/xtWj19USpXt9Pqow6',
+        icon: ThumbsUp,
+        openInNewTab: true
+      },
+      {
+        title: 'Sobre',
+        url: `/about`,
+        icon: Info
       }
     ]
   });
@@ -203,16 +236,10 @@ const AppSidebar = ({
         </div>
 
         <div className="mt-1 transition-all duration-200 ease-linear group-data-[collapsible=icon]:hidden">
-          <Link
-            href={`/courses/${currentCourseId}/dimensions`}
-            className="inline-flex w-full max-w-full items-center gap-2 rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white"
-            title={currentCourseName ?? '—'}
-          >
-            <span className="opacity-80">Curso:</span>
-            <span className="min-w-0 flex-1 truncate font-medium">
-              {currentCourseName ?? '—'}
-            </span>
-          </Link>
+          <CourseLink
+            currentCourseId={currentCourseId ?? ''}
+            currentCourseName={currentCourseName ?? ''}
+          />
         </div>
       </SidebarHeader>
 
@@ -228,12 +255,15 @@ const AppSidebar = ({
                   const isActive =
                     pathname === item.url ||
                     pathname.startsWith(item.url.split('?')[0]);
+                  const openInNewTab = !!item.openInNewTab;
                   const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={isActive}>
                         <Link
                           href={item.url}
+                          target={openInNewTab ? '_blank' : undefined}
+                          rel={openInNewTab ? 'noopener noreferrer' : undefined}
                           className="flex items-center gap-2"
                         >
                           <Icon size={20} color="white" />

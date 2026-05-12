@@ -33,7 +33,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     pathname === '/profile' ||
     pathname === '/admin/users' ||
     pathname === '/forgot-password' ||
-    pathname === '/reset-password';
+    pathname === '/reset-password' ||
+    pathname === '/about';
   const hideSidebar =
     pathname === '/courses' ||
     pathname === '/courses/new' ||
@@ -57,7 +58,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     'id' in (user as Record<string, unknown>)
       ? (user as { id?: string }).id
       : undefined;
-  const role = hasRole(user) ? user.role : undefined;
+  const role = hasRole(user) ? user.role : UserRole.VISITOR;
 
   const { info, loading } = useCourseInfo(currentCourseId);
   const courseName = info.name;

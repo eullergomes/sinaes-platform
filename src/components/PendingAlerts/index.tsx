@@ -108,7 +108,7 @@ const PendingAlerts = () => {
 
         <DropdownMenuItem
           onSelect={() => router.push(ALL_ALERTS_URL)}
-          className="flex justify-center bg-green-600 text-white hover:cursor-pointer hover:bg-green-700"
+          className="flex justify-center bg-green-600 text-white hover:cursor-pointer hover:bg-green-700 hover:text-white focus:bg-green-700 focus:text-white"
         >
           Ver todos
         </DropdownMenuItem>
