@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from './ui/skeleton';
 import {
   ResponsiveContainer,
   RadarChart,
@@ -25,9 +24,7 @@ import ReportButton from './report-button';
 import { UserRole } from '@prisma/client';
 import { useAppContext } from '@/context/AppContext';
 import { isVisitor as isVisitorRole } from '@/lib/permissions';
-import { useCourseYears } from '@/hooks/useCourseYears';
 import { useCreateCycle } from '@/hooks/useCreateCycle';
-import DimensionItemSkeleton from './dimension-item-skeleton';
 
 type DimensionWithGrade = DimensionDefinition & {
   averageGrade: number;
@@ -39,6 +36,7 @@ type Props = {
   hasCycles: boolean;
   currentYear: number | null;
   canCreateCycleInitial?: boolean;
+  availableYearsInitial?: number[];
 };
 
 const DimensionList = ({
@@ -46,7 +44,8 @@ const DimensionList = ({
   dimensionsWithGrades,
   hasCycles,
   currentYear,
-  canCreateCycleInitial
+  canCreateCycleInitial,
+  availableYearsInitial = []
 }: Props) => {
   const {
     userId,
@@ -70,7 +69,7 @@ const DimensionList = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
-  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>(availableYearsInitial);
   const [hasCyclesState, setHasCyclesState] = useState<boolean>(hasCycles);
   const [currentYearState, setCurrentYearState] = useState<number | null>(
     currentYear
@@ -97,20 +96,12 @@ const DimensionList = ({
   // Prefer client calculation when it turns true; otherwise fall back to SSR initial
   const canCreateCycle = clientCanCreate || !!canCreateCycleInitial;
 
-  const {
-    availableYears: fetchedYears,
-    latestYear,
-    loading: yearsLoading,
-    error: yearsError
-  } = useCourseYears(slug);
-
   useEffect(() => {
-    setAvailableYears(fetchedYears);
     const yearParamStr = searchParams.get('year');
     const yearParam = yearParamStr ? Number(yearParamStr) : null;
     const hasYearParam = yearParamStr !== null;
 
-    if (fetchedYears.length === 0) {
+    if (availableYears.length === 0) {
       setHasCyclesState(false);
       setCurrentYearState(null);
       return;
@@ -120,7 +111,7 @@ const DimensionList = ({
       hasYearParam &&
       yearParam !== null &&
       !Number.isNaN(yearParam) &&
-      fetchedYears.includes(yearParam)
+      availableYears.includes(yearParam)
     ) {
       // Respect explicit year from query params
       setCurrentYearState(yearParam);
@@ -129,11 +120,12 @@ const DimensionList = ({
     }
 
     // No valid year param: default to latest available year
+    const latestYear: number | null = availableYears.length > 0 ? availableYears[0] : null;
     if (latestYear !== null) {
       setCurrentYearState(latestYear);
       setHasCyclesState(true);
     }
-  }, [fetchedYears, latestYear, searchParams]);
+  }, [availableYears, searchParams]);
 
   const {
     createCycle,
@@ -162,7 +154,7 @@ const DimensionList = ({
     window.history.replaceState({}, '', url.toString());
   }
 
-  const showNoCycles = !hasCyclesState && !yearsLoading;
+  const showNoCycles = !hasCyclesState;
 
   return (
     <div className="space-y-6 p-6 md:p-8">
@@ -240,43 +232,30 @@ const DimensionList = ({
                 Selecione o ciclo avaliativo:
               </div>
               <div className="w-48">
-                {yearsLoading ? (
-                  <Skeleton className="h-8 w-28" />
-                ) : (
-                  <CycleYearSelect
-                    years={availableYears}
-                    value={currentYearState}
-                    placeholder="Ano do ciclo"
-                    updateQueryParam={true}
-                    disabled={availableYears.length === 0}
-                    onChange={(yr) => {
-                      setCurrentYearState(yr);
-                      // URL is updated inside CycleYearSelect via router.replace
-                      router.refresh();
-                    }}
-                  />
-                )}
-                {yearsError && (
-                  <div className="text-destructive mt-1 text-xs">
-                    {yearsError}
-                  </div>
-                )}
+                <CycleYearSelect
+                  years={availableYears}
+                  value={currentYearState}
+                  placeholder="Ano do ciclo"
+                  updateQueryParam={true}
+                  disabled={availableYears.length === 0}
+                  onChange={(yr) => {
+                    setCurrentYearState(yr);
+                    // URL is updated inside CycleYearSelect via router.replace
+                    router.refresh();
+                  }}
+                />
               </div>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {yearsLoading
-              ? Array.from({ length: 3 }).map((_, idx) => (
-                  <DimensionItemSkeleton key={`dim-skel-${idx}`} />
-                ))
-              : dimensionsWithGrades.map((d) => (
-                  <DimensionItem
-                    key={d.id}
-                    slug={slug}
-                    dimensionWithGrade={d}
-                    currentYear={currentYearState ?? undefined}
-                  />
-                ))}
+            {dimensionsWithGrades.map((d) => (
+              <DimensionItem
+                key={d.id}
+                slug={slug}
+                dimensionWithGrade={d}
+                currentYear={currentYearState ?? undefined}
+              />
+            ))}
           </div>
 
           <Card>
