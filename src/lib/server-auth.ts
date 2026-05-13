@@ -48,7 +48,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 export async function requireAuthenticated(): Promise<AuthResult> {
   const user = await getCurrentUser();
   if (!user) {
-    return { ok: false, status: 401, error: 'NÃ£o autenticado.' };
+    return { ok: false, status: 401, error: 'Não autenticado.' };
   }
 
   return { ok: true, user };
@@ -93,7 +93,7 @@ async function requireCourseIndicatorAccess(
     | null
 ): Promise<AuthResult<{ course: Pick<Course, 'id' | 'slug' | 'coordinatorId'> }>> {
   if (!course) {
-    return { ok: false, status: 404, error: 'Curso nÃ£o encontrado.' };
+    return { ok: false, status: 404, error: 'Curso não encontrado.' };
   }
 
   const authResult = await requireAuthenticated();

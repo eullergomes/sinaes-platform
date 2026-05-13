@@ -1,6 +1,6 @@
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
-import { BookMarked, Building, Info, Link2, ThumbsUp } from 'lucide-react';
+import { BookMarked, Building, Info, Link2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -12,7 +12,7 @@ const Footer = () => {
       <div className="px-8 py-4">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row">
           <div className="flex-1 space-y-2">
-            <a 
+            <Link 
               href="https://caxias.ifma.edu.br/" 
               target="_blank" 
               rel="noopener noreferrer" 
@@ -26,7 +26,7 @@ const Footer = () => {
                 height={57}
                 className="w-auto h-auto"
               />
-            </a>
+            </Link>
             <h3 className="font-semibold text-white">Plataforma de Monitoramento SINAES</h3>
             <p className='text-white'>
               © {currentYear} Instituto Federal do Maranhão (IFMA)
@@ -40,57 +40,46 @@ const Footer = () => {
             <nav>
               <ul className="space-y-1">
                 <li>
-                  <a
+                  <Link
                     href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/avaliacao-in-loco"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
+                    className="inline-flex items-center gap-2 hover:underline text-white"
                   >
                     <BookMarked className="h-4 w-4" />
                     Sobre o SINAES (INEP)
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="https://caxias.ifma.edu.br"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
+                    className="inline-flex items-center gap-2 hover:underline text-white"
                   >
                     <Building className="h-4 w-4" />
                     Site do IFMA - Campus Caxias
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="https://drive.google.com/file/d/1DMEPOsndcWtGgCq5xJL9HJxaQ9eaXol7/view?usp=sharing"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
+                    className="inline-flex items-center gap-2 hover:underline text-white"
                   >
                     <Link2 className="h-4 w-4" />
                     Guia de Uso
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="https://forms.gle/xtWj19USpXt9Pqow6"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
-                  >
-                    <ThumbsUp className="h-4 w-4" />
-                    Avalie a Plataforma
-                  </a>
-                </li>
-                <li>
-                  <a
+                  <Link
                     href="/about"
-                    className="inline-flex items-center gap-2 hover:text-primary hover:underline text-white"
+                    className="inline-flex items-center gap-2 hover:underline text-white"
                   >
                     <Info className="h-4 w-4" />
                     Sobre
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </nav>
