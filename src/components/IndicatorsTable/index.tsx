@@ -40,7 +40,7 @@ export type IndicatorRow = {
   lastUpdate: string;
   hasEvaluation: boolean;
   nsaLocked: boolean;
-  nsaApplicable: boolean; // indica se o indicador é aplicável (true) ou está como NSA (false)
+  nsaApplicable: boolean;
 };
 
 function GradeBadge({ grade }: { grade: IndicatorGrade }) {

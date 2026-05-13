@@ -24,7 +24,7 @@ import { DimensionApiResponse } from '@/types/dimension-types';
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import StatusBadge from '../status-badge';
-import IndicatorsTable, { IndicatorRow } from './IndicatorsTable';
+import IndicatorsTable, {IndicatorRow } from '../IndicatorsTable';
 import {
   AlertDialog,
   AlertDialogAction,
