@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Loader2, UploadCloud } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -71,14 +71,38 @@ export default function ProfilePage() {
     setAvatarPreview(user?.image ?? null);
   }, [user?.name, user?.email, user?.image, form]);
 
+  const hasProfileChanges = useMemo(() => {
+    return form.formState.isDirty || avatarFile !== null;
+  }, [avatarFile, form.formState.isDirty]);
+
   const canSubmit = useMemo(() => {
-    return !isSubmitting && form.formState.isValid;
-  }, [isSubmitting, form.formState.isValid]);
+    return !isSubmitting && form.formState.isValid && hasProfileChanges;
+  }, [hasProfileChanges, isSubmitting, form.formState.isValid]);
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push('/courses');
+  };
 
   return (
     <div className="space-y-8 p-6 md:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Meu perfil</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="-ml-3 inline-flex cursor-pointer items-center gap-2 text-sm"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <h1 className="text-3xl font-bold">Meu perfil</h1>
+        </div>
       </div>
 
       <Form {...form}>
@@ -103,6 +127,13 @@ export default function ProfilePage() {
               if (!result.ok) {
                 throw new Error(result.error || 'Erro ao atualizar o perfil');
               }
+              form.reset({
+                name: result.user.name,
+                email: result.user.email,
+                avatar: undefined
+              });
+              setAvatarFile(null);
+              setAvatarPreview(result.user.image);
               toast.success('Perfil atualizado');
               router.refresh();
             } catch (err) {
