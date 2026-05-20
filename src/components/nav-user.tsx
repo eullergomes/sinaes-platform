@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown, Link2, LogOut, ThumbsUp, UserCircle } from 'lucide-react';
+import { ChevronsUpDown, Link2, LogOut, UserCircle } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -138,7 +138,7 @@ const NavUser = ({ user, hideInfo, isInSidebar }: NavUserProps) => {
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuGroup>
+        {/* <DropdownMenuGroup>
           <DropdownMenuItem asChild className="hover:cursor-pointer">
             <Link
               href="https://forms.gle/xtWj19USpXt9Pqow6"
@@ -150,7 +150,7 @@ const NavUser = ({ user, hideInfo, isInSidebar }: NavUserProps) => {
               Avalie a Plataforma
             </Link>
           </DropdownMenuItem>
-        </DropdownMenuGroup>
+        </DropdownMenuGroup> */}
         <DropdownMenuSeparator className="m-0" />
         <DropdownMenuItem asChild>
           <Button

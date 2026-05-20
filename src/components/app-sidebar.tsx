@@ -35,7 +35,6 @@ import {
   ArrowLeftCircle,
   FileText,
   Link2,
-  ThumbsUp,
   Info
 } from 'lucide-react';
 import Image from 'next/image';
@@ -114,12 +113,12 @@ function buildNav(currentCourseId?: string | null, showDashboard?: boolean) {
         icon: Link2,
         openInNewTab: true
       },
-      {
-        title: 'Avalie a Plataforma',
-        url: 'https://forms.gle/xtWj19USpXt9Pqow6',
-        icon: ThumbsUp,
-        openInNewTab: true
-      },
+      // {
+      //   title: 'Avalie a Plataforma',
+      //   url: 'https://forms.gle/xtWj19USpXt9Pqow6',
+      //   icon: ThumbsUp,
+      //   openInNewTab: true
+      // },
       {
         title: 'Sobre',
         url: `/about`,
