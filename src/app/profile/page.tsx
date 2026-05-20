@@ -92,16 +92,18 @@ export default function ProfilePage() {
     <div className="space-y-8 p-6 md:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
+          <h1 className="text-3xl font-bold">Meu perfil</h1>
+          <div className="mb-6">
+        </div>
           <Button
             type="button"
             variant="ghost"
-            className="-ml-3 inline-flex cursor-pointer items-center gap-2 text-sm"
+            className="-ml-3 inline-flex cursor-pointer items-center gap-2 text-sm text-black transition-colors hover:text-blue-600 hover:bg-transparent"
             onClick={handleBack}
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <h1 className="text-3xl font-bold">Meu perfil</h1>
         </div>
       </div>
 

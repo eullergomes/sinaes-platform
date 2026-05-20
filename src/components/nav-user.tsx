@@ -18,6 +18,7 @@ import { Button } from './ui/button';
 import { signOut } from '@/lib/auth-client';
 import Link from 'next/link';
 import AdminIcon from '@/icons/AdminIcon';
+import { useRouter } from 'next/navigation';
 
 type NavUserProps = { user: User; hideInfo?: boolean; isInSidebar?: boolean };
 
@@ -30,7 +31,15 @@ function formatDisplayName(fullName?: string): string {
 
 type UserWithRole = User & { role?: string };
 const NavUser = ({ user, hideInfo, isInSidebar }: NavUserProps) => {
+  const router = useRouter();
   const isAdmin = (user as UserWithRole)?.role === 'ADMIN';
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+    router.refresh();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -156,7 +165,7 @@ const NavUser = ({ user, hideInfo, isInSidebar }: NavUserProps) => {
           <Button
             variant="ghost"
             className="flex w-full justify-start hover:cursor-pointer"
-            onClick={() => signOut()}
+            onClick={handleSignOut}
           >
             <LogOut />
             Sair

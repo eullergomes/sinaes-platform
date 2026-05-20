@@ -90,7 +90,7 @@ const CoordinatorAutocomplete = ({
                 onChange(null);
                 setOpen(false);
               }}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
               aria-label="Limpar seleção"
             >
               <X className="size-4" />
@@ -99,7 +99,7 @@ const CoordinatorAutocomplete = ({
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
             aria-label="Alternar lista"
           >
             <ChevronsUpDown className="size-4" />
