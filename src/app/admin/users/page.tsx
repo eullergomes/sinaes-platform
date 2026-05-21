@@ -71,7 +71,7 @@ export default async function AdminUsersPage({
   return (
     <div className="space-y-8 p-6 md:p-8">
       <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
-      <BackButton url="/courses" label="Voltar para Início" />
+      <BackButton forceBack={true} label="Voltar para Início" />
       <UsersClientPage
         currentUserId={session.user.id}
         users={users.map((u) => ({
