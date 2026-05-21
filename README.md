@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./public/assets/imgs/logo-ifma-vertical.png" alt="Logo IFMA Campus Caxias" width="300"/>
+<img src="./public/assets/imgs/logo-ifma-vertical.webp" alt="Logo IFMA Campus Caxias" width="300"/>
 
 <h1>Plataforma de Monitoramento SINAES</h1>
 
@@ -91,22 +91,22 @@ A plataforma está sendo desenvolvida com múltiplos níveis de acesso, garantin
 <div align="center">
 
 ### Página dos Cursos  
-<img src="./public/assets/screenshots/course-page.png" alt="Página dos Cursos" width="800" style="margin:10px;"/>
+<img src="./public/assets/screenshots/course-page.webp" alt="Página dos Cursos" width="800" style="margin:10px;"/>
 
 ### Página de Edição do Curso  
-<img src="./public/assets/screenshots/edit-couse-page.png" alt="Página de Edição do Curso" width="800" style="margin:10px;"/>
+<img src="./public/assets/screenshots/edit-couse-page.webp" alt="Página de Edição do Curso" width="800" style="margin:10px;"/>
 
 ### Página das Dimensões  
-<img src="./public/assets/screenshots/dimentions-page.png" alt="Página das Dimensões" width="800" style="margin:10px;"/>
+<img src="./public/assets/screenshots/dimentions-page.webp" alt="Página das Dimensões" width="800" style="margin:10px;"/>
 
 ### Página da Dimensão  
-<img src="./public/assets/screenshots/dimention-page.png" alt="Página da Dimensão" width="800" style="margin:10px;"/>
+<img src="./public/assets/screenshots/dimention-page.webp" alt="Página da Dimensão" width="800" style="margin:10px;"/>
 
 ### Página do Indicador  
-<img src="./public/assets/screenshots/indicator-page.png" alt="Página do Indicador" width="800" style="margin:10px;"/>
+<img src="./public/assets/screenshots/indicator-page.webp" alt="Página do Indicador" width="800" style="margin:10px;"/>
 
 ### Página de Login  
-<img src="./public/assets/screenshots/sign-in-page.png" alt="Página de Login" width="800" style="margin:10px;"/>
+<img src="./public/assets/screenshots/sign-in-page.webp" alt="Página de Login" width="800" style="margin:10px;"/>
 
 </div>
 
@@ -148,27 +148,58 @@ npm install
 
 ### ⚙️ 3. Configurar Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto, baseado no `.env.example`:
-```bash
-# URL do Banco de Dados (local ou Atlas)
-DATABASE_URL="mongodb://localhost:27017/sinaes_db_local?replicaSet=rs0"
+Crie um arquivo `.env` na raiz do projeto, baseado no `.env.example`.
 
+Escolha **uma** das opções abaixo para `DATABASE_URL`.
+
+#### Opção A: MongoDB local com Docker
+
+```bash
+# URL do banco local com replica set
+DATABASE_URL="mongodb://localhost:27017/sinaes_db_local?replicaSet=rs0"
+```
+
+#### Opção B: MongoDB remoto com MongoDB Atlas
+
+Use a string de conexão do cluster MongoDB Atlas e substitua os placeholders pelas credenciais e pelo banco desejado:
+
+```bash
+DATABASE_URL="mongodb+srv://<DB_USER>:<DB_PASSWORD>@<CLUSTER_HOST>/sinaes_db?retryWrites=true&w=majority"
+```
+
+Se a senha possuir caracteres especiais, use a versão codificada na URL antes de executar os comandos do Prisma.
+
+Além da conexão com o banco, configure as demais variáveis necessárias:
+
+```bash
 # Secret de autenticação
 BETTER_AUTH_SECRET="YOUR_AUTH_SECRET"
 
-# MinIO
+# Credenciais Cloudinary
+CLOUDINARY_URL="cloudinary://<API_KEY>:<API_SECRET>@<CLOUD_NAME>"
+CLOUDINARY_CLOUD_NAME="YOUR_CLOUD_NAME"
+CLOUDINARY_API_KEY="YOUR_API_KEY"
+CLOUDINARY_API_SECRET="YOUR_API_SECRET"
+
+# MinIO usado nos testes do fluxo S3 local
 MINIO_ROOT_USER="minioadmin"
 MINIO_ROOT_PASSWORD="minioadmin"
 MINIO_ENDPOINT="localhost:9000"
-MINIO_BUCKET="sinaes-bucket"
+MINIO_BUCKET="sinaes-files"
 ```
-### 🐳 4. Subir MongoDB e MinIO com Docker
+
+### 🐳 4. Subir Serviços Locais com Docker
+
+O `docker-compose.yml` sobe MongoDB e MinIO para desenvolvimento local:
+
 ```bash
-# Sobe o container MongoDB em modo replica set (necessário para o Prisma)
 docker-compose up -d
 ```
 
-Na primeira execução, configure o replica set:
+#### 4.1 MongoDB local
+
+Se você escolheu a `DATABASE_URL` local, configure o replica set na primeira execução. Essa etapa é necessária para o MongoDB local usado pelo Prisma:
+
 ```bash
 docker exec -it mongodb_local mongosh
 ```
@@ -179,8 +210,11 @@ rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "localhost:27017" }] })
 exit
 ```
 
-#### 📁 4.2 Criar o Bucket do MinIO (opcionalmente via script)
-Você pode usar o script:
+Se você escolheu MongoDB Atlas, não é necessário usar o container MongoDB local nem executar `rs.initiate` para o banco remoto.
+
+#### 📁 4.2 Criar o Bucket do MinIO
+
+Para testar o fluxo MinIO/S3 local, mantenha o serviço MinIO disponível e crie o bucket usado pelos uploads. Você pode usar o script:
 ```bash
 npm run minio:setup
 ```
@@ -193,6 +227,28 @@ Ou criar manualmente acessando:
 ```bash
 http://localhost:9001
 ```
+
+### 📤 4.3 Escolher o Provedor de Upload
+
+Os arquivos enviados pelo `uploadFileService`, como avatares e evidências, usam o cookie `storage_provider` para decidir o provedor de armazenamento:
+
+- Sem cookie, o envio usa **Cloudinary** por padrão.
+- Com `storage_provider=minio`, o envio usa o fluxo **MinIO/S3**.
+- Qualquer valor diferente de `minio` segue o fallback do **Cloudinary**.
+
+Para o Cloudinary, configure as credenciais `CLOUDINARY_*` do `.env`. Para o MinIO, o serviço e o bucket devem estar disponíveis para o fluxo de upload pré-assinado.
+
+Exemplos para testar no console do navegador:
+
+```js
+document.cookie = 'storage_provider=minio; path=/'
+```
+
+```js
+document.cookie = 'storage_provider=cloudinary; path=/'
+```
+
+Para voltar ao comportamento padrão do Cloudinary, remova o cookie ou configure qualquer valor diferente de `minio`.
 
 ### 🗄️ 5. Sincronizar e Popular o Banco
 ```bash
@@ -223,8 +279,8 @@ Bacharelado em Ciência da Computação – IFMA Campus Caxias
 
 ### 🪪 Licença
 
-Este software é de uso interno do Instituto Federal do Maranhão (IFMA) – Campus Caxias.
+Este projeto está sujeito à Licença de Uso Institucional Restrita descrita no arquivo [LICENSE.md](./LICENSE.md).
 
-Sua reprodução, modificação ou redistribuição fora do âmbito institucional requer autorização expressa do autor e da instituição.
+O software foi desenvolvido por Euller Gomes Teixeira no contexto do TCC em Bacharelado em Ciência da Computação no IFMA Campus Caxias. A autoria, a titularidade patrimonial, a implantação, a manutenção, a migração tecnológica e a eventual replicação institucional deverão observar o registro junto ao INPI e os instrumentos formais firmados com o IFMA.
 
-© 2025 Euller Gomes Teixeira. Todos os direitos reservados.
+© 2026 Euller Gomes Teixeira. Todos os direitos reservados.
