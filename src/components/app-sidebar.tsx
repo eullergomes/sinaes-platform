@@ -182,7 +182,7 @@ const AppSidebar = ({
                   </Tooltip>
                 ) : (
                   <Image
-                    src="/assets/imgs/ifma-avalia-logo.png"
+                    src="/assets/imgs/ifma-avalia-logo.webp"
                     alt="IFMA Avalia Logo"
                     width={20}
                     height={20}

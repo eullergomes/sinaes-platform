@@ -20,7 +20,7 @@ const Footer = () => {
               aria-label="Página inicial do IFMA Campus Caxias"
             >
               <Image
-                src="/assets/imgs/logo-ifma-horizontal-fundo-branco.png"
+                src="/assets/imgs/logo-ifma-horizontal-fundo-branco.webp"
                 alt="Logo do IFMA Campus Caxias"
                 width={200}
                 height={57}
