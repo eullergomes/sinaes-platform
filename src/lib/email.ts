@@ -9,20 +9,23 @@ export async function sendResetPasswordEmail(to: string, url: string) {
       return;
     }
 
-    const realTo = 'eullertexeira@gmail.com';
+    const resetPasswordRecipient =
+      process.env.NODE_ENV === 'production'
+        ? to
+        : 'eullertexeira@gmail.com';
     const brandPrimary = '#5eaf3c';
     const brandDark = '#222';
     const muted = '#6b7280';
 
-    const ifmaAvaliaLogo = '/assets/imgs/ifma-avalia-logo.png';
-    const ifmaLogo = '/assets/imgs/logo-ifma-horizontal-fundo-branco.png';
+    const ifmaAvaliaLogo = '/assets/imgs/ifma-avalia-logo.webp';
+    const ifmaLogo = '/assets/imgs/logo-ifma-horizontal-fundo-branco.webp';
     const html = `
 			<!doctype html>
 			<html lang="pt-BR">
 				<head>
 					<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-					<title>Redefinição de senha – IFMA Avalia</title>
+					<title>Redefinição de senha - IFMA Avalia</title>
 					<style>
 						.container { max-width: 560px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; }
 						.header { padding: 24px 24px 0 24px; text-align: center; }
@@ -39,7 +42,7 @@ export async function sendResetPasswordEmail(to: string, url: string) {
 				<body style="background:#f8fafc; padding: 24px;">
 					<div class="container">
 						<div class="header">
-							<img src=${ifmaAvaliaLogo}" alt="IFMA Avalia" style="height: 80px; width: auto; display: inline-block; vertical-align: middle;" />
+							<img src="${ifmaAvaliaLogo}" alt="IFMA Avalia" style="height: 80px; width: auto; display: inline-block; vertical-align: middle;" />
 							<h1 class="font-bold text-2xl">IFMA Avalia</h1>
 						</div>
 						<div class="body">
@@ -65,7 +68,7 @@ export async function sendResetPasswordEmail(to: string, url: string) {
 
     const response = await resend.emails.send({
       from: 'IFMA Avalia <onboarding@resend.dev>',
-      to: realTo,
+      to: resetPasswordRecipient,
       subject: 'Redefinição de senha',
       html
     });
