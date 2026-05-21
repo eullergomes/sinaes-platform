@@ -22,6 +22,8 @@ import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import Image from 'next/image';
 import { mapAuthError } from '@/lib/errors/auth';
+import { Loader2 } from 'lucide-react';
+import BackButton from '@/components/back-button';
 
 const formSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -32,12 +34,14 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignInPage = () => {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', password: '' }
   });
 
   async function onSubmit(values: FormValues) {
+    setIsSubmitting(true);
     try {
       await authClient.signIn.email({
         email: values.email,
@@ -53,12 +57,15 @@ const SignInPage = () => {
       });
     } catch {
       toast.error('Falha no login');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
+        <BackButton url="/" label="Voltar" />
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
             <Form {...form}>
@@ -68,7 +75,7 @@ const SignInPage = () => {
               >
                 <div className="grid gap-4">
                   <Image
-                    src="/assets/imgs/ifma-avalia-logo.png"
+                    src="/assets/imgs/ifma-avalia-logo.webp"
                     alt="Logo IFMA"
                     width={100}
                     height={100}
@@ -127,9 +134,17 @@ const SignInPage = () => {
 
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="w-full bg-green-500 cursor-pointer hover:bg-green-600"
                   >
-                    Entrar
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Entrando...
+                      </>
+                    ) : (
+                      'Entrar'
+                    )}
                   </Button>
                 </div>
               </form>
@@ -145,7 +160,7 @@ const SignInPage = () => {
       </div>
       <div className="bg-muted hidden items-center justify-center md:flex">
         <Image
-          src="/assets/imgs/ifma-cx-logo.png"
+          src="/assets/imgs/ifma-cx-logo.webp"
           alt="Logo IFMA Caxias"
           width={500}
           height={500}

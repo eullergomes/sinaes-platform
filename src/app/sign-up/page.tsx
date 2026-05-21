@@ -24,6 +24,7 @@ import { mapAuthErrorCode } from '@/lib/errors/auth';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { uploadFileService } from '@/services/uploadService';
+import BackButton from '@/components/back-button';
 
 const SignUpForm = () => {
   const formSchema = z
@@ -117,6 +118,7 @@ const SignUpForm = () => {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
+        <BackButton url="/" label="Voltar" />
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
             <Form {...form}>
@@ -126,7 +128,7 @@ const SignUpForm = () => {
               >
                 <div className="grid gap-4">
                   <Image
-                    src="/assets/imgs/ifma-avalia-logo.png"
+                    src="/assets/imgs/ifma-avalia-logo.webp"
                     alt="Logo IFMA"
                     width={100}
                     height={100}
@@ -294,7 +296,7 @@ const SignUpForm = () => {
       </div>
       <div className="bg-muted hidden items-center justify-center md:flex">
         <Image
-          src="/assets/imgs/ifma-cx-logo.png"
+          src="/assets/imgs/ifma-cx-logo.webp"
           alt="Logo IFMA Caxias"
           width={500}
           height={500}
