@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
+import { AboutPageContent } from '@/components/about-page-content';
 
 export default function Home() {
-  // Redirect root path to the courses selection page
-  redirect('/courses');
+	return <AboutPageContent isHome />;
 }

@@ -28,6 +28,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const isAuthPage =
+    pathname === '/' ||
     pathname === '/sign-in' ||
     pathname === '/sign-up' ||
     pathname === '/profile' ||
@@ -93,9 +94,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           >
             {hideSidebar ? (
               <>
-                <Link href="/courses" className="flex items-center gap-3">
+                <Link href="/" className="flex items-center gap-3">
                   <Image
-                    src="/assets/imgs/ifma-avalia-logo.png"
+                    src="/assets/imgs/ifma-avalia-logo.webp"
                     alt="IFMA Avalia Logo"
                     width={24}
                     height={24}
